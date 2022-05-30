@@ -7,7 +7,7 @@ Building a website for managing restaurant business activties with ordering and 
 ### Frontend
 - Cd into ***/frontend*** directory
 - Run command ```npm install``` to install dependencies
-- Add ***.env** file inside root directory (see ***env.example** for reference) and fill environment variables with backend url (usually http://localhost:5000)
+- Add ***.env*** file inside root directory (see ***env.example** for reference) and fill environment variables with backend url (usually http://localhost:5000)
 ### Backend
 - Cd into ***/frontend*** directory
 - Run command ```npm install``` to install dependencies
