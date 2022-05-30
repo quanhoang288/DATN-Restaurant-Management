@@ -1,0 +1,20 @@
+.good__list__container {
+  display: flex;
+  /* justify-content: space-between; */
+}
+
+.good__list__container .filter__section {
+  margin-right: 3rem;
+}
+
+.list__container {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.list__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
