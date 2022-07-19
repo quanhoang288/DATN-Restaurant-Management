@@ -34,8 +34,14 @@ module.exports = (sequelize, DataTypes) => {
       quantity: {
         type: DataTypes.INTEGER,
       },
+      finished_quantity: {
+        type: DataTypes.INTEGER,
+        defaultValue: 0,
+      },
       status: {
         type: DataTypes.STRING,
+        allowNull: false,
+        defaultValue: 'pending',
       },
       ...dateTime(DataTypes),
     },

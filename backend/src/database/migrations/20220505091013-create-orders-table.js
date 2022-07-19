@@ -4,41 +4,61 @@ module.exports = {
   async up(queryInterface, Sequelize) {
     await queryInterface.createTable('orders', {
       ...id(Sequelize.DataTypes),
+      parent_id: {
+        type: Sequelize.DataTypes.BIGINT.UNSIGNED,
+        references: {
+          model: {
+            tableName: 'orders',
+          },
+        },
+      },
       reservation_table_id: {
         type: Sequelize.DataTypes.BIGINT.UNSIGNED,
         references: {
           model: {
             tableName: 'reservation_tables',
           },
-          key: 'id',
         },
       },
-      kitchen_id: {
+      customer_id: {
         type: Sequelize.DataTypes.BIGINT.UNSIGNED,
         references: {
-          model: {
-            tableName: 'kitchens',
-          },
-          key: 'id',
+          model: 'customers',
         },
       },
-      invoice_id: {
+      delivery_info_id: {
         type: Sequelize.DataTypes.BIGINT.UNSIGNED,
         references: {
-          model: {
-            tableName: 'invoices',
-          },
-          key: 'id',
+          model: 'delivery_infos',
         },
+      },
+      shipper_id: {
+        type: Sequelize.DataTypes.BIGINT.UNSIGNED,
+        references: {
+          model: 'staff',
+        },
+      },
+      customer_name: {
+        type: Sequelize.DataTypes.STRING,
+      },
+      customer_phone_number: {
+        type: Sequelize.DataTypes.STRING,
+      },
+      delivery_address: {
+        type: Sequelize.DataTypes.STRING,
       },
       type: {
         type: Sequelize.DataTypes.STRING,
         allowNull: false,
+        defaultValue: 'dine-in',
       },
-      status: {
+      prepare_status: {
         type: Sequelize.DataTypes.STRING,
         allowNull: false,
         defaultValue: 'pending',
+      },
+      payment_status: {
+        type: Sequelize.DataTypes.STRING,
       },
       note: {
         type: Sequelize.DataTypes.STRING,

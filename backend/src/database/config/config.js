@@ -18,11 +18,11 @@ module.exports = {
       updatedAt: 'updated_at',
       paranoid: true,
       deletedAt: 'deleted_at',
-      defaultScope: {
-        attributes: {
-          exclude: ['created_at', 'updated_at', 'deleted_at'],
-        },
-      },
+      // defaultScope: {
+      //   attributes: {
+      //     exclude: ['created_at', 'updated_at', 'deleted_at'],
+      //   },
+      // },
     },
     migrationStorageTableName: 'migrations',
     seederStorageTableName: 'seeders',

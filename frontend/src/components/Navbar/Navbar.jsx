@@ -49,34 +49,10 @@ export default function Navbar({ isDrawerOpen, onOpenDrawer }) {
       open={isMenuOpen}
       onClose={handleMenuClose}
     >
-      <MenuItem onClick={handleShowProfile}>Profile</MenuItem>
-      <MenuItem onClick={handleMenuClose}>My account</MenuItem>
+      <MenuItem onClick={handleShowProfile}>Trang cá nhân</MenuItem>
+      <MenuItem>Cài đặt</MenuItem>
+      <MenuItem onClick={handleMenuClose}>Đăng xuất</MenuItem>
     </Menu>
-  )
-
-  const renderGuestNavbarOptions = (
-    <>
-      {/* <Link href='#' variant='body1' className='mr__2 vertical__center '>
-        Tải lên
-      </Link> */}
-      <Button variant='contained' color='secondary' size='medium' onClick={() => dispatch(showModal())}>
-        Đăng nhập
-      </Button>
-    </>
-  )
-
-  const renderAuthenticatedNavbarOptions = (
-    <>
-      <IconButton color='inherit'>
-        <CloudUploadIcon />
-      </IconButton>
-      <IconButton color='inherit'>
-        <NotificationsIcon />
-      </IconButton>
-      <IconButton edge='end' aria-controls={menuId} aria-haspopup='true' onClick={handleProfileMenuOpen} color='inherit'>
-        <AccountCircle />
-      </IconButton>
-    </>
   )
 
   return (
@@ -85,13 +61,26 @@ export default function Navbar({ isDrawerOpen, onOpenDrawer }) {
         <Toolbar>
           <Grid container style={{ alignItems: 'center' }}>
             <Grid item xs={1}>
-              <IconButton color='inherit' aria-label='open drawer' onClick={onOpenDrawer} edge='start' className={clsx(classes.menuButton, isDrawerOpen && classes.hide)}>
+              <IconButton
+                color='inherit'
+                aria-label='open drawer'
+                onClick={onOpenDrawer}
+                edge='start'
+                className={clsx(classes.menuButton, isDrawerOpen && classes.hide)}
+              >
                 <MenuIcon />
               </IconButton>
             </Grid>
             <Grid item xs={9}></Grid>
             <Grid item xs={2}>
-              <div className='icon__group'>{user ? renderAuthenticatedNavbarOptions : renderGuestNavbarOptions}</div>
+              <div className='icon__group'>
+                <IconButton color='inherit'>
+                  <NotificationsIcon />
+                </IconButton>
+                <IconButton edge='end' aria-controls={menuId} aria-haspopup='true' onClick={handleProfileMenuOpen} color='inherit'>
+                  <AccountCircle />
+                </IconButton>
+              </div>
             </Grid>
           </Grid>
         </Toolbar>
@@ -100,3 +89,4 @@ export default function Navbar({ isDrawerOpen, onOpenDrawer }) {
     </div>
   )
 }
+

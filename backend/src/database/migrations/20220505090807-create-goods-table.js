@@ -11,9 +11,11 @@ module.exports = {
       description: {
         type: Sequelize.DataTypes.STRING,
       },
+      type: {
+        type: Sequelize.DataTypes.STRING,
+      },
       import_price: {
         type: Sequelize.DataTypes.BIGINT.UNSIGNED,
-        allowNull: false,
       },
       sale_price: {
         type: Sequelize.DataTypes.BIGINT.UNSIGNED,
@@ -27,15 +29,13 @@ module.exports = {
       max_quantity_threshold: {
         type: Sequelize.DataTypes.INTEGER,
       },
-      is_sold_directly: {
-        type: Sequelize.DataTypes.BOOLEAN,
-        defaultValue: false,
+      manufacture_date: {
+        type: Sequelize.DataTypes.DATE,
       },
-      is_topping: {
-        type: Sequelize.DataTypes.BOOLEAN,
-        defaultValue: false,
+      expires_in_days: {
+        type: Sequelize.DataTypes.INTEGER,
       },
-      usage_period_in_days: {
+      expires_at: {
         type: Sequelize.DataTypes.INTEGER,
       },
       ...dateTime(Sequelize.DataTypes),

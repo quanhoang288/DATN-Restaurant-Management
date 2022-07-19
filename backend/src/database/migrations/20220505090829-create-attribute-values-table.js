@@ -13,10 +13,13 @@ module.exports = {
           key: 'id',
         },
       },
+      name: {
+        type: Sequelize.DataTypes.STRING,
+        allowNull: false,
+      },
       value: {
         type: Sequelize.DataTypes.STRING,
         allowNull: false,
-        unique: true,
       },
       ...dateTime(Sequelize.DataTypes),
     });

@@ -1,5 +1,5 @@
 const { Model } = require('sequelize');
-const { id, dateTime } = require('../generate');
+const { id } = require('../generate');
 
 module.exports = (sequelize, DataTypes) => {
   class Good extends Model {
@@ -26,6 +26,13 @@ module.exports = (sequelize, DataTypes) => {
         as: 'units',
         foreignKey: 'good_id',
       });
+      models.Good.belongsToMany(models.OrderDiscount, {
+        as: 'orderDiscounts',
+        through: {
+          model: models.OrderDiscountGood,
+        },
+        foreignKey: 'good_id',
+      });
     }
   }
 
@@ -42,9 +49,11 @@ module.exports = (sequelize, DataTypes) => {
       quantity: {
         type: DataTypes.INTEGER,
       },
+      type: {
+        type: DataTypes.STRING,
+      },
       import_price: {
         type: DataTypes.BIGINT.UNSIGNED,
-        allowNull: false,
       },
       sale_price: {
         type: DataTypes.BIGINT.UNSIGNED,
@@ -55,18 +64,15 @@ module.exports = (sequelize, DataTypes) => {
       max_quantity_threshold: {
         type: DataTypes.BIGINT.UNSIGNED,
       },
-      is_sold_directly: {
-        type: DataTypes.TINYINT,
-        defaultValue: 0,
+      manufacture_date: {
+        type: DataTypes.DATE,
       },
-      is_topping: {
-        type: DataTypes.TINYINT,
-        defaultValue: 0,
-      },
-      usage_period_in_days: {
+      expires_in_days: {
         type: DataTypes.INTEGER,
       },
-      ...dateTime(DataTypes),
+      expires_at: {
+        type: DataTypes.INTEGER,
+      },
     },
     {
       sequelize,

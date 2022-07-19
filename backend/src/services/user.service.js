@@ -7,11 +7,12 @@ const ApiError = require('../exceptions/api-error');
  * @param {Object} userBody
  * @returns {Promise<User>}
  */
-const createUser = async (userBody) => {
+const createUser = async (userBody, option = {}) => {
   if (await db.User.isEmailTaken(userBody.email)) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Email already taken');
   }
-  return db.User.create(userBody);
+  console.log('user body: ', userBody);
+  return db.User.create(userBody, option);
 };
 
 /**
@@ -24,7 +25,6 @@ const createUser = async (userBody) => {
  * @returns {Promise<QueryResult>}
  */
 const queryUsers = async (filter, options) => {
-  console.log('query users');
   const users = await db.User.paginate(filter, options);
   return users;
 };
@@ -40,13 +40,19 @@ const getUserById = async (id) => db.User.findByPk(id);
  * @param {string} email
  * @returns {Promise<db.User>}
  */
-const getUserByEmail = async (email) => {
-  return db.User.findOne({
+const getUserByEmail = async (email) =>
+  db.User.findOne({
     where: {
       email,
     },
   });
-};
+
+const getUserByUsername = async (username) =>
+  db.User.findOne({
+    where: {
+      username,
+    },
+  });
 
 /**
  * Update user by id
@@ -59,7 +65,10 @@ const updateUser = async (userId, updateBody) => {
   if (!user) {
     throw new ApiError(httpStatus.NOT_FOUND, 'User not found');
   }
-  if (updateBody.email && (await User.isEmailTaken(updateBody.email, userId))) {
+  if (
+    updateBody.email &&
+    (await db.User.isEmailTaken(updateBody.email, userId))
+  ) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Email already taken');
   }
   user.set(updateBody);
@@ -85,6 +94,7 @@ module.exports = {
   queryUsers,
   getUserById,
   getUserByEmail,
+  getUserByUsername,
   updateUser,
   deleteUser,
 };

@@ -26,7 +26,14 @@ const updateTable = async (tableId, data, option = {}) => {
   return table.save(option);
 };
 
-const getTableList = async () => db.Table.findAll({});
+const getTableList = async () =>
+  db.Table.findAll({
+    include: [
+      {
+        association: 'reservations',
+      },
+    ],
+  });
 
 const getTableDetail = async (tableId) => {
   console.log(tableId);

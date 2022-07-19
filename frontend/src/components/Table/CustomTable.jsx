@@ -12,6 +12,7 @@ import TableSortLabel from '@material-ui/core/TableSortLabel'
 import Paper from '@material-ui/core/Paper'
 import { Button, Typography } from '@material-ui/core'
 import pick from '../../utils/pick'
+import ChipLabel from '../ChipLabel/ChipLabel'
 
 function descendingComparator(a, b, orderBy) {
   if (b[orderBy] < a[orderBy]) {
@@ -47,10 +48,21 @@ function EnhancedTableHead(props) {
     <TableHead>
       <TableRow>
         {(cols || []).map((headCell) => (
-          <TableCell key={headCell.id} align={headCell.align ?? 'left'} padding='normal' sortDirection={orderBy === headCell.id ? order : false}>
-            <TableSortLabel active={orderBy === headCell.id} direction={orderBy === headCell.id ? order : 'asc'} onClick={createSortHandler(headCell.id)}>
+          <TableCell
+            key={headCell.id}
+            align={headCell.align ?? 'left'}
+            padding='normal'
+            sortDirection={orderBy === headCell.id ? order : false}
+          >
+            <TableSortLabel
+              active={orderBy === headCell.id}
+              direction={orderBy === headCell.id ? order : 'asc'}
+              onClick={createSortHandler(headCell.id)}
+            >
               {headCell.label}
-              {orderBy === headCell.id ? <span className={classes.visuallyHidden}>{order === 'desc' ? 'sorted descending' : 'sorted ascending'}</span> : null}
+              {orderBy === headCell.id ? (
+                <span className={classes.visuallyHidden}>{order === 'desc' ? 'sorted descending' : 'sorted ascending'}</span>
+              ) : null}
             </TableSortLabel>
           </TableCell>
         ))}
@@ -67,22 +79,32 @@ EnhancedTableHead.propTypes = {
   onSelectAllClick: PropTypes.func.isRequired,
   order: PropTypes.oneOf(['asc', 'desc']).isRequired,
   orderBy: PropTypes.string.isRequired,
-  rowCount: PropTypes.number.isRequired
+  rowCount: PropTypes.number.isRequired,
 }
 
 function EnhancedTableRow(props) {
-  const { row, actionButtons } = props
+  const { row, actionButtons, cols } = props
+
   return (
     <TableRow hover tabIndex={-1}>
-      {Object.keys(row).map((key) => (
-        <TableCell>{row[key]}</TableCell>
+      {Object.keys(row).map((field, idx) => (
+        <TableCell>
+          {(cols || [])[idx].type === 'chip' ? (
+            <ChipLabel
+              label={row[field]?.name ?? row[field]}
+              variant={cols[idx].variantMapping.find((mapping) => mapping.value === row[field]?.value ?? row[field])?.variant}
+            />
+          ) : (
+            row[field]?.name ?? row[field]
+          )}
+        </TableCell>
       ))}
 
       {(actionButtons || []).length > 0 && (
         <TableCell align='center'>
           <div style={{ display: 'flex', justifyContent: 'center' }}>
             {actionButtons.map((btn) => (
-              <Button variant={btn.variant} color={btn.color} onClick={(e) => btn.clickHandler(row.id)}>
+              <Button variant={btn.variant} color={btn.color} onClick={(e) => btn.clickHandler(row.id)} style={{ marginRight: 5 }}>
                 {btn.name}
               </Button>
             ))}
@@ -95,14 +117,14 @@ function EnhancedTableRow(props) {
 
 const useStyles = makeStyles((theme) => ({
   root: {
-    width: '100%'
+    width: '100%',
   },
   paper: {
     width: '100%',
-    marginBottom: theme.spacing(2)
+    marginBottom: theme.spacing(2),
   },
   table: {
-    minWidth: 750
+    minWidth: 750,
   },
   visuallyHidden: {
     border: 0,
@@ -113,8 +135,8 @@ const useStyles = makeStyles((theme) => ({
     padding: 0,
     position: 'absolute',
     top: 20,
-    width: 1
-  }
+    width: 1,
+  },
 }))
 
 export default function EnhancedTable(props) {
@@ -148,7 +170,14 @@ export default function EnhancedTable(props) {
         <Paper className={classes.paper}>
           <TableContainer>
             <Table className={classes.table} aria-labelledby='tableTitle' size='medium' aria-label='enhanced table'>
-              <EnhancedTableHead classes={classes} order={order} orderBy={orderBy} onRequestSort={handleRequestSort} cols={cols} actionButtons={actionButtons} />
+              <EnhancedTableHead
+                classes={classes}
+                order={order}
+                orderBy={orderBy}
+                onRequestSort={handleRequestSort}
+                cols={cols}
+                actionButtons={actionButtons}
+              />
               <TableBody>
                 {stableSort(rows || [], getComparator(order, orderBy)).map((row, index) => {
                   return (
@@ -157,6 +186,7 @@ export default function EnhancedTable(props) {
                         row,
                         (cols || []).map((col) => col.id)
                       )}
+                      cols={cols}
                       actionButtons={actionButtons}
                     />
                   )
@@ -189,5 +219,6 @@ export default function EnhancedTable(props) {
 }
 
 EnhancedTable.defaultProps = {
-  paginationEnabled: true
+  paginationEnabled: true,
 }
+

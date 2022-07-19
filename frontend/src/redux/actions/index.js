@@ -1,3 +1,5 @@
-import * as authActions from './authActions';
+import * as authActions from './authActions'
+import * as cartActions from './cartActions'
 
-export { authActions };
+export { authActions, cartActions }
+

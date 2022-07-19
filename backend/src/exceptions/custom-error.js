@@ -61,6 +61,18 @@ const Errors = {
     statusCode: httpStatus.NOT_FOUND,
     message: 'Menu category not found',
   },
+  TableNotReserved: {
+    statusCode: httpStatus.BAD_REQUEST,
+    message: 'Table is not reserved and checked in yet',
+  },
+  OrderAlreadyCreated: {
+    statusCode: httpStatus.BAD_REQUEST,
+    message: 'There has been an order created already',
+  },
+  InvalidNotificationType: {
+    statusCode: httpStatus.BAD_REQUEST,
+    message: 'Notification type does not exist',
+  },
 };
 
 module.exports = Errors;

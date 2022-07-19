@@ -1,5 +1,5 @@
 const { Model } = require('sequelize');
-const { id, dateTime } = require('../generate');
+const { id } = require('../generate');
 
 module.exports = (sequelize, DataTypes) => {
   class DiscountConstraint extends Model {
@@ -7,6 +7,28 @@ module.exports = (sequelize, DataTypes) => {
       models.DiscountConstraint.belongsTo(models.Discount, {
         as: 'discount',
         foreignKey: 'discount_id',
+      });
+      models.DiscountConstraint.belongsToMany(models.Good, {
+        as: 'goods',
+        through: {
+          model: models.DiscountConstraintGood,
+        },
+        foreignKey: 'discount_constraint_id',
+      });
+      models.DiscountConstraint.belongsToMany(models.GoodGroup, {
+        as: 'goodGroups',
+        through: {
+          model: models.DiscountConstraintGoodGroup,
+        },
+        foreignKey: 'discount_constraint_id',
+      });
+      models.DiscountConstraint.hasMany(models.DiscountConstraintGood, {
+        as: 'constraintGoods',
+        foreignKey: 'discount_constraint_id',
+      });
+      models.DiscountConstraint.hasMany(models.DiscountConstraintGoodGroup, {
+        as: 'constraintGoodGroups',
+        foreignKey: 'discount_constraint_id',
       });
     }
   }
@@ -22,26 +44,21 @@ module.exports = (sequelize, DataTypes) => {
           key: 'discount_id',
         },
       },
-      type: {
-        type: DataTypes.STRING,
-      },
-      min_value: {
+      min_invoice_value: {
         type: DataTypes.INTEGER,
-      },
-      discount_method: {
-        type: DataTypes.STRING,
       },
       discount_amount: {
         type: DataTypes.INTEGER,
       },
       discount_unit: {
-        // % | VND
+        type: DataTypes.STRING,
+      },
+      order_item_quantity: {
         type: DataTypes.INTEGER,
       },
       discount_item_quantity: {
         type: DataTypes.INTEGER,
       },
-      ...dateTime(DataTypes),
     },
     {
       sequelize,

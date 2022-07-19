@@ -2,23 +2,19 @@ const { id, dateTime } = require('../generate');
 
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('payment_transactions', {
+    await queryInterface.createTable('notifications', {
       ...id(Sequelize.DataTypes),
-      invoice_id: {
+      notification_template_id: {
         type: Sequelize.DataTypes.BIGINT.UNSIGNED,
         references: {
           model: {
-            tableName: 'invoices',
+            tableName: 'notification_templates',
           },
-          key: 'id',
+          allowNull: false,
         },
       },
-      content: {
-        type: Sequelize.DataTypes.STRING,
-        allowNull: false,
-      },
-      type: {
-        type: Sequelize.DataTypes.STRING,
+      referenced_id: {
+        type: Sequelize.DataTypes.BIGINT.UNSIGNED,
         allowNull: false,
       },
       ...dateTime(Sequelize.DataTypes),
@@ -26,6 +22,6 @@ module.exports = {
   },
 
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('payment_transactions');
+    await queryInterface.dropTable('notifications');
   },
 };

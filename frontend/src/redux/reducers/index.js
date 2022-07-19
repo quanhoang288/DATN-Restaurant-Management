@@ -1,4 +1,6 @@
-import authReducer from './authReducer';
-import modalReducer from './modalReducer';
+import authReducer from './authReducer'
+import modalReducer from './modalReducer'
+import cartReducer from './cartReducer'
 
-export { authReducer, modalReducer };
+export { authReducer, modalReducer, cartReducer }
+

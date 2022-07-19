@@ -8,7 +8,7 @@ import ConfirmDialog from '../../../components/Modal/ConfirmDialog'
 const cols = [
   { id: 'id', label: 'STT', isSortable: true },
   { id: 'name', label: 'Ten bep', isSortable: true },
-  { id: 'type', label: 'Loai', isSortable: true }
+  { id: 'type', label: 'Loai', isSortable: true },
 ]
 
 function KitchenList(props) {
@@ -38,7 +38,7 @@ function KitchenList(props) {
       clickHandler: (id) => {
         setSelected(id)
         setCreateModalVisible(true)
-      }
+      },
     },
     {
       name: 'Xoa',
@@ -47,8 +47,8 @@ function KitchenList(props) {
       clickHandler: (id) => {
         setSelected(id)
         setDeleteDialogVisible(true)
-      }
-    }
+      },
+    },
   ]
 
   useEffect(() => {
@@ -74,14 +74,27 @@ function KitchenList(props) {
           setCreateModalVisible(false)
         }}
       />
-      <div style={{ float: 'right', marginBottom: '1rem' }}>
-        <Button variant='contained' color='primary' onClick={() => setCreateModalVisible(true)}>
-          Them moi
-        </Button>
+      <div className='list__header' style={{ justifyContent: 'flex-end' }}>
+        <div>
+          <Button size='small' variant='contained' onClick={() => setCreateModalVisible(true)}>
+            Thêm mới
+          </Button>
+          <Button size='small' variant='contained'>
+            Import
+          </Button>
+        </div>
       </div>
-      <div>{kitchenList.length > 0 ? <CustomTable rows={kitchenList} cols={cols} actionButtons={actionButtons} /> : <Typography variant='h6'>Khong co du lieu</Typography>}</div>
+
+      <div>
+        {kitchenList.length > 0 ? (
+          <CustomTable rows={kitchenList} cols={cols} actionButtons={actionButtons} />
+        ) : (
+          <Typography variant='h6'>Khong co du lieu</Typography>
+        )}
+      </div>
     </div>
   )
 }
 
 export default KitchenList
+

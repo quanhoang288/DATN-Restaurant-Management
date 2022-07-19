@@ -10,7 +10,8 @@ const createStaff = catchAsync(async (req, res) => {
 });
 
 const getStaffList = catchAsync(async (req, res) => {
-  // TODO
+  const staffList = await staffService.getStaffList();
+  return res.send(staffList);
 });
 
 const getStaff = catchAsync(async (req, res) => {

@@ -1,8 +1,28 @@
+const http = require('http');
+const { Server } = require('socket.io');
+
 const app = require('./app');
 const config = require('./config/config');
 const logger = require('./config/logger');
 
-const server = app.listen(config.port, () => {
+const server = http.createServer(app);
+
+const io = new Server(server, { cors: '*' });
+
+io.on('test', (data) => console.log(data));
+
+io.on('connection', (socket) => {
+  console.log('a user connected');
+  socket.on('test', (data) => console.log(data));
+});
+
+// Socket.io middleware
+app.use((req, res, next) => {
+  req.io = io;
+  next();
+});
+
+server.listen(config.port, () => {
   logger.info(`Listening on port ${config.port}`);
 });
 

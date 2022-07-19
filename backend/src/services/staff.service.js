@@ -5,26 +5,27 @@ const Errors = require('../exceptions/custom-error');
 const ApiError = require('../exceptions/api-error');
 
 const createStaff = async (data, option = {}) => {
-  const userData = pick(data, ['email', 'password']);
+  const userData = pick(data, ['email', 'password', 'full_name', 'address']);
   const user = await userService.createUser(userData);
   // create staff
+  console.log('creating staff');
   return db.Staff.create(
     {
-      ...data,
+      status: 'active',
       id: user.id,
     },
-    {
-      ...option,
-      include: [
-        {
-          association: 'roles',
-        },
-      ],
-    },
+    option,
   );
 };
 
-const getStaffList = async (filter, option) => {};
+const getStaffList = async (filter, option) =>
+  db.Staff.findAll({
+    include: [
+      {
+        association: 'user',
+      },
+    ],
+  });
 
 const getStaff = async (staffId) => {
   const staff = await db.Staff.findByPk(staffId, {

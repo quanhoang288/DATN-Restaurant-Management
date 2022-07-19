@@ -1,5 +1,19 @@
 import React, { useEffect, useState } from 'react'
-import { Card, CardContent, CardHeader, Typography, Collapse, Avatar, IconButton, CardActions, FormControlLabel, FormGroup, Icon, Button, TextField } from '@material-ui/core'
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  Typography,
+  Collapse,
+  Avatar,
+  IconButton,
+  CardActions,
+  FormControlLabel,
+  FormGroup,
+  Icon,
+  Button,
+  TextField,
+} from '@material-ui/core'
 import Checkbox from '@material-ui/core/Checkbox'
 import SearchIcon from '@material-ui/icons/Search'
 
@@ -10,11 +24,12 @@ import Main from '../../../containers/Main/Main'
 import StaffCreate from './StaffCreate'
 import { staffApi } from '../../../apis'
 import ConfirmDialog from '../../../components/Modal/ConfirmDialog'
+import { getStaffList } from '../../../apis/staff'
 
 const cols = [
   { id: 'id', label: 'STT', isSortable: true },
   { id: 'name', label: 'Ten bep', isSortable: true },
-  { id: 'type', label: 'Loai', isSortable: true }
+  { id: 'type', label: 'Loai', isSortable: true },
 ]
 
 function StaffList() {
@@ -32,6 +47,11 @@ function StaffList() {
     }
   }
 
+  const fetchStaffList = async () => {
+    const staff = (await getStaffList()).data
+    setStaffList(staff)
+  }
+
   const actionButtons = [
     {
       name: 'Chi tiet',
@@ -40,7 +60,7 @@ function StaffList() {
       clickHandler: (id) => {
         setSelected(id)
         setCreateModalVisible(true)
-      }
+      },
     },
     {
       name: 'Xoa',
@@ -49,14 +69,9 @@ function StaffList() {
       clickHandler: (id) => {
         setSelected(id)
         setDeleteDialogVisible(true)
-      }
-    }
+      },
+    },
   ]
-
-  const fetchStaffList = async (page, limit = 5) => {
-    const res = await staffApi.getStaffList()
-    console.log(res.data)
-  }
 
   useEffect(() => {
     fetchStaffList()
@@ -80,26 +95,25 @@ function StaffList() {
         handleCancel={() => setDeleteDialogVisible(false)}
       />
       <StaffCreate staffId={selected} isModalVisible={isCreateModalVisible} handleCloseModal={() => setCreateModalVisible(false)} />
-      <div className='good__list__container'>
+      <div>
         <div className='list_container'>
-          <div className='list__header' style={{ marginBottom: 10 }}>
+          <div className='list__header'>
             <Typography variant='h5'>Nhân viên</Typography>
-          </div>
-          <div className='staff__button__group' style={{ float: 'right' }}>
-            <div style={{ display: 'flex' }}>
+            <div>
               <Button size='small' variant='contained' onClick={() => setCreateModalVisible(true)}>
-                Them moi
+                Thêm mới
               </Button>
-              <Button size='small' variant='contained' onClick={() => setCreateModalVisible(true)}>
+              <Button size='small' variant='contained'>
                 Import
               </Button>
               <Button size='small' variant='contained'>
-                Xuat file
+                Xuất file
               </Button>
             </div>
           </div>
+
           <div className='list__content'>
-            <CustomTable />
+            <CustomTable cols={cols} actionButtons={actionButtons} rows={staffList} />
           </div>
         </div>
       </div>
@@ -108,3 +122,4 @@ function StaffList() {
 }
 
 export default StaffList
+

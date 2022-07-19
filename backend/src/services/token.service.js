@@ -1,12 +1,12 @@
 const jwt = require('jsonwebtoken');
 const moment = require('moment');
 const httpStatus = require('http-status');
+const { v4: uuidv4 } = require('uuid');
+
 const config = require('../config/config');
 const userService = require('./user.service');
 const db = require('../database/models');
 const ApiError = require('../exceptions/api-error');
-const { v4: uuidv4 } = require('uuid')
-
 
 /**
  * Generate token
@@ -16,12 +16,17 @@ const { v4: uuidv4 } = require('uuid')
  * @param {string} [secret]
  * @returns {string}
  */
-const generateJwtToken = (userId, expires, type, secret = config.jwt.secret) => {
+const generateJwtToken = (
+  userId,
+  expires,
+  type,
+  secret = config.jwt.secret,
+) => {
   const payload = {
     sub: userId,
     iat: moment().unix(),
     exp: expires.unix(),
-    type
+    type,
   };
   return jwt.sign(payload, secret);
 };
@@ -37,49 +42,38 @@ const generateJwtToken = (userId, expires, type, secret = config.jwt.secret) => 
 const saveToken = async (token, userId, expires, type) => {
   const user = await db.User.findByPk(userId);
   if (!user) {
-    throw new Error('User not found')
-  }
-  switch (type) {
-    case config.tokenType.REFRESH:
-      user.set({
-        refresh_token: token,
-        refresh_token_expires_at: expires
-      })
-      break;
-    case config.tokenType.EMAIL_VERIFY:
-      user.set({
-        email_verify_token: token,
-        email_verify_token_expires_at: expires
-      })
-      break;
-    case config.tokenType.PASSWORD_RESET:
-      user.set({
-        password_reset_token: token,
-        password_reset_token_expires_at: expires
-      })
+    throw new Error('User not found');
   }
 
-  await user.save()
+  if (type === config.tokenType.REFRESH) {
+    user.set({
+      refresh_token: token,
+      refresh_token_expires_at: expires,
+    });
+  } else if (type === config.tokenType.EMAIL_VERIFY) {
+    user.set({
+      email_verify_token: token,
+      email_verify_token_expires_at: expires,
+    });
+  } else if (type === config.tokenType.PASSWORD_RESET) {
+    user.set({
+      password_reset_token: token,
+      password_reset_token_expires_at: expires,
+    });
+  }
+
+  await user.save();
 };
 
 const verifyToken = async (userId, token, type) => {
   const user = await db.User.findByPk(userId);
-  switch (type) {
-    case config.tokenType.REFRESH:
-      if (!user.isRefreshTokenValid(token)) {
-        throw new Error('Invalid refresh token')
-      }
-    case config.tokenType.EMAIL_VERIFY:
-      if (!user.isRefreshTokenValid(token)) {
-        throw new Error('Invalid refresh token')
-      }
-    case config.tokenType.PASSWORD_RESET:
-      if (!user.isRefreshTokenValid(token)) {
-        throw new Error('Invalid refresh token')
-      }
-  }
-}
 
+  if (type === config.tokenType.REFRESH) {
+    if (!user.isRefreshTokenValid(token)) {
+      throw new Error('Invalid refresh token');
+    }
+  }
+};
 
 /**
  * Generate auth tokens
@@ -106,7 +100,7 @@ const generateAuthTokens = async (user) => {
     refreshToken,
     user.id,
     refreshTokenExpires,
-    tokenTypes.REFRESH,
+    config.tokenType.REFRESH,
   );
 
   return {
@@ -122,15 +116,18 @@ const generateAuthTokens = async (user) => {
 };
 
 const resetRefreshToken = async (userId) => {
-  await db.User.update({
-    refresh_token: null,
-    refresh_token_expires_at: null 
-  }, { 
-    where: {
-      id: userId
-    }
-  })
-}
+  await db.User.update(
+    {
+      refresh_token: null,
+      refresh_token_expires_at: null,
+    },
+    {
+      where: {
+        id: userId,
+      },
+    },
+  );
+};
 
 /**
  * Generate reset password token
@@ -170,11 +167,13 @@ const generateVerifyEmailToken = async (user) => {
     config.jwt.verifyEmailExpirationMinutes,
     'minutes',
   );
-  const verifyEmailToken = generateJwtToken(
+  const verifyEmailToken = generateJwtToken(user.id, expires);
+  await saveToken(
+    verifyEmailToken,
     user.id,
     expires,
+    config.tokenType.VERIFY_EMAIL,
   );
-  await saveToken(verifyEmailToken, user.id, expires, config.tokenType.VERIFY_EMAIL);
   return verifyEmailToken;
 };
 
@@ -185,5 +184,5 @@ module.exports = {
   generateAuthTokens,
   generateResetPasswordToken,
   generateVerifyEmailToken,
-  resetRefreshToken
+  resetRefreshToken,
 };

@@ -13,14 +13,14 @@ module.exports = {
           key: 'id',
         },
       },
-      code: {
-        type: Sequelize.DataTypes.STRING,
-        allowNull: false,
-        unique: true,
-      },
       name: {
         type: Sequelize.DataTypes.STRING,
         allowNull: false,
+      },
+      multiplier: {
+        type: Sequelize.DataTypes.FLOAT,
+        allowNull: false,
+        defaultValue: 1.0,
       },
       ...dateTime(Sequelize.DataTypes),
     });

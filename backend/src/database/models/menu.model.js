@@ -1,5 +1,5 @@
 const { Model } = require('sequelize');
-const { id, dateTime } = require('../generate');
+const { id } = require('../generate');
 
 module.exports = (sequelize, DataTypes) => {
   class Menu extends Model {
@@ -23,7 +23,10 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING,
         allowNull: false,
       },
-      ...dateTime(DataTypes),
+      status: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
     },
     {
       sequelize,

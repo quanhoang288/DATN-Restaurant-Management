@@ -12,14 +12,16 @@ module.exports = {
           },
           key: 'id',
         },
+        allowNull: false,
       },
-      discount_id: {
+      discount_constraint_id: {
         type: Sequelize.DataTypes.BIGINT.UNSIGNED,
         references: {
           model: {
-            tableName: 'discounts',
+            tableName: 'discount_constraints',
           },
           key: 'id',
+          allowNull: false,
         },
       },
       ...dateTime(Sequelize.DataTypes),

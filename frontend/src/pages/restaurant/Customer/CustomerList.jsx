@@ -1,5 +1,19 @@
 import React, { useState } from 'react'
-import { Card, CardContent, CardHeader, Typography, Collapse, Avatar, IconButton, CardActions, FormControlLabel, FormGroup, Icon, Button, TextField } from '@material-ui/core'
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  Typography,
+  Collapse,
+  Avatar,
+  IconButton,
+  CardActions,
+  FormControlLabel,
+  FormGroup,
+  Icon,
+  Button,
+  TextField,
+} from '@material-ui/core'
 import Checkbox from '@material-ui/core/Checkbox'
 
 import CollapsibleCard from '../../../components/CollapsibleCard/CollapsibleCard'
@@ -11,7 +25,7 @@ function CustomerList() {
     <Main>
       <div className='customer__list__container'>
         <div className='list_container'>
-          <div className='list__header' style={{ marginBottom: 10 }}>
+          <div className='list__header'>
             <Typography variant='h6'>Khach hang</Typography>
             <div>
               <Button size='small' variant='contained'>
@@ -29,3 +43,4 @@ function CustomerList() {
 }
 
 export default CustomerList
+

@@ -21,7 +21,7 @@ const getOptions = async (req, res) => {
 };
 
 const getGoodDetail = async (req, res) => {
-  const good = goodService.showGood(req.params.id);
+  const good = await goodService.getGoodDetail(req.params.id);
   return res.status(httpStatus.OK).send(good);
 };
 

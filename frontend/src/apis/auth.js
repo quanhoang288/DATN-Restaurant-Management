@@ -1,21 +1,22 @@
-import api from './api';
+import api from './api'
 
 const register = async (registerInfo) => {
   const registerResult = await api({
     method: 'POST',
-    url: '/users/register',
+    url: '/auth/register',
     data: registerInfo,
-  });
-  return registerResult;
-};
+  })
+  return registerResult
+}
 
 const login = async (credentials) => {
   const loginResult = await api({
     method: 'POST',
-    url: '/users/login',
+    url: '/auth/login',
     data: credentials,
-  });
-  return loginResult;
-};
+  })
+  return loginResult
+}
 
-export { register, login };
+export { register, login }
+

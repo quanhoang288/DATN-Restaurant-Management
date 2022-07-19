@@ -1,4 +1,3 @@
-'use strict';
 const { id, dateTime } = require('../generate');
 
 module.exports = {
@@ -15,25 +14,17 @@ module.exports = {
         },
         allowNull: false,
       },
-      type: {
-        type: Sequelize.DataTypes.STRING,
-        allowNull: false,
-      },
-      min_value: {
-        type: Sequelize.DataTypes.DATE,
-        allowNull: false,
-      },
-      discount_method: {
-        type: Sequelize.DataTypes.STRING,
-        allowNull: false,
+      min_invoice_value: {
+        type: Sequelize.DataTypes.INTEGER,
       },
       discount_amount: {
         type: Sequelize.DataTypes.INTEGER,
-        allowNull: false,
       },
       discount_unit: {
         type: Sequelize.DataTypes.STRING,
-        allowNull: false,
+      },
+      order_item_quantity: {
+        type: Sequelize.DataTypes.INTEGER,
       },
       discount_item_quantity: {
         type: Sequelize.DataTypes.INTEGER,

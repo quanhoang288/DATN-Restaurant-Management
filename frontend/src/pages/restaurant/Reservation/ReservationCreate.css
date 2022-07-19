@@ -1,0 +1,28 @@
+.table__item {
+  height: 80px;
+  width: 80px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: auto;
+}
+
+.table__item__available {
+  background: grey;
+}
+
+.table__item__available:hover {
+  cursor: pointer;
+  opacity: 0.7;
+}
+
+.table__item__reserved {
+  background: orange;
+}
+
+.table__item__used {
+  background: blue;
+  color: white;
+}
+

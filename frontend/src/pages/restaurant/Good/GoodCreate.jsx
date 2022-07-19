@@ -1,6 +1,18 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import Modal from '../../../components/Modal/Modal'
-import { Button, IconButton, InputAdornment, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, Typography } from '@material-ui/core'
+import {
+  Button,
+  IconButton,
+  InputAdornment,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  TextField,
+  Typography,
+} from '@material-ui/core'
 import CameraAltIcon from '@material-ui/icons/CameraAlt'
 import DeleteIcon from '@material-ui/icons/Delete'
 import CustomTabs from '../../../components/CustomTabs/CustomTabs'
@@ -10,6 +22,25 @@ import pick from '../../../utils/pick'
 import { createGood, getGood, getGoods, updateGood } from '../../../apis/good'
 import CustomAccordion from '../../../components/CustomAccordion/CustomAccordion'
 // import './GoodCreate.css'
+
+const goodTypes = [
+  {
+    name: 'Phục vụ ngay',
+    value: 'ready_served',
+  },
+  {
+    name: 'Combo',
+    value: 'combo',
+  },
+  {
+    name: 'Nguyên liệu',
+    value: 'ingredient',
+  },
+  {
+    name: 'Hàng chế biến',
+    value: 'fresh_served',
+  },
+]
 
 const defaultGoodData = {
   name: '',
@@ -23,7 +54,8 @@ const defaultGoodData = {
   description: '',
   attributes: [],
   units: [],
-  components: []
+  components: [],
+  type: goodTypes[0].value,
 }
 
 function GoodAttributeCreate(props) {
@@ -36,11 +68,11 @@ function GoodAttributeCreate(props) {
         InputLabelProps={{
           shrink: true,
           style: {
-            fontSize: 22
-          }
+            fontSize: 22,
+          },
         }}
         style={{
-          justifyContent: 'flex-end'
+          justifyContent: 'flex-end',
         }}
         value={attribute.name}
         onChange={(e) => handleChange({ ...attribute, name: e.target.value })}
@@ -65,8 +97,8 @@ function GoodAttributeCreate(props) {
             InputLabelProps={{
               shrink: true,
               style: {
-                fontSize: 22
-              }
+                fontSize: 22,
+              },
             }}
           />
         )}
@@ -88,8 +120,8 @@ function GoodUnitCreate(props) {
         InputLabelProps={{
           shrink: true,
           style: {
-            fontSize: 22
-          }
+            fontSize: 22,
+          },
         }}
         value={unit.name}
         onChange={(e) => handleChange({ ...unit, name: e.target.value })}
@@ -114,8 +146,8 @@ function GoodUnitCreate(props) {
             InputLabelProps={{
               shrink: true,
               style: {
-                fontSize: 22
-              }
+                fontSize: 22,
+              },
             }}
           />
         )}
@@ -147,7 +179,12 @@ function GoodComponents({ components, onChangeComponentQuantity, onDeleteCompone
               <TableCell>{idx + 1}</TableCell>
               <TableCell>{component.name}</TableCell>
               <TableCell>
-                <TextField type='number' InputProps={{ inputProps: { min: 1 } }} value={component.quantity} onChange={(e) => onChangeComponentQuantity(component.id, e.target.value)} />
+                <TextField
+                  type='number'
+                  InputProps={{ inputProps: { min: 1 } }}
+                  value={component.quantity}
+                  onChange={(e) => onChangeComponentQuantity(component.id, e.target.value)}
+                />
               </TableCell>
               <TableCell>{component.import_price}</TableCell>
               <TableCell>{component.import_price * (component.quantity || 1)}</TableCell>
@@ -173,8 +210,20 @@ function GoodCreate({ goodId, isModalVisible, handleCloseModal }) {
   const [componentKeyword, setComponentKeyword] = useState('')
 
   const fetchGoodData = async (goodId) => {
-    const res = await getGood(goodId)
-    console.log(res)
+    const good = (await getGood(goodId)).data
+    setGoodData({
+      name: good.name,
+      description: good.description,
+      quantity: good.quantity,
+      minQuantity: good.min_quantity_threshold,
+      maxQuantity: good.max_quantity_threshold,
+      type: good.type,
+      importPrice: good.import_price,
+      salePrice: good.sale_price,
+      attributes: good.attributes || [],
+      units: good.units || [],
+      components: good.components || [],
+    })
   }
 
   const handleSelectImage = (e) => {
@@ -196,7 +245,7 @@ function GoodCreate({ goodId, isModalVisible, handleCloseModal }) {
         if (!isAlreadySelected) {
           setGoodData({
             ...goodData,
-            components: [...goodData.components, { ...val, quantity: 1 }]
+            components: [...goodData.components, { ...val, quantity: 1 }],
           })
         }
         setComponentKeyword('')
@@ -209,7 +258,7 @@ function GoodCreate({ goodId, isModalVisible, handleCloseModal }) {
     (componentId, quantity) => {
       setGoodData({
         ...goodData,
-        components: goodData.components.map((comp) => (comp.id === componentId ? { ...comp, quantity } : comp))
+        components: goodData.components.map((comp) => (comp.id === componentId ? { ...comp, quantity } : comp)),
       })
     },
     [goodData]
@@ -219,7 +268,7 @@ function GoodCreate({ goodId, isModalVisible, handleCloseModal }) {
     (componentId) => {
       setGoodData({
         ...goodData,
-        components: goodData.components.filter((comp) => comp.id !== componentId)
+        components: goodData.components.filter((comp) => comp.id !== componentId),
       })
     },
     [goodData]
@@ -239,18 +288,44 @@ function GoodCreate({ goodId, isModalVisible, handleCloseModal }) {
     handleSearchGoodOptions(componentKeyword)
   }, [componentKeyword])
 
+  useEffect(() => {
+    if (goodId) {
+      fetchGoodData(goodId)
+    }
+  }, [goodId])
+
   const handleSaveGood = useCallback(async () => {
     const uploadData = {
       name: goodData.name,
-      description: goodData.description,
-      quantity: goodData.quantity,
-      import_price: goodData.importPrice,
-      sale_price: goodData.salePrice,
-      min_quantity_threshold: goodData.minQuantity,
-      max_quantity_threshold: goodData.maxQuantity,
-      is_sold_directly: false,
-      is_topping: false
+      type: goodData.type,
+      attributes: goodData.attributes,
+      units: goodData.units,
+      components: goodData.components,
     }
+
+    if (goodData.description) {
+      uploadData.description = goodData.description
+    }
+
+    if (goodData.importPrice) {
+      uploadData.import_price = goodData.importPrice
+    }
+
+    if (goodData.salePrice) {
+      uploadData.sale_price = goodData.salePrice
+    }
+    if (goodData.quantity) {
+      uploadData.quantity = goodData.quantity
+    }
+
+    if (goodData.minQuantity) {
+      uploadData.min_quantity_threshold = goodData.minQuantity
+    }
+
+    if (goodData.maxQuantity) {
+      uploadData.max_quantity_threshold = goodData.maxQuantity
+    }
+
     if (goodId) {
       await updateGood(goodId, uploadData)
     } else {
@@ -279,12 +354,33 @@ function GoodCreate({ goodId, isModalVisible, handleCloseModal }) {
                 InputLabelProps={{
                   shrink: true,
                   style: {
-                    fontSize: 22
-                  }
+                    fontSize: 22,
+                  },
                 }}
+                required
                 value={goodData.name}
                 onChange={(e) => setGoodData({ ...goodData, name: e.target.value })}
               />
+
+              <TextField
+                label='Loại hàng hóa'
+                fullWidth
+                margin='normal'
+                InputLabelProps={{
+                  shrink: true,
+                  style: {
+                    fontSize: 22,
+                  },
+                }}
+                select
+                SelectProps={{ native: true }}
+                value={goodData.type}
+                onChange={(e) => setGoodData({ ...goodData, type: e.target.value })}
+              >
+                {goodTypes.map((type) => (
+                  <option value={type.value}>{type.name}</option>
+                ))}
+              </TextField>
 
               <TextField
                 select
@@ -293,11 +389,11 @@ function GoodCreate({ goodId, isModalVisible, handleCloseModal }) {
                 InputLabelProps={{
                   shrink: true,
                   style: {
-                    fontSize: 22
-                  }
+                    fontSize: 22,
+                  },
                 }}
                 SelectProps={{
-                  native: true
+                  native: true,
                 }}
                 fullWidth
               ></TextField>
@@ -308,13 +404,13 @@ function GoodCreate({ goodId, isModalVisible, handleCloseModal }) {
                   InputLabelProps={{
                     shrink: true,
                     style: {
-                      fontSize: 22
-                    }
+                      fontSize: 22,
+                    },
                   }}
                   style={{ marginRight: 10 }}
                   type='number'
                   InputProps={{
-                    endAdornment: <InputAdornment position='end'>đ</InputAdornment>
+                    endAdornment: <InputAdornment position='end'>đ</InputAdornment>,
                   }}
                   value={goodData.importPrice}
                   onChange={(e) => setGoodData({ ...goodData, importPrice: e.target.value })}
@@ -326,14 +422,14 @@ function GoodCreate({ goodId, isModalVisible, handleCloseModal }) {
                   InputLabelProps={{
                     shrink: true,
                     style: {
-                      fontSize: 22
-                    }
+                      fontSize: 22,
+                    },
                   }}
                   style={{ marginRight: 10 }}
                   value={goodData.salePrice}
                   onChange={(e) => setGoodData({ ...goodData, salePrice: e.target.value })}
                   InputProps={{
-                    endAdornment: <InputAdornment position='end'>đ</InputAdornment>
+                    endAdornment: <InputAdornment position='end'>đ</InputAdornment>,
                   }}
                 />
                 <TextField
@@ -345,8 +441,8 @@ function GoodCreate({ goodId, isModalVisible, handleCloseModal }) {
                   InputLabelProps={{
                     shrink: true,
                     style: {
-                      fontSize: 22
-                    }
+                      fontSize: 22,
+                    },
                   }}
                 />
               </div>
@@ -363,14 +459,24 @@ function GoodCreate({ goodId, isModalVisible, handleCloseModal }) {
                 InputLabelProps={{
                   shrink: true,
                   style: {
-                    fontSize: 22
-                  }
+                    fontSize: 22,
+                  },
                 }}
                 onChange={(e) => setGoodData({ ...goodData, description: e.target.value })}
               />
 
               <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', flex: 1 }}>
-                <div style={{ border: '1px dashed', minHeight: 200, marginBottom: 10, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+                <div
+                  style={{
+                    border: '1px dashed',
+                    minHeight: 200,
+                    marginBottom: 10,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                  }}
+                >
                   {selectedFile ? (
                     <img src={profilePreview} alt='profile-preview' style={{ maxWidth: 150, minHeight: 150, maxHeight: 300 }} />
                   ) : (
@@ -404,8 +510,8 @@ function GoodCreate({ goodId, isModalVisible, handleCloseModal }) {
                     InputLabelProps={{
                       shrink: true,
                       style: {
-                        fontSize: 22
-                      }
+                        fontSize: 22,
+                      },
                     }}
                     value={goodData.minQuantity}
                     onChange={(e) => setGoodData({ ...goodData, minQuantity: e.target.value })}
@@ -417,8 +523,8 @@ function GoodCreate({ goodId, isModalVisible, handleCloseModal }) {
                     InputLabelProps={{
                       shrink: true,
                       style: {
-                        fontSize: 22
-                      }
+                        fontSize: 22,
+                      },
                     }}
                     value={goodData.maxQuantity}
                     onChange={(e) => setGoodData({ ...goodData, maxQuantity: e.target.value })}
@@ -436,10 +542,10 @@ function GoodCreate({ goodId, isModalVisible, handleCloseModal }) {
                           attributes: [
                             {
                               name: '',
-                              values: []
+                              values: [],
                             },
-                            ...goodData.attributes
-                          ]
+                            ...goodData.attributes,
+                          ],
                         })
                       }
                     >
@@ -453,10 +559,12 @@ function GoodCreate({ goodId, isModalVisible, handleCloseModal }) {
                         handleChange={(newAttribute) =>
                           setGoodData({
                             ...goodData,
-                            attributes: goodData.attributes.map((attr, idx) => (idx === index ? newAttribute : attr))
+                            attributes: goodData.attributes.map((attr, idx) => (idx === index ? newAttribute : attr)),
                           })
                         }
-                        handleDelete={() => setGoodData({ ...goodData, attributes: goodData.attributes.filter((attr, idx) => idx !== index) })}
+                        handleDelete={() =>
+                          setGoodData({ ...goodData, attributes: goodData.attributes.filter((attr, idx) => idx !== index) })
+                        }
                       />
                     ))}
                   </div>
@@ -471,8 +579,8 @@ function GoodCreate({ goodId, isModalVisible, handleCloseModal }) {
                     InputLabelProps={{
                       shrink: true,
                       style: {
-                        fontSize: 22
-                      }
+                        fontSize: 22,
+                      },
                     }}
                   />
                   <div>
@@ -485,10 +593,12 @@ function GoodCreate({ goodId, isModalVisible, handleCloseModal }) {
                         handleChange={(newAttribute) =>
                           setGoodData({
                             ...goodData,
-                            attributes: goodData.attributes.map((attr, idx) => (idx === index ? newAttribute : attr))
+                            attributes: goodData.attributes.map((attr, idx) => (idx === index ? newAttribute : attr)),
                           })
                         }
-                        handleDelete={() => setGoodData({ ...goodData, attributes: goodData.attributes.filter((attr, idx) => idx !== index) })}
+                        handleDelete={() =>
+                          setGoodData({ ...goodData, attributes: goodData.attributes.filter((attr, idx) => idx !== index) })
+                        }
                       />
                     ))}
                   </div>
@@ -514,15 +624,19 @@ function GoodCreate({ goodId, isModalVisible, handleCloseModal }) {
                   InputLabelProps={{
                     shrink: true,
                     style: {
-                      fontSize: 22
-                    }
+                      fontSize: 22,
+                    },
                   }}
                 />
               )}
             />
             {goodData.components.length > 0 && (
               <div>
-                <GoodComponents components={goodData.components} onChangeComponentQuantity={handleChangeComponentQuantity} onDeleteComponent={handleDeleteComponent} />
+                <GoodComponents
+                  components={goodData.components}
+                  onChangeComponentQuantity={handleChangeComponentQuantity}
+                  onDeleteComponent={handleDeleteComponent}
+                />
               </div>
             )}
           </TabPanel>
@@ -541,3 +655,4 @@ function GoodCreate({ goodId, isModalVisible, handleCloseModal }) {
 }
 
 export default GoodCreate
+
