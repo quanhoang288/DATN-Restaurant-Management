@@ -9,7 +9,7 @@ import Main from '../../../containers/Main/Main'
 const cols = [
   { id: 'id', label: 'STT', isSortable: true },
   { id: 'name', label: 'Ten khuyen mai', isSortable: true },
-  { id: 'type', label: 'Loai', isSortable: true }
+  { id: 'type', label: 'Loai', isSortable: true },
 ]
 
 function DiscountList(props) {
@@ -38,7 +38,7 @@ function DiscountList(props) {
       clickHandler: (id) => {
         setSelected(id)
         setCreateModalVisible(true)
-      }
+      },
     },
     {
       name: 'Xoa',
@@ -47,8 +47,8 @@ function DiscountList(props) {
       clickHandler: (id) => {
         setSelected(id)
         setDeleteDialogVisible(true)
-      }
-    }
+      },
+    },
   ]
 
   useEffect(() => {
@@ -74,14 +74,25 @@ function DiscountList(props) {
           setCreateModalVisible(false)
         }}
       />
-      <div style={{ float: 'right', marginBottom: '1rem' }}>
-        <Button variant='contained' color='primary' onClick={() => setCreateModalVisible(true)}>
-          Them moi
-        </Button>
+      <div className='list__header'>
+        <Typography variant='h5'>Khuyến mãi</Typography>
+        <div>
+          <Button variant='contained' color='primary' onClick={() => setCreateModalVisible(true)}>
+            Thêm mới
+          </Button>
+        </div>
       </div>
-      <div>{discountList.length > 0 ? <CustomTable rows={discountList} cols={cols} actionButtons={actionButtons} /> : <Typography variant='h6'>Khong co du lieu</Typography>}</div>
+
+      <div>
+        {discountList.length > 0 ? (
+          <CustomTable rows={discountList} cols={cols} actionButtons={actionButtons} />
+        ) : (
+          <Typography variant='h6'>Khong co du lieu</Typography>
+        )}
+      </div>
     </Main>
   )
 }
 
 export default DiscountList
+

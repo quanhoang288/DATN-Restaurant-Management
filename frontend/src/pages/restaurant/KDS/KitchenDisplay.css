@@ -1,0 +1,16 @@
+.order__item__card:hover {
+  cursor: pointer;
+}
+
+.order__item__card:hover .order__item__card__header a {
+  text-decoration: solid;
+}
+
+.order__detail__item__check {
+  color: green !important;
+}
+
+.line__through span {
+  text-decoration: line-through;
+}
+

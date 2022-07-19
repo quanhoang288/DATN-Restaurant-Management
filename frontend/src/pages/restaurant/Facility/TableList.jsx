@@ -9,7 +9,7 @@ const cols = [
   { id: 'id', label: 'Mã bàn', isSortable: true },
   { id: 'name', label: 'Tên bàn', isSortable: true },
   { id: 'floor_num', label: 'Tầng', isSortable: true },
-  { id: 'order', label: 'Thứ tự', isSortable: true }
+  { id: 'order', label: 'Thứ tự', isSortable: true },
 ]
 
 function TableList(props) {
@@ -38,7 +38,7 @@ function TableList(props) {
       clickHandler: (id) => {
         setSelected(id)
         setCreateModalVisible(true)
-      }
+      },
     },
     {
       name: 'Xóa',
@@ -47,8 +47,8 @@ function TableList(props) {
       clickHandler: (id) => {
         setSelected(id)
         setDeleteDialogVisible(true)
-      }
-    }
+      },
+    },
   ]
 
   useEffect(() => {
@@ -74,11 +74,18 @@ function TableList(props) {
           setCreateModalVisible(false)
         }}
       />
-      <div style={{ float: 'right', marginBottom: '1rem' }}>
-        <Button variant='contained' color='primary' onClick={() => setCreateModalVisible(true)}>
-          Thêm mới
-        </Button>
+      <div className='list__header'>
+        {/* <Typography variant='h5'>Bàn ăn</Typography> */}
+        <div>
+          <Button size='small' variant='contained' onClick={() => setCreateModalVisible(true)}>
+            Thêm mới
+          </Button>
+          <Button size='small' variant='contained'>
+            Import
+          </Button>
+        </div>
       </div>
+
       <div>
         <CustomTable rows={tableList} cols={cols} actionButtons={actionButtons} />
       </div>
@@ -87,3 +94,4 @@ function TableList(props) {
 }
 
 export default TableList
+

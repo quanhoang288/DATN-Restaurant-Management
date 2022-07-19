@@ -18,17 +18,20 @@ function Main({ children }) {
   return (
     <Layout
       className={clsx(classes.content, {
-        [classes.contentShift]: isDrawerOpen
+        [classes.contentShift]: isDrawerOpen,
       })}
     >
       {/* {authState.error && <Toast variant='error' message={authState.error} />}
       {authState.registerSuccess && <Toast variant='success' message={successMessages.REGISTER_SUCCESSFUL} />} */}
-      <AuthHandler />
+      <AuthHandler isAdminAuthentication={true} />
       <Navbar isDrawerOpen={isDrawerOpen} onOpenDrawer={() => setDrawerOpen(true)} />
       <Sidebar isDrawerOpen={isDrawerOpen} onCloseDrawer={() => setDrawerOpen(false)} />
-      <div className='main__content'>{children}</div>
+      <div className='main__container'>
+        <div className='main__content'>{children}</div>
+      </div>
     </Layout>
   )
 }
 
 export default Main
+

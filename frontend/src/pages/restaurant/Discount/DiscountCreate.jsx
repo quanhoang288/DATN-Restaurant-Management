@@ -3,6 +3,9 @@ import Modal from '../../../components/Modal/Modal'
 import {
   Button,
   ButtonGroup,
+  Card,
+  CardContent,
+  CardHeader,
   Checkbox,
   Divider,
   FormControl,
@@ -22,28 +25,26 @@ import {
   Typography,
 } from '@material-ui/core'
 import DeleteIcon from '@material-ui/icons/Delete'
+import ClearIcon from '@material-ui/icons/Clear'
 import { createDiscount, getDiscount, updateDiscount } from '../../../apis/discount'
 import CustomTabs from '../../../components/CustomTabs/CustomTabs'
 import TabPanel from '../../../components/CustomTabs/TabPanel'
 import { Autocomplete, ToggleButton, ToggleButtonGroup } from '@material-ui/lab'
 import { getGoods } from '../../../apis/good'
 import DiscountContraints from './DiscountConstraints'
+import CustomAccordion from '../../../components/CustomAccordion/CustomAccordion'
 // import './DiscountCreate.css'
-
-const tabLabels = ['Hình thức khuyến mại', 'Thời gian áp dụng', 'Phạm vi áp dụng']
 
 const defaultValues = {
   name: '',
   type: 'invoice',
   method: 'invoice-discount',
   status: null,
-  isAppliedToAllCustomers: false,
+  description: '',
   isAppliedDirectly: false,
   customerGroups: [],
   fromDate: null,
   toDate: null,
-  fromDay: null,
-  toDay: null,
   hours: [],
   constraints: [],
 }
@@ -53,14 +54,25 @@ function DiscountCreate({ discountId, isModalVisible, handleCloseModal }) {
   const [discountMethodOptions, setDiscountMethodOptions] = useState([])
   const [activeTab, setActiveTab] = useState(0)
   const [goodOptions, setGoodOptions] = useState([])
+  const [isSaveDiscountSuccessful, setSaveDiscountSuccessful] = useState(false)
 
   const fetchdiscountData = async (discountId) => {
-    const res = await getDiscount(discountId)
-    const { name, type } = res.data
-    setDiscountData({
-      name,
-      type,
-    })
+    const discount = (await getDiscount(discountId)).data
+    if (discount) {
+      setDiscountData({
+        name: discount.name,
+        type: discount.type,
+        method: discount.method,
+        status: discount.status,
+        description: discount.description,
+        isAppliedDirectly: discount.is_auto_applied === 1,
+        customerGroups: [],
+        fromDate: discount.start_date,
+        toDate: discount.end_date,
+        constraints: discount.constraints,
+        hours: [],
+      })
+    }
   }
 
   const handleSearchGoodOptions = async (keyword) => {
@@ -71,9 +83,10 @@ function DiscountCreate({ discountId, isModalVisible, handleCloseModal }) {
   const handleAddConstraintInput = useCallback(() => {
     let newConstraint
     if (discountData.type === 'invoice') {
-      newConstraint = discountData.method === 'invoice-discount' ? {} : {}
+      newConstraint =
+        discountData.method === 'invoice-discount' ? { min_invoice_value: null, discount_amount: null, discount_unit: null } : {}
     } else {
-      newConstraint = discountData.method === 'good-discount' ? {} : {}
+      newConstraint = discountData.method === 'good-discount' ? { discount_option: 'sale_price' } : {}
     }
     setDiscountData({ ...discountData, constraints: [...discountData.constraints, newConstraint] })
   }, [discountData])
@@ -90,33 +103,66 @@ function DiscountCreate({ discountId, isModalVisible, handleCloseModal }) {
 
   const handleDeleteConstraint = useCallback(
     (idx) => {
-      console.log('index: ', idx)
       setDiscountData({ ...discountData, constraints: discountData.constraints.filter((constraint, index) => index !== idx) })
     },
     [discountData]
   )
   const handleSaveDiscount = useCallback(async () => {
+    console.log('discount data: ', discountData)
+    const postData = {
+      name: discountData.name,
+      description: discountData.description,
+      status: discountData.status,
+      type: discountData.type,
+      method: discountData.method,
+      constraints: discountData.constraints,
+      start_date: discountData.fromDate,
+      end_date: discountData.toDate,
+      is_auto_applied: discountData.isAppliedDirectly,
+      hours: discountData.hours,
+    }
+    console.log('post data: ', postData)
     if (discountId) {
-      console.log(discountData)
-      await updateDiscount(discountId, discountData)
+      await updateDiscount(discountId, postData)
     } else {
-      await createDiscount(discountData)
+      await createDiscount(postData)
     }
     handleCloseModal()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [discountId, discountData])
 
+  const handleAddTimeRange = useCallback(() => {
+    setDiscountData({ ...discountData, hours: [...discountData.hours, { fromHour: null, toHour: null }] })
+  }, [discountData])
+
+  const handleUpdateTimeRange = useCallback(
+    (selectedIndex, key, val) => {
+      setDiscountData({
+        ...discountData,
+        hours: discountData.hours.map((timeRange, index) => (index === selectedIndex ? { ...timeRange, [key]: val } : timeRange)),
+      })
+    },
+    [discountData]
+  )
+
+  const handleRemoveTimeRange = useCallback(
+    (idx) => {
+      setDiscountData({
+        ...discountData,
+        hours: discountData.hours.filter((_, index) => index !== idx),
+      })
+    },
+    [discountData]
+  )
+
   useEffect(() => {
     if (discountId) {
+      console.log('discount id: ', discountId)
       fetchdiscountData(discountId)
     } else {
       setDiscountData(defaultValues)
     }
   }, [discountId])
-
-  useEffect(() => {
-    console.log('data: ', discountData)
-  }, [discountData])
 
   useEffect(() => {
     if (discountData.type === 'invoice') {
@@ -127,7 +173,7 @@ function DiscountCreate({ discountId, isModalVisible, handleCloseModal }) {
         },
         {
           name: 'Tặng món/quà',
-          value: 'invoice-good-giveaway',
+          value: 'invoice-giveaway',
         },
       ])
     } else {
@@ -144,56 +190,87 @@ function DiscountCreate({ discountId, isModalVisible, handleCloseModal }) {
     }
   }, [discountData.type])
 
+  useEffect(() => {
+    if (discountMethodOptions.length) {
+      setDiscountData({ ...discountData, method: discountMethodOptions[0].value })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [discountMethodOptions])
+
+  useEffect(() => {
+    console.log('discount data: ', discountData)
+  }, [discountData])
+
   return (
     <Modal isModalVisible={isModalVisible} handleClose={handleCloseModal} title='Thêm chương trình khuyến mãi'>
-      <div>
-        <TextField
-          label='Mã chương trình'
-          fullWidth
-          margin='normal'
-          InputLabelProps={{
-            shrink: true,
-            style: {
-              fontSize: 22,
-            },
-          }}
-        />
-        <TextField
-          label='Tên chương trình'
-          fullWidth
-          margin='normal'
-          InputLabelProps={{
-            shrink: true,
-            style: {
-              fontSize: 22,
-            },
-          }}
-        />
-        <FormControl margin='normal'>
-          <FormLabel id='demo-radio-buttons-group-label'>Trạng thái</FormLabel>
-          <RadioGroup row aria-labelledby='demo-radio-buttons-group-label' defaultValue='male' name='radio-buttons-group'>
-            <FormControlLabel value='activated' control={<Radio />} label='Kích hoạt' />
-            <FormControlLabel value='inactivated' control={<Radio />} label='Chưa áp dụng' />
-          </RadioGroup>
-        </FormControl>
-        <TextField
-          label='Ghi chú'
-          fullWidth
-          multiline
-          rows={3}
-          variant='outlined'
-          margin='normal'
-          InputLabelProps={{
-            shrink: true,
-            style: {
-              fontSize: 22,
-            },
-          }}
-        />
-      </div>
-      <Divider />
-      <CustomTabs labels={tabLabels} activeTab={activeTab} onChangeActiveTab={(val) => setActiveTab(val)}>
+      <CustomTabs
+        labels={['Thông tin chung', 'Điều kiện áp dụng', 'Áp dụng khuyến mại']}
+        activeTab={activeTab}
+        onChangeActiveTab={(val) => setActiveTab(val)}
+      >
         <TabPanel value={activeTab} index={0}>
+          <div>
+            <TextField
+              label='Mã chương trình'
+              fullWidth
+              margin='normal'
+              InputLabelProps={{
+                shrink: true,
+                style: {
+                  fontSize: 22,
+                },
+              }}
+            />
+            <TextField
+              label='Tên chương trình'
+              fullWidth
+              margin='normal'
+              InputLabelProps={{
+                shrink: true,
+                style: {
+                  fontSize: 22,
+                },
+              }}
+              required
+              value={discountData.name}
+              onChange={(e) => setDiscountData({ ...discountData, name: e.target.value })}
+            />
+            <FormControl margin='normal'>
+              <FormLabel id='demo-radio-buttons-group-label'>Trạng thái</FormLabel>
+              <RadioGroup
+                row
+                aria-labelledby='demo-radio-buttons-group-label'
+                value={discountData.status || 'activated'}
+                name='radio-buttons-group'
+              >
+                <FormControlLabel value='activated' control={<Radio />} label='Kích hoạt' />
+                <FormControlLabel value='inactivated' control={<Radio />} label='Chưa áp dụng' />
+              </RadioGroup>
+            </FormControl>
+            <CustomAccordion title='Mô tả'>
+              <div style={{ flex: 1 }}>
+                <TextField
+                  label='Ghi chú'
+                  fullWidth
+                  multiline
+                  rows={3}
+                  variant='outlined'
+                  margin='normal'
+                  InputLabelProps={{
+                    shrink: true,
+                    style: {
+                      fontSize: 22,
+                    },
+                  }}
+                  value={discountData.description}
+                  onChange={(e) => setDiscountData({ ...discountData, description: e.target.value })}
+                />
+              </div>
+            </CustomAccordion>
+          </div>
+        </TabPanel>
+
+        <TabPanel value={activeTab} index={1}>
           <div>
             <TextField
               label='Khuyến mại theo'
@@ -246,77 +323,94 @@ function DiscountCreate({ discountId, isModalVisible, handleCloseModal }) {
             />
           </div>
         </TabPanel>
-        <TabPanel value={activeTab} index={1}>
-          <div>
-            <div>
-              <TextField
-                label='Hiệu lực từ'
-                margin='normal'
-                type='datetime-local'
-                InputLabelProps={{
-                  shrink: true,
-                  style: {
-                    fontSize: 22,
-                  },
-                }}
-              />
-              <TextField
-                label='Hiệu lực đến'
-                margin='normal'
-                type='datetime-local'
-                InputLabelProps={{
-                  shrink: true,
-                  style: {
-                    fontSize: 22,
-                  },
-                }}
-              />
-            </div>
-
-            <TextField
-              label='Theo tháng'
-              margin='normal'
-              InputLabelProps={{
-                shrink: true,
-                style: {
-                  fontSize: 22,
-                },
-              }}
-              fullWidth
-            />
-            <TextField
-              label='Theo ngày'
-              margin='normal'
-              InputLabelProps={{
-                shrink: true,
-                style: {
-                  fontSize: 22,
-                },
-              }}
-              fullWidth
-            />
-            <TextField
-              label='Theo giờ'
-              margin='normal'
-              InputLabelProps={{
-                shrink: true,
-                style: {
-                  fontSize: 22,
-                },
-              }}
-              fullWidth
-            />
-          </div>
-        </TabPanel>
         <TabPanel value={activeTab} index={2}>
           <div>
-            <FormControl>
-              <FormLabel id='demo-radio-buttons-group-label'>Đối tượng áp dụng</FormLabel>
-              <RadioGroup aria-labelledby='demo-radio-buttons-group-label' defaultValue='all' name='radio-buttons-group'>
-                <FormControlLabel value='all' control={<Radio />} label='Toàn bộ khách hàng' />
-                <FormControlLabel value='groups' control={<Radio />} label='Nhóm khách hàng' />
-              </RadioGroup>
-            </FormControl>
+            <Card>
+              <CardHeader title='Thời gian áp dụng' titleTypographyProps={{ style: { fontSize: 18 } }} />
+              <CardContent>
+                <div style={{ display: 'flex' }}>
+                  <TextField
+                    label='Hiệu lực từ'
+                    margin='normal'
+                    type='date'
+                    InputLabelProps={{
+                      shrink: true,
+                      style: {
+                        fontSize: 22,
+                      },
+                    }}
+                    required
+                    fullWidth
+                    style={{ marginRight: '2rem' }}
+                    value={discountData.fromDate}
+                    onChange={(e) => setDiscountData({ ...discountData, fromDate: e.target.value })}
+                  />
+                  <TextField
+                    label='Hiệu lực đến'
+                    margin='normal'
+                    type='date'
+                    InputLabelProps={{
+                      shrink: true,
+                      style: {
+                        fontSize: 22,
+                      },
+                    }}
+                    required
+                    fullWidth
+                    onChange={(e) => setDiscountData({ ...discountData, toDate: e.target.value })}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card style={{ marginTop: '2rem' }}>
+              <CardHeader title='Khung giờ áp dụng khuyến mại' titleTypographyProps={{ style: { fontSize: 18 } }} />
+              <CardContent>
+                <Button variant='contained' onClick={handleAddTimeRange}>
+                  Thêm khung giờ
+                </Button>
+                {discountData.hours.length > 0 && (
+                  <div>
+                    {discountData.hours.map((timeRange, idx) => (
+                      <div style={{ display: 'flex', marginBottom: 10 }}>
+                        <TextField
+                          label='Từ giờ'
+                          margin='normal'
+                          type='time'
+                          InputLabelProps={{
+                            shrink: true,
+                            style: {
+                              fontSize: 22,
+                            },
+                          }}
+                          style={{ marginRight: '2rem' }}
+                          value={timeRange.fromHour}
+                          onChange={(e) => handleUpdateTimeRange(idx, 'fromHour', e.target.value)}
+                          fullWidth
+                        />
+                        <TextField
+                          label='Đến giờ'
+                          type='time'
+                          margin='normal'
+                          InputLabelProps={{
+                            shrink: true,
+                            style: {
+                              fontSize: 22,
+                            },
+                          }}
+                          fullWidth
+                          value={timeRange.toHour}
+                          onChange={(e) => handleUpdateTimeRange(idx, 'toHour', e.target.value)}
+                        />
+                        <IconButton style={{ marginLeft: '1rem' }} onClick={() => handleRemoveTimeRange(idx)}>
+                          <ClearIcon />
+                        </IconButton>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </div>
         </TabPanel>
       </CustomTabs>

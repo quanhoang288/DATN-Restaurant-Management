@@ -1,34 +1,20 @@
-import React from 'react';
+import React from 'react'
 
-import {
-  Button,
-  Dialog,
-  DialogContent,
-  Divider,
-  Typography,
-} from '@material-ui/core';
-import './ConfirmDialog.css';
+import { Button, Dialog, DialogContent, Divider, Typography } from '@material-ui/core'
+import './ConfirmDialog.css'
 
 function ConfirmDialog(props) {
-  const {
-    cancelTitle,
-    confirmTitle,
-    isModalVisible,
-    handleCancel,
-    handleConfirm,
-    description,
-    title,
-  } = props;
+  const { cancelTitle, confirmTitle, isModalVisible, handleCancel, handleConfirm, description, title, handleCloseDialog } = props
   return (
-    <Dialog open={isModalVisible} aria-labelledby="confirm-dialog-title">
-      <DialogContent className="dialog__content">
-        <div className="dialog__text">
-          <Typography variant="h5">{title}</Typography>
+    <Dialog open={isModalVisible} aria-labelledby='confirm-dialog-title' onClose={handleCloseDialog}>
+      <DialogContent className='dialog__content'>
+        <div className='dialog__text'>
+          <Typography variant='h5'>{title}</Typography>
           {description && <Typography>{description}</Typography>}
         </div>
         <Divider />
-        <div className="confirm__button_group">
-          <Button fullWidth onClick={handleConfirm} color="secondary">
+        <div className='confirm__button_group'>
+          <Button fullWidth onClick={handleConfirm} color='secondary'>
             {confirmTitle}
           </Button>
           <Divider />
@@ -38,7 +24,8 @@ function ConfirmDialog(props) {
         </div>
       </DialogContent>
     </Dialog>
-  );
+  )
 }
 
-export default ConfirmDialog;
+export default ConfirmDialog
+
