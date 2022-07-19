@@ -1,5 +1,4 @@
-'use strict';
-const { id, timeStamp } = require('../generate');
+const { id } = require('../generate');
 
 module.exports = {
   async up(queryInterface, Sequelize) {

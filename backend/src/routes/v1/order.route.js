@@ -9,18 +9,33 @@ const router = express.Router();
 router
   .route('/')
   .post(
-    auth,
+    // auth,
     validate(orderValidation.createOrder),
     orderController.createOrder,
   )
-  .get(auth, validate(orderValidation.getOrders), orderController.getOrderList);
+  .get(
+    // auth,
+    validate(orderValidation.getOrders),
+    orderController.getOrderList,
+  );
+
+router.post('/:id/payment', orderController.payOrder);
+router.post('/:id/items/:itemId/update', orderController.updateOrderItem);
 
 router
   .route('/:id')
-  .get(auth, validate(orderValidation.getOrder), orderController.getOrderDetail)
-  .put(auth, validate(orderValidation.updateOrder), orderController.updateOrder)
+  .get(
+    // auth,
+    validate(orderValidation.getOrder),
+    orderController.getOrderDetail,
+  )
+  .put(
+    // auth,
+    validate(orderValidation.updateOrder),
+    orderController.updateOrder,
+  )
   .delete(
-    auth,
+    // auth,
     validate(orderValidation.deleteOrder),
     orderController.deleteOrder,
   );

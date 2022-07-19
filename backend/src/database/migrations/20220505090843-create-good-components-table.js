@@ -23,6 +23,9 @@ module.exports = {
           key: 'id',
         },
       },
+      quantity: {
+        type: Sequelize.DataTypes.INTEGER,
+      },
       ...dateTime(Sequelize.DataTypes),
     });
   },

@@ -6,48 +6,47 @@ const Errors = require('../exceptions/custom-error');
 const { Op } = db;
 
 const createGood = async (data, option = {}) => {
+  console.log('good data: ', data);
   const duplicateNameGood = await db.Good.findOne({
-    name: data.name,
+    where: {
+      name: data.name,
+    },
   });
   console.log(duplicateNameGood);
   if (duplicateNameGood) {
-    console.log(duplicateNameGood);
     throw new ApiError(
       Errors.DuplicateGoodName.statusCode,
       Errors.DuplicateGoodName.message,
     );
   }
   const t = await db.sequelize.transaction();
+  option.transaction = t;
 
   try {
-    const res = await db.Good.create(data, {
-      ...option,
-      transaction: t,
-      // include: [
-      //   {
-      //     association: 'components',
-      //     ...option,
-      //   },
-      //   {
-      //     association: 'attributes',
-      //     include: [
-      //       {
-      //         association: 'values',
-      //         ...option,
-      //       },
-      //     ],
-      //     ...option,
-      //   },
-      //   {
-      //     association: 'units',
-      //     ...option,
-      //   },
-      // ],
+    const good = await db.Good.create(data, {
+      include: [
+        {
+          association: 'components',
+          ...option,
+        },
+        {
+          association: 'attributes',
+          include: [
+            {
+              association: 'values',
+              ...option,
+            },
+          ],
+          ...option,
+        },
+        {
+          association: 'units',
+          ...option,
+        },
+      ],
     });
-    console.log('res: ', res);
-    // If the execution reaches this line, no errors were thrown.
-    // We commit the transaction.
     await t.commit();
+    return good;
   } catch (err) {
     console.log(err);
     // If the execution reaches this line, an error was thrown.
@@ -63,7 +62,7 @@ const getGoodList = async (params = {}) => {
 
   if (params.page) {
     const items = await db.Good.paginate({
-      page: params.page || 1,
+      page: params.page,
       paginate: params.limit || 10,
       where: query.filter(Op, filter),
       order: sort,
@@ -81,60 +80,45 @@ const getGoodList = async (params = {}) => {
   }
 
   return db.Good.findAll(option);
-
-  // try {
-  //   const items = await db.Good.paginate({
-  //     page: params.page || 1,
-  //     paginate: params.limit || 10,
-  //     where: query.filter(Op, filter),
-  //     order: sort,
-  //   });
-
-  //   return query.getPagingData(items, params.page, params.limit);
-  // } catch (err) {
-  //   console.log(err);
-  // }
 };
 
 const getGoodDetail = async (goodId) => {
-  const good = db.Good.findOne({
-    where: {
-      id: goodId,
-    },
-    include: [
-      {
-        association: 'group',
-        attributes: ['id', 'name'],
+  try {
+    const good = await db.Good.findOne({
+      where: {
+        id: goodId,
       },
-      {
-        association: 'components',
-        attributes: ['id', 'name'],
-      },
-      {
-        association: 'attributes',
-        attributes: ['id', 'name'],
-        include: [
-          {
-            association: 'values',
-            attributes: ['id', 'name', 'attribute_id'],
-          },
-        ],
-      },
-      {
-        association: 'units',
-        attributes: ['id', 'name'],
-      },
-    ],
-  });
-  if (!good) {
-    const { statusCode, message } = Errors.GoodNotFound;
-    throw new ApiError(statusCode, message);
+      include: [
+        {
+          association: 'components',
+          attributes: ['id', 'name'],
+        },
+        {
+          association: 'attributes',
+          attributes: ['id', 'name'],
+          include: [
+            {
+              association: 'values',
+            },
+          ],
+        },
+        {
+          association: 'units',
+          attributes: ['id', 'name'],
+        },
+      ],
+    });
+    if (!good) {
+      const { statusCode, message } = Errors.GoodNotFound;
+      throw new ApiError(statusCode, message);
+    }
+    return good;
+  } catch (error) {
+    console.log(error);
   }
-  return good;
 };
 
 const updateGood = async (goodId, data, option = {}) => {
-  const updatePromises = [];
   const good = await getGoodDetail(goodId);
   if (!good) {
     throw new ApiError(
@@ -154,29 +138,58 @@ const updateGood = async (goodId, data, option = {}) => {
       Errors.DuplicateGoodName.message,
     );
   }
-  if (data.attributes) {
-    // todo: save attributes
+  const attributeData = data.attributes || [];
+  const unitData = data.units || [];
+  const componentData = data.components || [];
+  delete data.attributes;
+  delete data.units;
+  delete data.components;
 
-    delete data.attributes;
-  }
-  if (data.units) {
-    // todo: save units
-    delete data.units;
-  }
-  if (data.group) {
-    // todo: save good groups
-    if (good.group.id !== data.group.id) {
-      good.set({ group_id: data.group.id });
-    }
-    delete data.group;
-  }
-  if (data.components) {
-    // todo: save components
-    delete data.components;
-  }
-  await Promise.all(updatePromises);
   good.set(data);
-  return good.save(option);
+
+  const t = await db.sequelize.transaction();
+  option.transaction = t;
+
+  try {
+    await Promise.all([
+      ...good.attributes.map(async (attr) => {
+        await attr.removeValues(attr.values, option);
+        return attr.destroy(option);
+      }),
+      good.removeUnits(good.units),
+      good.removeComponents(good.components),
+    ]);
+    await Promise.all([
+      attributeData.map((attr) =>
+        db.GoodAttribute.create(
+          { ...attr, good_id: good.id },
+          {
+            include: [
+              {
+                association: 'values',
+              },
+            ],
+            ...option,
+          },
+        ),
+      ),
+      db.GoodUnit.bulkCreate(
+        unitData.map((unit) => ({ ...unit, good_id: good.id })),
+      ),
+      db.GoodComponent.bulkCreate(
+        componentData.map((comp) => ({
+          good_id: good.id,
+          component_id: comp.good_id,
+          quantity: comp.quantity,
+        })),
+      ),
+      good.save(option),
+    ]);
+    await t.commit();
+  } catch (err) {
+    t.throwback();
+    throw err;
+  }
 };
 
 const deleteGood = async (goodId, option = {}) => {
@@ -188,18 +201,11 @@ const deleteGood = async (goodId, option = {}) => {
     );
   }
   const deletePromises = [
-    ...good.units.map((unit) => unit.destroy(option)),
-    ...good.attributes.map(
-      (attr) =>
-        new Promise((resolve) => {
-          const valueDestroyPromises = attr.values.map((val) =>
-            val.destroy(option),
-          );
-          Promise.all(valueDestroyPromises).then(() =>
-            resolve(attr.destroy(option)),
-          );
-        }),
-    ),
+    good.removeUnits(good.units, option),
+    ...good.attributes.map(async (attr) => {
+      await attr.removeValues(attr.values, option);
+      return attr.destroy(option);
+    }),
   ];
   await Promise.all(deletePromises);
   return good.destroy(option);

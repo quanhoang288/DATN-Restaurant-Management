@@ -1,9 +1,7 @@
 const httpStatus = require('http-status');
 const pick = require('../utils/pick');
-const ApiError = require('../exceptions/api-error');
 const catchAsync = require('../utils/catchAsync');
 const { kitchenService } = require('../services');
-const Errors = require('../exceptions/custom-error');
 
 const createKitchen = catchAsync(async (req, res) => {
   const kitchen = await kitchenService.createKitchen(req.body);
@@ -19,12 +17,6 @@ const getKitchens = catchAsync(async (req, res) => {
 
 const getKitchen = catchAsync(async (req, res) => {
   const kitchen = await kitchenService.getKitchenDetail(req.params.id);
-  if (!kitchen) {
-    throw new ApiError(
-      Errors.KitchenNotFound.statusCode,
-      Errors.KitchenNotFound.message,
-    );
-  }
   res.send(kitchen);
 });
 

@@ -3,8 +3,11 @@ const Joi = require('joi');
 const createMenu = {
   body: Joi.object().keys({
     name: Joi.string().required().min(1),
-    type: Joi.string(),
-    status: Joi.string(),
+    type: Joi.string().required().valid('food', 'beverage').default('food'),
+    status: Joi.string()
+      .required()
+      .valid('active', 'inactive')
+      .default('active'),
     categories: Joi.array().items(
       Joi.object().keys({
         name: Joi.string().required(),
@@ -14,13 +17,37 @@ const createMenu = {
   }),
 };
 
-const getMenus = () => {};
+const getMenus = {};
 
-const getMenu = () => {};
+const getMenu = {
+  params: Joi.object().keys({
+    id: Joi.number().positive().required(),
+  }),
+};
 
-const updateMenu = () => {};
+const updateMenu = {
+  params: Joi.object().keys({
+    id: Joi.number().positive().required(),
+  }),
+  body: Joi.object().keys({
+    name: Joi.string().min(1),
+    type: Joi.string(),
+    status: Joi.string().valid('active', 'inactive').default('active'),
+    categories: Joi.array().items(
+      Joi.object().keys({
+        id: Joi.number().positive(),
+        name: Joi.string(),
+        items: Joi.array().items(Joi.number().positive()),
+      }),
+    ),
+  }),
+};
 
-const deleteMenu = () => {};
+const deleteMenu = {
+  params: Joi.object().keys({
+    id: Joi.number().positive().required(),
+  }),
+};
 
 module.exports = {
   createMenu,

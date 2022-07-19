@@ -10,26 +10,33 @@ const createDiscount = catchAsync(async (req, res) => {
 });
 
 const getDiscounts = catchAsync(async (req, res) => {
-  // TODO
+  const { orderId } = req.query;
+  const discounts = orderId
+    ? await discountService.getAvailableDiscounts(orderId)
+    : await discountService.getDiscounts();
+  return res.send(discounts);
 });
 
 const getDiscount = catchAsync(async (req, res) => {
   const { id } = req.params;
-  return res.status(httpStatus.OK).json(discountService.getStaff(id));
+  const discount = await discountService.getDiscount(id);
+  return res.status(httpStatus.OK).send(discount);
 });
 
 const updateDiscount = catchAsync(async (req, res) => {
   const { id } = req.params;
+  await discountService.updateDiscount(id, req.body);
   return res
     .status(httpStatus.OK)
-    .json(discountService.updateDiscount(id, req.body));
+    .json({ message: 'Update discount successfully' });
 });
 
 const deleteDiscount = catchAsync(async (req, res) => {
   const { id } = req.params;
+  await discountService.deleteDiscount(id);
   return res
     .status(httpStatus.NO_CONTENT)
-    .json(discountService.deleteDiscount(id));
+    .json({ message: 'Delete discount succesfully' });
 });
 
 module.exports = {

@@ -3,6 +3,7 @@ const tokenService = require('./token.service');
 const userService = require('./user.service');
 const ApiError = require('../exceptions/api-error');
 const config = require('../config/config');
+const db = require('../database/models');
 
 /**
  * Login with username and password
@@ -12,7 +13,7 @@ const config = require('../config/config');
 const loginUserWithEmailAndPassword = async (email, password) => {
   const user = await userService.getUserByEmail(email);
   if (!user || !(await user.isPasswordMatch(password))) {
-    throw new ApiError(httpStatus.UNAUTHORIZED, 'Incorrect email or password');
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Incorrect email or password');
   }
   return user;
 };
@@ -24,7 +25,7 @@ const loginUserWithEmailAndPassword = async (email, password) => {
  */
 const refreshAuth = async (userId, refreshToken) => {
   try {
-    await tokenService.verifyToken(
+    const user = await tokenService.verifyToken(
       userId,
       refreshToken,
       config.tokenType.REFRESH,

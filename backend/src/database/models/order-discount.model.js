@@ -9,9 +9,20 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: 'order_id',
       });
 
-      models.OrderDiscount.belongsTo(models.Discount, {
-        as: 'discount',
-        foreignKey: 'discount_id',
+      models.OrderDiscount.belongsTo(models.DiscountConstraint, {
+        as: 'discountConstraint',
+        foreignKey: 'discount_constraint_id',
+      });
+      models.OrderDiscount.hasMany(models.OrderDiscountGood, {
+        as: 'discountGoods',
+        foreignKey: 'order_discount_id',
+      });
+      models.OrderDiscount.belongsToMany(models.Good, {
+        as: 'discountItems',
+        through: {
+          model: models.OrderDiscountGood,
+        },
+        foreignKey: 'order_discount_id',
       });
     }
   }
@@ -24,13 +35,21 @@ module.exports = (sequelize, DataTypes) => {
         references: {
           model: 'orders',
         },
+        allowNull: false,
       },
-      discount_id: {
+      discount_constraint_id: {
         type: DataTypes.BIGINT.UNSIGNED,
         references: {
-          model: 'discounts',
+          model: 'discount_constraints',
         },
+        allowNull: false,
       },
+      // good_id: {
+      //   type: DataTypes.BIGINT.UNSIGNED,
+      //   references: {
+      //     model: 'goods',
+      //   },
+      // },
       ...dateTime(DataTypes),
     },
     {

@@ -1,4 +1,3 @@
-'use strict';
 const { id, dateTime } = require('../generate');
 
 module.exports = {
@@ -22,6 +21,9 @@ module.exports = {
           },
           key: 'id',
         },
+      },
+      is_discount_item: {
+        type: Sequelize.DataTypes.TINYINT,
       },
       ...dateTime(Sequelize.DataTypes),
     });

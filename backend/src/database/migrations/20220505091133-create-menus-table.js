@@ -13,6 +13,11 @@ module.exports = {
         type: Sequelize.DataTypes.STRING,
         allowNull: false,
       },
+      status: {
+        type: Sequelize.DataTypes.STRING,
+        allowNull: false,
+        defaultValue: 'active',
+      },
       ...dateTime(Sequelize.DataTypes),
     });
   },

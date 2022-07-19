@@ -1,4 +1,3 @@
-'use strict';
 const { id, dateTime } = require('../generate');
 
 module.exports = {
@@ -14,12 +13,8 @@ module.exports = {
           key: 'id',
         },
       },
-      arrival_time: {
+      arrive_time: {
         type: Sequelize.DataTypes.DATE,
-        allowNull: false,
-      },
-      type: {
-        type: Sequelize.DataTypes.STRING,
         allowNull: false,
       },
       num_people: {
@@ -30,6 +25,12 @@ module.exports = {
         type: Sequelize.DataTypes.STRING,
       },
       customer_phone_number: {
+        type: Sequelize.DataTypes.STRING,
+      },
+      note: {
+        type: Sequelize.DataTypes.STRING,
+      },
+      status: {
         type: Sequelize.DataTypes.STRING,
       },
       ...dateTime(Sequelize.DataTypes),

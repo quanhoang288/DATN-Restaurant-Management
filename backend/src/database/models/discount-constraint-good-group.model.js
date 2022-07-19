@@ -1,5 +1,5 @@
 const { Model } = require('sequelize');
-const { id, dateTime } = require('../generate');
+const { id } = require('../generate');
 
 module.exports = (sequelize, DataTypes) => {
   class DiscountConstraintGoodGroup extends Model {
@@ -10,7 +10,7 @@ module.exports = (sequelize, DataTypes) => {
       });
       models.DiscountConstraintGoodGroup.belongsTo(models.GoodGroup, {
         as: 'good_group',
-        foreignKey: 'good_id',
+        foreignKey: 'good_group_id',
       });
     }
   }
@@ -18,23 +18,29 @@ module.exports = (sequelize, DataTypes) => {
   DiscountConstraintGoodGroup.init(
     {
       ...id(DataTypes),
-      discount_id: {
+      discount_constraint_id: {
         type: DataTypes.BIGINT.UNSIGNED,
         allowNull: false,
         references: {
-          model: 'discounts',
-          key: 'discount_id',
+          model: 'discount_constraints',
+          key: 'id',
         },
       },
-      good_id: {
+      good_group_id: {
         type: DataTypes.BIGINT.UNSIGNED,
         allowNull: false,
         references: {
           model: 'good_groups',
-          key: 'good_group_id',
+          key: 'id',
         },
       },
-      ...dateTime(DataTypes),
+      is_discount_item: {
+        type: DataTypes.TINYINT,
+        defaultValue: 0,
+      },
+      quantity: {
+        type: DataTypes.INTEGER,
+      },
     },
     {
       sequelize,

@@ -4,6 +4,8 @@ const httpStatus = require('http-status');
 const routes = require('./routes/v1');
 const { errorConverter, errorHandler } = require('./middlewares/error');
 const ApiError = require('./exceptions/api-error');
+// const scheduler = require('./factories/schedulerFactory');
+// const reminderWorker = require('./workers/reminderWorker');
 
 const app = express();
 
@@ -27,5 +29,7 @@ app.use(errorConverter);
 
 // handle error
 app.use(errorHandler);
+
+// scheduler.start(reminderWorker);
 
 module.exports = app;

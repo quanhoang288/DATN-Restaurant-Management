@@ -14,11 +14,6 @@ module.exports = (sequelize, DataTypes) => {
   Discount.init(
     {
       ...id(DataTypes),
-      code: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        unique: true,
-      },
       name: {
         type: DataTypes.STRING,
         allowNull: false,

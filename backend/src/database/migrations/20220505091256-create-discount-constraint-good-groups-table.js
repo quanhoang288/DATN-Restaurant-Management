@@ -23,6 +23,12 @@ module.exports = {
           key: 'id',
         },
       },
+      is_discount_item: {
+        type: Sequelize.DataTypes.TINYINT,
+      },
+      quantity: {
+        type: Sequelize.DataTypes.INTEGER,
+      },
       ...dateTime(Sequelize.DataTypes),
     });
   },

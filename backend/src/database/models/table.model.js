@@ -3,7 +3,14 @@ const { id, dateTime } = require('../generate');
 
 module.exports = (sequelize, DataTypes) => {
   class Table extends Model {
-    static associate(models) {}
+    static associate(models) {
+      models.Table.belongsToMany(models.Reservation, {
+        as: 'reservations',
+        through: {
+          model: models.ReservationTable,
+        },
+      });
+    }
   }
 
   Table.init(

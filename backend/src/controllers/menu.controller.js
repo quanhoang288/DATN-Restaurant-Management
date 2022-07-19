@@ -18,7 +18,7 @@ const getMenus = catchAsync(async (req, res) => {
 });
 
 const getMenu = catchAsync(async (req, res) => {
-  const menu = await menuService.getMenuDetail(req.params.id);
+  const menu = await menuService.getMenu(req.params.id);
   if (!menu) {
     throw new ApiError(
       Errors.MenuNotFound.statusCode,

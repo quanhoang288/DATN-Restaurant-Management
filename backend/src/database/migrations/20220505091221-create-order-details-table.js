@@ -1,9 +1,8 @@
-'use strict';
 const { id, dateTime } = require('../generate');
 
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('menu_categories', {
+    await queryInterface.createTable('order_details', {
       ...id(Sequelize.DataTypes),
       order_id: {
         type: Sequelize.DataTypes.BIGINT.UNSIGNED,
@@ -11,7 +10,6 @@ module.exports = {
           model: {
             tableName: 'orders',
           },
-          key: 'id',
         },
       },
       good_id: {
@@ -26,6 +24,10 @@ module.exports = {
       quantity: {
         type: Sequelize.DataTypes.INTEGER,
       },
+      finished_quantity: {
+        type: Sequelize.DataTypes.INTEGER,
+        defaultValue: 0,
+      },
       status: {
         type: Sequelize.DataTypes.STRING,
       },
@@ -34,6 +36,6 @@ module.exports = {
   },
 
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('menu_categories');
+    await queryInterface.dropTable('order_details');
   },
 };

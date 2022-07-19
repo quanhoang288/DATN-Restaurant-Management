@@ -9,13 +9,49 @@ const createOrder = catchAsync(async (req, res) => {
   });
 });
 
-const getOrderList = async (req, res) => {};
+const getOrderList = async (req, res) => {
+  // const filter = pick(req.query, ['name', 'role']);
+  // const options = pick(req.query, ['sortBy', 'limit', 'page']);
+  const result = await orderService.getOrderList();
+  res.send(result);
+};
 
-const getOrderDetail = async (req, res) => {};
+const getOrderDetail = catchAsync(async (req, res) => {
+  const order = await orderService.getOrderDetail(req.params.id);
+  res.send(order);
+});
 
-const updateOrder = async (req, res) => {};
+const updateOrder = catchAsync(async (req, res) => {
+  await orderService.updateOrder(req.params.id, req.body);
+  return res.status(httpStatus.OK).json({
+    message: 'Update order succesfully',
+  });
+});
 
-const deleteOrder = async (req, res) => {};
+const deleteOrder = catchAsync(async (req, res) => {
+  await orderService.deleteOrder(req.params.id);
+  res.status(httpStatus.NO_CONTENT).json({
+    message: 'Delete order succesfully',
+  });
+});
+
+const payOrder = catchAsync(async (req, res) => {
+  await orderService.payOrder(req.params.id, req.body);
+  return res.status(httpStatus.OK).json({
+    message: 'Pay order successfully',
+  });
+});
+
+const updateOrderItem = catchAsync(async (req, res) => {
+  await orderService.updateOrderItem(
+    req.params.id,
+    req.params.itemId,
+    req.body,
+  );
+  return res
+    .status(httpStatus.OK)
+    .json({ message: 'Update item successfully' });
+});
 
 module.exports = {
   createOrder,
@@ -23,4 +59,6 @@ module.exports = {
   getOrderDetail,
   updateOrder,
   deleteOrder,
+  payOrder,
+  updateOrderItem,
 };

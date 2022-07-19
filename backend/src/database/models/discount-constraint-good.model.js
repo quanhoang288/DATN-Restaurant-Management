@@ -1,12 +1,12 @@
 const { Model } = require('sequelize');
-const { id, dateTime } = require('../generate');
+const { id } = require('../generate');
 
 module.exports = (sequelize, DataTypes) => {
   class DiscountConstraintGood extends Model {
     static associate(models) {
-      models.DiscountConstraintGood.belongsTo(models.Discount, {
-        as: 'discount',
-        foreignKey: 'discount_id',
+      models.DiscountConstraintGood.belongsTo(models.DiscountConstraint, {
+        as: 'constraint',
+        foreignKey: 'discount_constraint_id',
       });
       models.DiscountConstraintGood.belongsTo(models.Good, {
         as: 'good',
@@ -18,12 +18,12 @@ module.exports = (sequelize, DataTypes) => {
   DiscountConstraintGood.init(
     {
       ...id(DataTypes),
-      discount_id: {
+      discount_constraint_id: {
         type: DataTypes.BIGINT.UNSIGNED,
         allowNull: false,
         references: {
-          model: 'discounts',
-          key: 'discount_id',
+          model: 'discount_constraints',
+          key: 'discount_constraint_id',
         },
       },
       good_id: {
@@ -34,7 +34,10 @@ module.exports = (sequelize, DataTypes) => {
           key: 'good_id',
         },
       },
-      ...dateTime(DataTypes),
+      is_discount_item: {
+        type: DataTypes.TINYINT,
+        defaultValue: 0,
+      },
     },
     {
       sequelize,

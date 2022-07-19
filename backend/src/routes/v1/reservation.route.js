@@ -9,30 +9,30 @@ const router = express.Router();
 router
   .route('/')
   .post(
-    auth,
+    // auth,
     validate(reservationValidation.createReservation),
     reservationController.createReservation,
   )
   .get(
-    auth,
+    // auth,
     validate(reservationValidation.getReservations),
-    reservationController.getReservationList,
+    reservationController.getReservations,
   );
 
 router
   .route('/:id')
   .get(
-    auth,
+    // auth,
     validate(reservationValidation.getReservation),
-    reservationController.getReservationDetail,
+    reservationController.getReservation,
   )
   .put(
-    auth,
+    // auth,
     validate(reservationValidation.updateReservation),
     reservationController.updateReservation,
   )
   .delete(
-    auth,
+    // auth,
     validate(reservationValidation.deleteReservation),
     reservationController.deleteReservation,
   );

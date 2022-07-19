@@ -4,21 +4,22 @@ module.exports = {
   async up(queryInterface, Sequelize) {
     await queryInterface.createTable('invoices', {
       ...id(Sequelize.DataTypes),
-      dining_fee: {
+      order_id: {
         type: Sequelize.DataTypes.BIGINT.UNSIGNED,
-        allowNull: false,
+        references: {
+          model: {
+            tableName: 'orders',
+          },
+        },
       },
       other_fee: {
-        type: Sequelize.DataTypes.BIGINT.UNSIGNED,
-        allowNull: false,
-        defaultValue: 0,
+        type: Sequelize.DataTypes.INTEGER,
+      },
+      discount_amount: {
+        type: Sequelize.DataTypes.INTEGER,
       },
       paid_amount: {
-        type: Sequelize.DataTypes.BIGINT.UNSIGNED,
-      },
-      payment_status: {
-        type: Sequelize.DataTypes.STRING,
-        allowNull: false,
+        type: Sequelize.DataTypes.INTEGER,
       },
       ...dateTime(Sequelize.DataTypes),
     });

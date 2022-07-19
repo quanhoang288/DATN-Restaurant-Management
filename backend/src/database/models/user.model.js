@@ -8,7 +8,7 @@ module.exports = (sequelize, DataTypes) => {
       // define association here
     }
 
-    static async isEmailAlreadyUsed(email) {
+    static async isEmailTaken(email) {
       const existingUser = await User.findOne({
         where: {
           email,
@@ -21,21 +21,21 @@ module.exports = (sequelize, DataTypes) => {
       return bcrypt.compare(password, this.password);
     }
 
-    isRefreshTokenValid(refreshToken) {
+    static isRefreshTokenValid(refreshToken) {
       return (
         this.refresh_token === refreshToken &&
         this.refresh_token_expires_at > new Date()
       );
     }
 
-    isEmailVerifyTokenValid(emailVerifyToken) {
+    static isEmailVerifyTokenValid(emailVerifyToken) {
       return (
         this.email_verify_token === emailVerifyToken &&
         this.email_verify_token_expires_at > new Date()
       );
     }
 
-    isPasswordResetTokenValid(passwordResetToken) {
+    static isPasswordResetTokenValid(passwordResetToken) {
       return (
         this.password_reset_token === passwordResetToken &&
         this.password_reset_token_expires_at > new Date()

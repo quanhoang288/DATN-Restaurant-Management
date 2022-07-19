@@ -70,11 +70,6 @@ const updateMenu = async (menuId, data, option = {}) => {
       categoriesToUpdate.push(category);
     }
   });
-
-  console.log('new: ', newCategories);
-  console.log('update: ', categoriesToUpdate);
-  console.log('delete: ', categoriesToDelete);
-
   delete data.categories;
   menu.set(data);
 
@@ -87,8 +82,6 @@ const updateMenu = async (menuId, data, option = {}) => {
       const category = menuCategories.find(
         (cat) => cat.id === categoryToUpdate.id,
       );
-      // console.log('category obj: ', category);
-      // console.log(category.set);
       const newItems = categoryToUpdate.items || [];
       delete categoryToUpdate.items;
       category.set(categoryToUpdate);
@@ -136,6 +129,7 @@ const getMenu = async (menuId) => {
         include: [
           {
             association: 'items',
+            attributes: ['id', 'name', 'sale_price'],
             through: {
               attributes: [],
             },
@@ -214,17 +208,21 @@ const deleteMenu = async (menuId, option = {}) => {
 };
 
 const getMenuCategory = async (menuId, categoryId) => {
-  const category = db.MenuCategory.findOne(
-    { menu_id: menuId, id: categoryId },
-    {
-      include: [
-        {
-          association: 'items',
-          attributes: ['id', 'name', 'sale_price'],
-        },
-      ],
+  const category = db.MenuCategory.findOne({
+    where: {
+      menu_id: menuId,
+      id: categoryId,
     },
-  );
+    include: [
+      {
+        association: 'items',
+        attributes: ['id', 'name', 'sale_price'],
+        through: {
+          attributes: [],
+        },
+      },
+    ],
+  });
   if (!category) {
     throw new ApiError(
       Errors.MenuCategoryNotFound.statusCode,

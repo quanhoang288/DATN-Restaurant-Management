@@ -5,6 +5,8 @@ const {
   // userService,
   // tokenService,
   emailService,
+  authService,
+  tokenService,
 } = require('../services');
 
 // const services = require('../services')

@@ -1,5 +1,5 @@
 const { Model } = require('sequelize');
-const { id, dateTime } = require('../generate');
+const { id } = require('../generate');
 
 module.exports = (sequelize, DataTypes) => {
   class Reservation extends Model {
@@ -8,12 +8,21 @@ module.exports = (sequelize, DataTypes) => {
         as: 'customer',
         foreignKey: 'customer_id',
       });
+      models.Reservation.hasMany(models.ReservationTable, {
+        as: 'reservationTables',
+        foreignKey: 'reservation_id',
+      });
       models.Reservation.belongsToMany(models.Table, {
         as: 'tables',
         through: {
           model: models.ReservationTable,
         },
       });
+    }
+
+    isReminderRequired(date) {
+      // TODO: implement comparison
+      return false;
     }
   }
 
@@ -26,12 +35,8 @@ module.exports = (sequelize, DataTypes) => {
           model: 'customers',
         },
       },
-      dining_time: {
+      arrive_time: {
         type: DataTypes.DATE,
-        allowNull: false,
-      },
-      type: {
-        type: DataTypes.STRING,
         allowNull: false,
       },
       num_people: {
@@ -49,7 +54,6 @@ module.exports = (sequelize, DataTypes) => {
       status: {
         type: DataTypes.STRING,
       },
-      ...dateTime(DataTypes),
     },
     {
       sequelize,

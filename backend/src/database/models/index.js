@@ -12,6 +12,7 @@ const sequelizeConfig = {
     charset: 'utf8mb4',
   },
   logging: console.log,
+  // logging: false,
   define: {
     underscored: true,
     timestamps: true,
@@ -27,7 +28,6 @@ const sequelizeConfig = {
   },
   migrationStorageTableName: 'migrations',
   seederStorageTableName: 'seeders',
-  logging: false,
 };
 
 const sequelize = new Sequelize(

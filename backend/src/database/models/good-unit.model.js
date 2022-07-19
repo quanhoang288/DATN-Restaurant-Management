@@ -29,7 +29,11 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING,
         allowNull: false,
       },
-      ...dateTime(DataTypes),
+      multiplier: {
+        type: DataTypes.FLOAT,
+        allowNull: false,
+        defaultValue: 1.0,
+      },
     },
     {
       sequelize,

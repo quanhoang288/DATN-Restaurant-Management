@@ -2,23 +2,26 @@ const db = require('../database/models');
 const query = require('../utils/query');
 const ApiError = require('../exceptions/api-error');
 const Errors = require('../exceptions/custom-error');
+const messagingService = require('./messaging.service');
 
-const { Op } = db;
+const { Op } = db.Sequelize;
 
 const createReservation = async (data, option = {}) => {
   // check if table is already occupied
   const existingReservationTable = await db.ReservationTable.findOne({
     where: {
       table_id: {
-        [Op.in]: data.tables,
+        [Op.in]: data.tables || [],
       },
     },
     include: [
       {
         association: 'reservation',
-        include: ['id', 'status'],
+        attributes: ['id', 'status'],
         where: {
-          status: 'IN_PROGRESS',
+          status: {
+            [Op.in]: ['confirmed', 'serving'],
+          },
         },
         required: true,
       },
@@ -31,40 +34,70 @@ const createReservation = async (data, option = {}) => {
     );
   }
 
+  data.reservationTables = (data.tables || []).map((tableId) => ({
+    table_id: tableId,
+  }));
+  delete data.tables;
+
   // TODO: check if user already booked at the same time
   // with user in system: check if there's any reservation with overlapping schedule
   // with guest user: check by phone number ??
 
-  const bookedTables = data.tables || [];
-  delete data.tables;
+  const t = await db.sequelize.transaction();
+  option.transaction = t;
 
-  const reservation = await db.Reservation.create(data, option);
-  const reservationTableData = bookedTables.map((tableId) => ({
-    reservation_id: reservation.id,
-    table_id: tableId,
-  }));
-  return db.ReservationTable.bulkCreate(reservationTableData, option);
+  try {
+    const reservation = await db.Reservation.create(data, {
+      ...option,
+      include: [
+        {
+          association: 'reservationTables',
+        },
+      ],
+    });
+    await t.commit();
+    return reservation;
+  } catch (err) {
+    t.rollback();
+    throw err;
+  }
 };
 
-const getReservationList = async (params) => {
-  const items = await db.Reservation.paginate({
-    page: params.page,
-    paginate: params.limit,
-    where: query.filter(Op, params.filter || {}),
-    sort: params.sort || {},
-  });
-  return query.getPagingData(items, params.page, params.limit);
+const getReservationList = async (params = {}) => {
+  const filter = params.filter || {};
+  const sort = params.sort || [];
+
+  if (params.page) {
+    const items = await db.Reservation.paginate({
+      page: params.page,
+      paginate: params.limit || 10,
+      where: query.filter(Op, filter),
+      order: sort,
+    });
+
+    return query.getPagingData(items, params.page, params.limit);
+  }
+
+  const option = {
+    where: filter,
+    sort,
+  };
+  if (params.attributes) {
+    option.attributes = params.attributes;
+  }
+
+  return db.Reservation.findAll(option);
 };
 
 const getReservationDetail = async (reservationId) => {
-  const reservation = await db.Reservation.findOne({
-    where: {
-      id: reservationId,
-    },
+  const reservation = await db.Reservation.findByPk(reservationId, {
     include: [
       {
         association: 'tables',
         attributes: ['id', 'name'],
+        through: {
+          attributes: [],
+        },
       },
     ],
   });
@@ -81,34 +114,35 @@ const updateReservation = async (reservationId, data, option = {}) => {
   const reservation = await getReservationDetail(reservationId);
   const tableUpdateData = data.tables || [];
   const bookedTables = reservation.tables || [];
+
   const newTableIds = tableUpdateData.filter(
-    (table) =>
-      bookedTables.findIndex((bookedTable) => bookedTable.id === table) === -1,
+    (tableId) =>
+      !bookedTables.some((bookedTable) => bookedTable.id === tableId),
   );
   const canceledTableIds = bookedTables
     .filter((table) => !tableUpdateData.includes(table.id))
     .map((table) => table.id);
-  const occupiedReservationTables = await db.ReservationTable.find({
+
+  const occupiedReservationTables = await db.ReservationTable.findOne({
     where: {
       table_id: {
         [Op.in]: newTableIds,
       },
-      attributes: ['id', 'name'],
-      include: [
-        {
-          association: 'reservation',
-          include: [],
-          where: {
-            status: 'IN_PROGRESS',
-          },
-          required: true,
-        },
-        {
-          association: 'table',
-          attribute: ['id', 'name'],
-        },
-      ],
+      reservation_id: {
+        [Op.ne]: reservation.id,
+      },
     },
+    include: [
+      {
+        association: 'reservation',
+        where: {
+          status: {
+            [Op.in]: ['confirmed', 'serving'],
+          },
+        },
+        required: true,
+      },
+    ],
   });
   if (occupiedReservationTables) {
     const occupiedTables = occupiedReservationTables.map(
@@ -117,38 +151,68 @@ const updateReservation = async (reservationId, data, option = {}) => {
     const errMsg = `Tables already occupied:  ${occupiedTables.join(', ')}`;
     throw new ApiError(Errors.TableOccupied.statusCode, errMsg);
   }
-  const updatePromises = [
-    db.ReservationTable.bulkCreate(
-      newTableIds.map((id) => ({
-        reservation_id: reservation.id,
-        table_id: id,
-      })),
-      option,
-    ),
-    db.ReservationTable.destroy({
-      where: {
-        table_id: {
-          [Op.in]: canceledTableIds,
+
+  delete data.tables;
+  reservation.set(data);
+
+  const t = await db.sequelize.transaction();
+  option.transaction = t;
+
+  try {
+    await Promise.all([
+      db.ReservationTable.bulkCreate(
+        newTableIds.map((id) => ({
+          reservation_id: reservation.id,
+          table_id: id,
+        })),
+        option,
+      ),
+      db.ReservationTable.destroy({
+        where: {
+          reservation_id: reservation.id,
+          table_id: {
+            [Op.in]: canceledTableIds,
+          },
         },
-      },
-    }),
-  ];
-  return Promise.all(updatePromises);
+        ...option,
+      }),
+      reservation.save(option),
+    ]);
+    await t.commit();
+  } catch (err) {
+    t.rollback();
+    throw err;
+  }
 };
 
 const deleteReservation = async (reservationId, option = {}) => {
   const reservation = await getReservationDetail(reservationId);
-  await db.ReservationTable.destroy(
-    {
-      where: {
-        table_id: {
-          [Op.in]: (reservation.tables || []).map((table) => table.id),
-        },
-      },
-    },
-    option,
-  );
-  return reservation.destroy();
+
+  const t = await db.sequelize.transaction();
+  option.transaction = t;
+  try {
+    await reservation.removeTables(reservation.tables, option);
+    await reservation.destroy(option);
+    await t.commit();
+  } catch (err) {
+    t.rollback();
+    throw err;
+  }
+};
+
+const sendReminders = async () => {
+  const now = new Date();
+  // TODO: get reservations due to remind
+  const reservationsToRemind = await db.Reservation.find({});
+  console.log('checking');
+  // await Promise.all(
+  //   reservationsToRemind.map((reservation) =>
+  //     messagingService.sendMessage(
+  //       reservation.customer_phone_number,
+  //       `Hi ${reservation.customer_name}. This is a reminder message to inform you that you have an reservation coming up at ${reservation.arrive_time}`,
+  //     ),
+  //   ),
+  // );
 };
 
 module.exports = {
@@ -157,4 +221,5 @@ module.exports = {
   getReservationList,
   updateReservation,
   deleteReservation,
+  sendReminders,
 };

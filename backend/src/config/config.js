@@ -35,6 +35,16 @@ const envVarsSchema = Joi.object()
     DB_NAME: Joi.string().description('database to connect to'),
     DB_HOST: Joi.string().description('database server to connect to'),
     DB_PORT: Joi.string().description('database port to connect to'),
+    AWS_S3_ACCESS_KEY_ID: Joi.string().description('S3 access key id'),
+    AWS_S3_SECRET_ACCESS_KEY: Joi.string().description('S3 secret key'),
+    AWS_S3_BUCKET_NAME: Joi.string().description('Bucket name'),
+    TWILIO_ACCOUNT_SID: Joi.string().description('Twilio account id'),
+    TWILIO_AUTH_TOKEN: Joi.string().description('Twilio authentication token'),
+    TWILIO_PHONE_NUMBER: Joi.string().description(
+      'Twilio phone number to send messages',
+    ),
+    VONAGE_API_KEY: Joi.string(),
+    VONAGE_API_SECRET: Joi.string(),
   })
   .unknown();
 
@@ -80,5 +90,19 @@ module.exports = {
     REFRESH: 'refresh',
     EMAIL_VERIFY: 'email_verify',
     PASSWORD_RESET: 'password_reset',
+  },
+  s3: {
+    accessKeyId: envVars.AWS_S3_ACCESS_KEY_ID,
+    secretAccessKey: envVars.AWS_S3_SECRET_ACCESS_KEY,
+    bucketName: envVars.AWS_S3_BUCKET_NAME,
+  },
+  twilio: {
+    accountId: envVars.TWILIO_ACCOUNT_SID,
+    authToken: envVars.TWILIO_AUTH_TOKEN,
+    phoneNumber: envVars.TWILIO_PHONE_NUMBER,
+  },
+  nexmo: {
+    apiKey: envVars.VONAGE_API_KEY,
+    apiSecret: envVars.VONAGE_API_SECRET,
   },
 };
