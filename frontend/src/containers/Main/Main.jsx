@@ -1,6 +1,7 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useSelector } from 'react-redux'
 import clsx from 'clsx'
+import { Redirect } from 'react-router-dom'
 
 import Layout from '../Layout/Layout'
 import Navbar from '../../components/Navbar/Navbar'
@@ -9,6 +10,7 @@ import { successMessages } from '../../constants/messages'
 import AuthHandler from '../AuthHandler/AuthHandler'
 import { useStyles } from '../../styles/drawer.style'
 import './Main.css'
+import routes from '../../constants/route'
 
 function Main({ children }) {
   const authState = useSelector((state) => state.auth)
@@ -21,6 +23,7 @@ function Main({ children }) {
         [classes.contentShift]: isDrawerOpen,
       })}
     >
+      {!authState.user && <Redirect to={routes.ADMIN_AUTH} />}
       {/* {authState.error && <Toast variant='error' message={authState.error} />}
       {authState.registerSuccess && <Toast variant='success' message={successMessages.REGISTER_SUCCESSFUL} />} */}
       <AuthHandler isAdminAuthentication={true} />

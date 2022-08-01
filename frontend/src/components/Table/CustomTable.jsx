@@ -13,6 +13,7 @@ import Paper from '@material-ui/core/Paper'
 import { Button, Typography } from '@material-ui/core'
 import pick from '../../utils/pick'
 import ChipLabel from '../ChipLabel/ChipLabel'
+import { useEffect } from 'react'
 
 function descendingComparator(a, b, orderBy) {
   if (b[orderBy] < a[orderBy]) {
@@ -140,7 +141,7 @@ const useStyles = makeStyles((theme) => ({
 }))
 
 export default function EnhancedTable(props) {
-  const { rows, cols, actionButtons, paginationEnabled } = props
+  const { rows, totalCount, cols, actionButtons, paginationEnabled, handleFetchRows } = props
   const classes = useStyles()
   const [order, setOrder] = useState('asc')
   const [orderBy, setOrderBy] = useState('id')
@@ -162,7 +163,12 @@ export default function EnhancedTable(props) {
     setPage(0)
   }
 
-  const emptyRows = rowsPerPage - Math.min(rowsPerPage, (rows || []).length - page * rowsPerPage)
+  useEffect(() => {
+    if (handleFetchRows) {
+      handleFetchRows(page + 1, rowsPerPage)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, rowsPerPage])
 
   return (
     <div className={classes.root}>
@@ -191,8 +197,8 @@ export default function EnhancedTable(props) {
                     />
                   )
                 })}
-                {emptyRows > 0 && (
-                  <TableRow style={{ height: 53 * emptyRows }}>
+                {rowsPerPage - Math.min(rowsPerPage, (rows || []).length) > 0 && (
+                  <TableRow style={{ height: 50 * (rowsPerPage - Math.min(rowsPerPage, (rows || []).length)) }}>
                     <TableCell colSpan={(cols || []).length} />
                   </TableRow>
                 )}
@@ -203,7 +209,7 @@ export default function EnhancedTable(props) {
             <TablePagination
               rowsPerPageOptions={[5, 10, 25]}
               component='div'
-              count={(rows || []).length}
+              count={totalCount || (rows || []).length}
               rowsPerPage={rowsPerPage}
               page={page}
               onPageChange={handleChangePage}

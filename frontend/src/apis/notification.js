@@ -1,8 +1,10 @@
 import api from './api'
 
-const getMenus = () => api.get('notifications')
+const getNotifications = (params = {}) => api.get('notifications', { params })
 
-const createMenu = (data) => api.post('notifications', data)
+const createNotification = (data) => api.post('notifications', data)
 
-export { createMenu, getMenus }
+const updateNotificationReadStatus = (notificationId, userId) => api.put(`notifications/${notificationId}`, { userId })
+
+export { createNotification, getNotifications, updateNotificationReadStatus }
 

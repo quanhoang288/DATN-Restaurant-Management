@@ -17,8 +17,12 @@ import AddIcon from '@material-ui/icons/Add'
 import './StaffCreate.css'
 import { createStaff, getStaff, updateStaff } from '../../../apis/staff'
 import Toast from '../../../components/Toast/Toast'
+import { API_BASE_URL, ASSET_BASE_URL } from '../../../configs'
+import RoleCreate from '../Role/RoleCreate'
+import { getRoles } from '../../../apis/role'
 
 const defaultData = {
+  avatar: null,
   fullName: '',
   dob: '',
   gender: '',
@@ -31,10 +35,12 @@ const defaultData = {
 }
 
 function StaffCreate({ staffId, isModalVisible, handleCloseModal }) {
-  const [selectedFile, setSelectedFile] = useState(null)
   const [profilePreview, setProfilePreview] = useState(null)
+  const [selectedFile, setSelectedFile] = useState(null)
   const [staffData, setStaffData] = useState(defaultData)
   const [isSaveStaffSucessful, setSaveStaffSuccessful] = useState(false)
+  const [isRoleCreateModalVisible, setRoleCreateModalVisible] = useState(false)
+  const [roleOptions, setRoleOptions] = useState([])
 
   const handleSelectImage = (e) => {
     if (!e.target.files || e.target.files.length === 0) {
@@ -46,16 +52,21 @@ function StaffCreate({ staffId, isModalVisible, handleCloseModal }) {
   const fetchStaffInfo = async (staffId) => {
     const staff = (await getStaff(staffId)).data
     setStaffData({
-      name: staff.name,
-      dob: staff.dob,
-      gender: staff.gender,
-      roleId: staff.role_id,
-      email: staff.email,
-      password: staff.password,
-      phoneNumber: staff.phone_number,
-      address: staff.address,
+      avatar: staff.user?.avatar,
+      fullName: staff.user?.full_name,
+      dob: staff.user?.dob,
+      gender: staff.user?.gender,
+      // roleId: staff.role_id,
+      email: staff.user?.email,
+      phoneNumber: staff.user?.phone_number,
+      address: staff.user?.address,
       branchId: staff.branch_id,
     })
+  }
+
+  const fetchRoleOptions = async () => {
+    const roles = (await getRoles()).data
+    setRoleOptions(roles)
   }
 
   const handleSubmit = useCallback(async () => {
@@ -70,6 +81,11 @@ function StaffCreate({ staffId, isModalVisible, handleCloseModal }) {
       address: staffData.address,
       branch_id: staffData.branchId,
     }
+
+    if (selectedFile) {
+      data.avatar = selectedFile
+    }
+
     if (staffId) {
       await updateStaff(staffId, data)
     } else {
@@ -78,7 +94,7 @@ function StaffCreate({ staffId, isModalVisible, handleCloseModal }) {
     setSaveStaffSuccessful(true)
     handleCloseModal()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [staffData, staffId])
+  }, [staffData, selectedFile, staffId])
 
   useEffect(() => {
     if (!selectedFile) {
@@ -94,11 +110,19 @@ function StaffCreate({ staffId, isModalVisible, handleCloseModal }) {
     if (staffId) {
       fetchStaffInfo(staffId)
     }
+    fetchRoleOptions()
   }, [staffId])
 
   return (
     <>
       {isSaveStaffSucessful && <Toast variant='success' message={`${staffId ? 'Cập nhật' : 'Thêm'} nhân viên thành công`} />}
+      <RoleCreate
+        isModalVisible={isRoleCreateModalVisible}
+        handleCloseModal={async () => {
+          await fetchRoleOptions()
+          setRoleCreateModalVisible(false)
+        }}
+      />
       <Modal isModalVisible={isModalVisible} handleClose={handleCloseModal} title='Thêm nhân viên'>
         <Grid container>
           <Grid item xs={2} style={{ display: 'flex', alignItems: 'center' }}>
@@ -114,8 +138,12 @@ function StaffCreate({ staffId, isModalVisible, handleCloseModal }) {
                   alignItems: 'center',
                 }}
               >
-                {selectedFile ? (
-                  <img src={profilePreview} alt='profile-preview' style={{ maxWidth: 150, minHeight: 150, maxHeight: 300 }} />
+                {staffData.avatar ? (
+                  <img
+                    src={profilePreview ?? `${ASSET_BASE_URL}/images/${staffData.avatar}`}
+                    alt='profile-preview'
+                    style={{ maxWidth: 150, minHeight: 150, maxHeight: 300 }}
+                  />
                 ) : (
                   <>
                     <IconButton size='medium'>
@@ -125,8 +153,8 @@ function StaffCreate({ staffId, isModalVisible, handleCloseModal }) {
                   </>
                 )}
               </div>
-              {selectedFile ? (
-                <Button variant='contained' color='secondary' onClick={() => setSelectedFile(null)}>
+              {staffData.avatar ? (
+                <Button variant='contained' color='secondary' onClick={() => setStaffData({ ...staffData, avatar: null })}>
                   Xóa ảnh
                 </Button>
               ) : (
@@ -207,7 +235,7 @@ function StaffCreate({ staffId, isModalVisible, handleCloseModal }) {
                 SelectProps={{
                   native: true,
                   endAdornment: (
-                    <IconButton style={{ marginRight: '1.5rem' }}>
+                    <IconButton style={{ marginRight: '1.5rem' }} onClick={() => setRoleCreateModalVisible(true)}>
                       <AddIcon />
                     </IconButton>
                   ),
@@ -215,9 +243,9 @@ function StaffCreate({ staffId, isModalVisible, handleCloseModal }) {
                 value={staffData.roleId}
                 onChange={(e) => setStaffData({ ...staffData, roleId: e.target.value })}
               >
-                <option value='a'>A</option>
-                <option value='b'>B</option>
-                <option value='c'>C</option>
+                {roleOptions.map((opt) => (
+                  <option value={opt.id}>{opt.name}</option>
+                ))}
               </TextField>
             </div>
           </Grid>
@@ -239,20 +267,23 @@ function StaffCreate({ staffId, isModalVisible, handleCloseModal }) {
                 value={staffData.email}
                 onChange={(e) => setStaffData({ ...staffData, email: e.target.value })}
               />
-              <TextField
-                label='Mật khẩu'
-                InputLabelProps={{
-                  shrink: true,
-                  style: {
-                    fontSize: 22,
-                  },
-                }}
-                margin='normal'
-                fullWidth
-                required
-                value={staffData.password}
-                onChange={(e) => setStaffData({ ...staffData, password: e.target.value })}
-              />
+              {!staffId && (
+                <TextField
+                  label='Mật khẩu'
+                  InputLabelProps={{
+                    shrink: true,
+                    style: {
+                      fontSize: 22,
+                    },
+                  }}
+                  margin='normal'
+                  fullWidth
+                  required
+                  value={staffData.password}
+                  onChange={(e) => setStaffData({ ...staffData, password: e.target.value })}
+                />
+              )}
+
               <TextField
                 label='Số điện thoại'
                 margin='normal'

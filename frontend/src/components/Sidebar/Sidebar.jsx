@@ -27,7 +27,7 @@ import { useLocation } from 'react-router-dom'
 // import './Sidebar.css'
 
 const categories = [
-  { name: 'Tổng quan', url: '/', Icon: EqualizerIcon },
+  { name: 'Tổng quan', url: routes.DASHBOARD, Icon: EqualizerIcon },
   { name: 'Hàng hóa', url: routes.GOODS, Icon: FastfoodIcon },
   { name: 'Cơ sở vật chất', url: routes.FACILITIES, Icon: KitchenIcon },
   { name: 'Khách hàng', url: routes.CUSTOMERS, Icon: PeopleIcon },

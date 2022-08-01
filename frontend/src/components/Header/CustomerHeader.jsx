@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { alpha, makeStyles } from '@material-ui/core/styles'
 import AppBar from '@material-ui/core/AppBar'
 import Toolbar from '@material-ui/core/Toolbar'
@@ -14,10 +14,14 @@ import AccountCircle from '@material-ui/icons/AccountCircle'
 import MailIcon from '@material-ui/icons/Mail'
 import NotificationsIcon from '@material-ui/icons/Notifications'
 import ShoppingCartIcon from '@material-ui/icons/ShoppingCart'
-import { Grid, Link } from '@material-ui/core'
+import { Button, Grid, Link } from '@material-ui/core'
 import { useHistory } from 'react-router-dom'
+import { useDispatch, useSelector } from 'react-redux'
+
 import CartPopover from '../../containers/Menu/CartPopover'
 import AccountPopover from '../../containers/Menu/AccountPopover'
+import AuthHandler from '../../containers/AuthHandler/AuthHandler'
+import { showModal } from '../../redux/actions/modalActions'
 
 const useStyles = makeStyles((theme) => ({
   grow: {
@@ -46,9 +50,13 @@ const useStyles = makeStyles((theme) => ({
 }))
 
 export default function CustomerHeader() {
+  const [anchorEl, setAnchorEl] = useState(null)
+
+  const user = useSelector((state) => state.auth.user)
+
   const history = useHistory()
   const classes = useStyles()
-  const [anchorEl, setAnchorEl] = React.useState(null)
+  const dispatch = useDispatch()
 
   const isMenuOpen = Boolean(anchorEl)
 
@@ -78,6 +86,7 @@ export default function CustomerHeader() {
 
   return (
     <div className={classes.grow}>
+      <AuthHandler />
       <AppBar position='sticky' style={{ backgroundColor: '#df5800bf' }}>
         <Toolbar style={{ alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ marginLeft: '1rem' }}>
@@ -101,8 +110,16 @@ export default function CustomerHeader() {
           </div>
 
           <div className={classes.sectionDesktop}>
-            <CartPopover />
-            <AccountPopover />
+            {user ? (
+              <>
+                <CartPopover />
+                <AccountPopover />
+              </>
+            ) : (
+              <Button variant='contained' color='secondary' onClick={() => dispatch(showModal())}>
+                Đăng nhập
+              </Button>
+            )}
           </div>
         </Toolbar>
       </AppBar>

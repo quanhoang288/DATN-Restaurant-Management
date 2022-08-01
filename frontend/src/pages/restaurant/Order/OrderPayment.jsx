@@ -27,59 +27,124 @@ import Modal from '../../../components/Modal/Modal'
 import { createOrder, payOrder } from '../../../apis/order'
 import { PDFViewer } from '@react-pdf/renderer'
 import Invoice from '../Invoice/Invoice'
+import ChipLabel from '../../../components/ChipLabel/ChipLabel'
+import CustomAccordion from '../../../components/CustomAccordion/CustomAccordion'
+import { createInvoice } from '../../../apis/invoice'
+import { convertToOrderDTO } from '../../../utils/converter/convertToOrderDTO'
+import { getDiscountAmount, getInvoiceTotal } from '../../../utils/order'
+import { useSelector } from 'react-redux'
 
 const defaultPaymentData = {
-  discounts: [],
-  invoice: {
-    paid_amount: 0,
-    other_fee: 0,
-  },
-  isEnableInvoiceExport: true,
+  other_fee: 0,
+  paid_amount: 0,
 }
 
 function OrderInvoicePreview(props) {
-  const { isModalVisible, handleCloseModal } = props
+  const { order, cashier, isModalVisible, handleCloseModal } = props
   return (
     <Modal title='Hóa đơn' isModalVisible={isModalVisible} handleClose={handleCloseModal}>
       <PDFViewer style={{ minHeight: 700, width: '100%' }}>
-        <Invoice />
+        <Invoice cashier={cashier} order={order} />
       </PDFViewer>
     </Modal>
+  )
+}
+
+function OrderDiscounts(props) {
+  const { discounts } = props
+  return (
+    <div>
+      <div className='discount__invoice' style={{ marginBottom: '1rem' }}>
+        <Typography style={{ fontWeight: 500 }}>Khuyến mãi trên hóa đơn</Typography>
+
+        {(discounts || []).filter((discount) => discount.type === 'invoice').length > 0 && (
+          <TableContainer>
+            <TableHead>
+              <TableRow>
+                <TableCell>Tên chương trình</TableCell>
+                <TableCell>Hình thức khuyến mãi</TableCell>
+                <TableCell>Khuyến mãi</TableCell>
+                <TableCell></TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {(discounts || [])
+                .filter((discount) => discount.type === 'invoice')
+                .map((discount) => (
+                  <TableRow>
+                    <TableCell>{discount.name}</TableCell>
+                    <TableCell>{discount.method}</TableCell>
+                    <TableCell>
+                      {discount.method === 'invoice-discount' ? (
+                        `${discount.constraint.discount_amount}${discount.constraint.discount_unit === 'cash' ? '' : '%'}`
+                      ) : (
+                        <div style={{ display: 'flex' }}>
+                          {(discount.discountItems || []).map((item) => (
+                            <ChipLabel key={item.id} label={item.name} variant='primary' />
+                          ))}
+                        </div>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+            </TableBody>
+          </TableContainer>
+        )}
+      </div>
+      <div className='discount__good'>
+        <Typography style={{ fontWeight: 500 }}>Khuyến mãi trên hàng hóa</Typography>
+      </div>
+    </div>
   )
 }
 
 function OrderPayment(props) {
   const { order, isModalVisible, handleClose } = props
 
-  const [amountToBePaid, setAmountToBePaid] = useState(0)
   const [paymentData, setPaymentData] = useState(defaultPaymentData)
   const [isInvoicePreviewVisible, setInvoicePreviewVisible] = useState(false)
 
-  const handlePayOrder = useCallback(
-    async (resolve, reject) => {
-      if (order.id) {
-        // pay existing order
-        await payOrder(order.id, paymentData)
-      } else {
-        // create new order and perform payment
-        const res = await createOrder(order)
-        await payOrder(res.data, paymentData)
-      }
-      resolve()
-    },
-    [order, paymentData]
-  )
+  const user = useSelector((state) => state.auth.user)
+
+  const handlePayOrder = useCallback(async () => {
+    if (order.id) {
+      // pay existing order
+      await createInvoice({
+        order_id: order.id,
+        ...paymentData,
+      })
+    } else {
+      // create new order and perform payment
+      const orderPayload = convertToOrderDTO(order)
+      const newOrder = (await createOrder(orderPayload)).data
+      await createInvoice({
+        order_id: newOrder.id,
+        ...paymentData,
+      })
+    }
+    handleClose()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [order, paymentData])
+
+  useEffect(() => {
+    console.log('user: ', user)
+  }, [user])
 
   return (
     <>
-      <OrderInvoicePreview isModalVisible={isInvoicePreviewVisible} handleCloseModal={() => setInvoicePreviewVisible(false)} />
+      <OrderInvoicePreview
+        order={order}
+        cashier={user}
+        isModalVisible={isInvoicePreviewVisible}
+        handleCloseModal={() => setInvoicePreviewVisible(false)}
+      />
       <Modal title='Thanh toán đơn hàng' isModalVisible={isModalVisible} handleClose={handleClose}>
         <div>
           <div>
             <div style={{ display: 'flex', marginBottom: 10 }}>
               <div style={{ display: 'flex', marginRight: '2.5rem' }}>
                 <Typography style={{ minWidth: 200, fontWeight: 500 }}>Loại đơn hàng: </Typography>
-                <Typography>Phục vụ tại bàn</Typography>
+                <Typography>{order.type === 'dine-in' ? 'Phục vụ tại bàn' : order.type === 'take-away' ? 'Mang về' : 'Giao đi'}</Typography>
               </div>
               <div style={{ display: 'flex', marginBottom: 10 }}>
                 <Typography style={{ minWidth: 200, fontWeight: 500 }}>Bàn phục vụ: </Typography>
@@ -126,54 +191,42 @@ function OrderPayment(props) {
                 </Table>
               </TableContainer>
 
-              <Card style={{ marginTop: '1rem' }}>
-                <CardHeader
-                  title='Chương trình khuyến mại'
-                  titleTypographyProps={{
-                    variant: 'h6',
-                    style: {
-                      fontSize: 16,
-                    },
-                  }}
-                />
-                <CardContent>
-                  <Typography variant='body2' color='textSecondary' component='p'>
-                    This impressive paella is a perfect party dish and a fun meal to cook together with your guests. Add 1 cup of frozen
-                    peas along with the mussels, if you like.
-                  </Typography>
-                </CardContent>
-              </Card>
+              <CustomAccordion title='Chương trình khuyến mãi' style={{ marginTop: '1rem' }}>
+                <OrderDiscounts discounts={order.discounts || []} />
+              </CustomAccordion>
             </Grid>
             <Grid item xs={6}>
               <div style={{ padding: '0 2rem', height: '100%' }}>
                 <div style={{ display: 'flex', marginBottom: 10 }}>
                   <Typography style={{ minWidth: 300, fontWeight: 500 }}>Tổng tiền hàng</Typography>
-                  <Typography>{order.details.reduce((prevSum, item) => (prevSum += item.quantity * item.price), 0)}</Typography>
+                  <Typography>{getInvoiceTotal(order)}</Typography>
                 </div>
                 <div style={{ display: 'flex', marginBottom: 10 }}>
                   <Typography style={{ minWidth: 300, fontWeight: 500 }}>Giảm giá</Typography>
-                  <Typography>30000</Typography>
+                  <Typography>{getDiscountAmount(getInvoiceTotal(order), order.discounts)}</Typography>
                 </div>
                 <div style={{ display: 'flex', marginBottom: 10 }}>
                   <Typography style={{ minWidth: 300, fontWeight: 500 }}>Thu khác</Typography>
-                  <Typography>{paymentData.invoice.other_fee}</Typography>
+                  <Typography>0</Typography>
                 </div>
                 <div style={{ display: 'flex', marginBottom: 10 }}>
                   <Typography style={{ minWidth: 300, fontWeight: 500 }}>Khách cần trả</Typography>
-                  <Typography>{order.details.reduce((prevSum, item) => (prevSum += item.quantity * item.price), 0)}</Typography>
+                  <Typography>{getInvoiceTotal(order) - getDiscountAmount(getInvoiceTotal(order), order.discounts)}</Typography>
                 </div>
                 <div style={{ display: 'flex', marginBottom: 10 }}>
                   <Typography style={{ minWidth: 300, fontWeight: 500 }}>Khách trả</Typography>
                   <TextField
                     type='number'
                     placeholder={0}
-                    value={paymentData.invoice.paid_amount}
-                    onChange={(e) => setPaymentData({ ...paymentData, invoice: { ...paymentData.invoice, paid_amount: e.target.value } })}
+                    value={paymentData.paid_amount}
+                    onChange={(e) => setPaymentData({ ...paymentData, paid_amount: e.target.value })}
                   />
                 </div>
                 <div style={{ display: 'flex', marginBottom: 10 }}>
                   <Typography style={{ minWidth: 300, fontWeight: 500 }}>Tiền thừa trả khách</Typography>
-                  <Typography>0</Typography>
+                  <Typography>
+                    {paymentData.paid_amount - (getInvoiceTotal(order) - getDiscountAmount(getInvoiceTotal(order), order.discounts))}
+                  </Typography>
                 </div>
                 <FormControlLabel
                   control={

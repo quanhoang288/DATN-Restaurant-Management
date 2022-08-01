@@ -28,8 +28,11 @@ import { getStaffList } from '../../../apis/staff'
 
 const cols = [
   { id: 'id', label: 'STT', isSortable: true },
-  { id: 'name', label: 'Ten bep', isSortable: true },
-  { id: 'type', label: 'Loai', isSortable: true },
+  { id: 'full_name', label: 'Tên nhân viên', isSortable: true },
+  { id: 'email', label: 'Email', isSortable: true },
+  { id: 'phone_number', label: 'SĐT', isSortable: true },
+  { id: 'gender', label: 'Giới tính', isSortable: true },
+  { id: 'status', label: 'Trạng thái', isSortable: true },
 ]
 
 function StaffList() {
@@ -49,6 +52,7 @@ function StaffList() {
 
   const fetchStaffList = async () => {
     const staff = (await getStaffList()).data
+    console.log('staff list:', staff)
     setStaffList(staff)
   }
 

@@ -11,19 +11,21 @@ const useStyles = makeStyles((theme) => ({
     width: '100%',
   },
   heading: {
-    fontSize: theme.typography.pxToRem(15),
+    fontSize: theme.typography.pxToRem(18),
     fontWeight: theme.typography.fontWeightRegular,
   },
 }))
 
-export default function CustomAccordion({ title, children, defaultExpanded }) {
+export default function CustomAccordion({ title, children, defaultExpanded, ...props }) {
   const classes = useStyles()
 
   return (
     <div className={classes.root}>
-      <Accordion defaultExpanded={defaultExpanded}>
+      <Accordion defaultExpanded={defaultExpanded} {...props}>
         <AccordionSummary expandIcon={<ExpandMoreIcon />} aria-controls='panel1a-content' id='panel1a-header'>
-          <Typography className={classes.heading}>{title}</Typography>
+          <Typography className={classes.heading} style={{ fontWeight: 500 }}>
+            {title}
+          </Typography>
         </AccordionSummary>
         <AccordionDetails>{children}</AccordionDetails>
       </Accordion>

@@ -8,16 +8,17 @@ import { authApi } from '../../../apis'
 import { loginSuccess } from '../../../redux/actions/authActions'
 import { errorMessages } from '../../../constants/messages'
 import Toast from '../../../components/Toast/Toast'
+import { useHistory } from 'react-router-dom'
+import routes from '../../../constants/route'
 
 function Copyright() {
   return (
     <Typography variant='body2' color='textSecondary' align='center'>
       {'Copyright © '}
       <Link color='inherit' href='https://material-ui.com/'>
-        Your Website
+        Quản lý nhà hàng
       </Link>{' '}
       {new Date().getFullYear()}
-      {'.'}
     </Typography>
   )
 }
@@ -51,6 +52,7 @@ export default function AdminAuth() {
 
   const [loginButtonDisabled, setLoginButtonDisabled] = useState(false)
 
+  const history = useHistory()
   const classes = useStyles()
   const dispatch = useDispatch()
 
@@ -90,6 +92,13 @@ export default function AdminAuth() {
   useEffect(() => {
     setLoginButtonDisabled(!isValidCredentials(credentials))
   }, [credentials])
+
+  useEffect(() => {
+    if (authState.user) {
+      history.push(routes.DASHBOARD)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authState])
 
   return (
     <Container component='main' maxWidth='xs'>

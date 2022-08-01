@@ -15,45 +15,11 @@ import { showModal } from '../../redux/actions/modalActions'
 import './Navbar.css'
 import clsx from 'clsx'
 import { useStyles } from '../../styles/drawer.style'
+import AccountPopover from '../../containers/Menu/AccountPopover'
+import NotificationsPopover from '../../containers/Menu/NotificationPopover'
 
 export default function Navbar({ isDrawerOpen, onOpenDrawer }) {
-  const [anchorEl, setAnchorEl] = useState(null)
-  const isMenuOpen = Boolean(anchorEl)
   const classes = useStyles()
-
-  const user = useSelector((state) => state.auth.user)
-  const dispatch = useDispatch()
-  const history = useHistory()
-
-  const handleProfileMenuOpen = (event) => {
-    setAnchorEl(event.currentTarget)
-  }
-
-  const handleMenuClose = () => {
-    setAnchorEl(null)
-  }
-
-  const handleShowProfile = () => {
-    setAnchorEl(null)
-    history.push(`/profile/${user.id}`)
-  }
-
-  const menuId = 'primary-search-account-menu'
-  const renderMenu = (
-    <Menu
-      anchorEl={anchorEl}
-      anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
-      id={menuId}
-      keepMounted
-      transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-      open={isMenuOpen}
-      onClose={handleMenuClose}
-    >
-      <MenuItem onClick={handleShowProfile}>Trang cá nhân</MenuItem>
-      <MenuItem>Cài đặt</MenuItem>
-      <MenuItem onClick={handleMenuClose}>Đăng xuất</MenuItem>
-    </Menu>
-  )
 
   return (
     <div>
@@ -74,18 +40,13 @@ export default function Navbar({ isDrawerOpen, onOpenDrawer }) {
             <Grid item xs={9}></Grid>
             <Grid item xs={2}>
               <div className='icon__group'>
-                <IconButton color='inherit'>
-                  <NotificationsIcon />
-                </IconButton>
-                <IconButton edge='end' aria-controls={menuId} aria-haspopup='true' onClick={handleProfileMenuOpen} color='inherit'>
-                  <AccountCircle />
-                </IconButton>
+                <NotificationsPopover />
+                <AccountPopover />
               </div>
             </Grid>
           </Grid>
         </Toolbar>
       </AppBar>
-      {renderMenu}
     </div>
   )
 }

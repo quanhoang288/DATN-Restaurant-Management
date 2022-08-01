@@ -6,6 +6,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import ExitToAppOutlinedIcon from '@material-ui/icons/ExitToAppOutlined'
 import PersonOutlinedIcon from '@material-ui/icons/PersonOutlined' // components
 import MenuPopover from '../../components/MenuPopover/MenuPopover'
+import { logout } from '../../redux/actions/authActions'
 
 export default function AccountPopover() {
   const anchorRef = useRef(null)
@@ -34,22 +35,46 @@ export default function AccountPopover() {
       </IconButton>
 
       <MenuPopover open={open} onClose={handleClose} anchorEl={anchorRef.current}>
-        <MenuItem onClick={() => history.push(`/profile/${user.id}`)}>
-          <ListItemIcon style={{ width: 36, minWidth: 30 }}>
-            <PersonOutlinedIcon />
-          </ListItemIcon>
-          <ListItemText primaryTypographyProps={{ variant: 'body2' }}>Xem hồ sơ</ListItemText>
-        </MenuItem>
-        <MenuItem
-          onClick={() => {
-            handleClose()
-          }}
-        >
-          <ListItemIcon style={{ width: 36, minWidth: 30 }}>
-            <ExitToAppOutlinedIcon />
-          </ListItemIcon>
-          <ListItemText primaryTypographyProps={{ variant: 'body2' }}>Đăng xuất</ListItemText>
-        </MenuItem>
+        {user && user.customer ? (
+          <>
+            <MenuItem onClick={() => history.push(`/profile/${user.id}`)}>
+              <ListItemIcon style={{ width: 36, minWidth: 30 }}>
+                <PersonOutlinedIcon />
+              </ListItemIcon>
+              <ListItemText primaryTypographyProps={{ variant: 'body2' }}>Xem hồ sơ</ListItemText>
+            </MenuItem>
+            <MenuItem
+              onClick={() => {
+                handleClose()
+              }}
+            >
+              <ListItemIcon style={{ width: 36, minWidth: 30 }}>
+                <ExitToAppOutlinedIcon />
+              </ListItemIcon>
+              <ListItemText primaryTypographyProps={{ variant: 'body2' }}>Đăng xuất</ListItemText>
+            </MenuItem>
+          </>
+        ) : (
+          <>
+            <MenuItem onClick={() => history.push(`/profile/${user.id}`)}>
+              <ListItemIcon style={{ width: 36, minWidth: 30 }}>
+                <PersonOutlinedIcon />
+              </ListItemIcon>
+              <ListItemText primaryTypographyProps={{ variant: 'body2' }}>Xem hồ sơ</ListItemText>
+            </MenuItem>
+            <MenuItem
+              onClick={() => {
+                dispatch(logout())
+                handleClose()
+              }}
+            >
+              <ListItemIcon style={{ width: 36, minWidth: 30 }}>
+                <ExitToAppOutlinedIcon />
+              </ListItemIcon>
+              <ListItemText primaryTypographyProps={{ variant: 'body2' }}>Đăng xuất</ListItemText>
+            </MenuItem>
+          </>
+        )}
       </MenuPopover>
     </>
   )

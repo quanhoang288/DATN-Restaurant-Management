@@ -1,7 +1,7 @@
 import { combineReducers, createStore } from 'redux'
 import { persistStore, persistReducer } from 'redux-persist'
 import storage from 'redux-persist/lib/storage'
-import { authReducer, cartReducer, modalReducer } from './reducers'
+import { authReducer, cartReducer, modalReducer, notificationReducer } from './reducers'
 
 const authPersistConfig = {
   key: 'auth',
@@ -14,10 +14,16 @@ const cartPersistConfig = {
   storage,
 }
 
+const notificationPersistConfig = {
+  key: 'notification',
+  storage,
+}
+
 const reducer = combineReducers({
   auth: persistReducer(authPersistConfig, authReducer),
   modal: modalReducer,
   cart: persistReducer(cartPersistConfig, cartReducer),
+  notification: persistReducer(notificationPersistConfig, notificationReducer),
 })
 
 export const store = createStore(reducer)

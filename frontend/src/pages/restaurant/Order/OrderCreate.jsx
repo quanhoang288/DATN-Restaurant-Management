@@ -41,6 +41,8 @@ import OrderPayment from './OrderPayment'
 import ChipLabel from '../../../components/ChipLabel/ChipLabel'
 import Toast from '../../../components/Toast/Toast'
 import { getDiscounts } from '../../../apis/discount'
+import { createNotification } from '../../../apis/notification'
+import { useWebsocket } from '../../../utils/websocket.context'
 // import './OrderCreate.css'
 
 const defaultData = {
@@ -274,6 +276,8 @@ function OrderCreate({ orderId, isModalVisible, handleCloseModal }) {
   const [isDiscountModalVisible, setDiscountModalVisible] = useState(false)
   const [discountOptions, setDiscountOptions] = useState([])
 
+  const socket = useWebsocket()
+
   const fetchDiscountOptions = async (orderId) => {
     const discounts = (await getDiscounts({ orderId })).data
     setDiscountOptions(discounts)
@@ -325,11 +329,16 @@ function OrderCreate({ orderId, isModalVisible, handleCloseModal }) {
 
   const handleSaveOrder = useCallback(async () => {
     const orderPayload = convertToOrderDTO(orderData)
+    let referencedId = orderId
     if (orderId) {
       await updateOrder(orderId, orderPayload)
     } else {
-      await createOrder(orderPayload)
+      const order = (await createOrder(orderPayload)).data
+      referencedId = order.id
     }
+    const notification = (await createNotification({ type: 'order_created', referenced_id: referencedId })).data
+    socket.emit('NEW_NOTIFICATION', notification)
+
     handleCloseModal()
     setSaveSuccessful(true)
     // eslint-disable-next-line react-hooks/exhaustive-deps
