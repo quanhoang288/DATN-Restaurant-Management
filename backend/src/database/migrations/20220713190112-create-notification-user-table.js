@@ -8,7 +8,7 @@ module.exports = {
         type: Sequelize.DataTypes.BIGINT.UNSIGNED,
         references: {
           model: {
-            tableName: 'notification_templates',
+            tableName: 'notifications',
           },
         },
       },

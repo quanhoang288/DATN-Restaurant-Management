@@ -4,6 +4,7 @@ const httpStatus = require('http-status');
 const routes = require('./routes/v1');
 const { errorConverter, errorHandler } = require('./middlewares/error');
 const ApiError = require('./exceptions/api-error');
+const s3Service = require('./services/s3.service');
 // const scheduler = require('./factories/schedulerFactory');
 // const reminderWorker = require('./workers/reminderWorker');
 
@@ -15,6 +16,26 @@ app.use(express.urlencoded({ extended: true }));
 // enable cors
 app.use(cors());
 app.options('*', cors());
+
+// download images from s3
+app.get('/public/images/:key', (req, res) => {
+  try {
+    const fileStream = s3Service.getFileStream(req.params.key);
+    fileStream.pipe(res);
+  } catch (err) {
+    console.log(err);
+  }
+});
+
+app.get('/public/templates/:key', (req, res) => {
+  try {
+    const fileStream = s3Service.getFileStream(req.params.key);
+    res.set('Content-Disposition', 'attachment');
+    fileStream.pipe(res);
+  } catch (err) {
+    console.log(err);
+  }
+});
 
 // v1 api routes
 app.use('/api/v1', routes);

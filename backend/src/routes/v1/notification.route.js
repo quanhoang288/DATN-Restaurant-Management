@@ -16,4 +16,6 @@ router
     notificationController.getNotifications,
   );
 
+router.route('/:id').put(notificationController.updateNotificationReadStatus);
+
 module.exports = router;

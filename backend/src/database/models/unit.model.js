@@ -2,14 +2,13 @@ const { Model } = require('sequelize');
 const { id, dateTime } = require('../generate');
 
 module.exports = (sequelize, DataTypes) => {
-  class Role extends Model {
+  class Unit extends Model {
     static associate(models) {}
   }
 
-  Role.init(
+  Unit.init(
     {
       ...id(DataTypes),
-
       name: {
         type: DataTypes.STRING,
         allowNull: false,
@@ -19,9 +18,9 @@ module.exports = (sequelize, DataTypes) => {
     },
     {
       sequelize,
-      modelName: 'Role',
-      tableName: 'roles',
+      modelName: 'Unit',
+      tableName: 'units',
     },
   );
-  return Role;
+  return Unit;
 };

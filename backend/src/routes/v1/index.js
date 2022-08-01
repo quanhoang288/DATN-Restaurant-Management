@@ -10,6 +10,8 @@ const staffRoute = require('./staff.route');
 const discountRoute = require('./discount.route');
 const goodRoute = require('./good.route');
 const menuRoute = require('./menu.route');
+const invoiceRoute = require('./invoice.route');
+const roleRoute = require('./role.route');
 
 const router = express.Router();
 
@@ -57,6 +59,14 @@ const routes = [
   {
     path: '/menus',
     route: menuRoute,
+  },
+  {
+    path: '/invoices',
+    route: invoiceRoute,
+  },
+  {
+    path: '/roles',
+    route: roleRoute,
   },
 ];
 

@@ -12,6 +12,7 @@ const staffService = require('./staff.service');
 const discountService = require('./discount.service');
 const menuService = require('./menu.service');
 const notificationService = require('./notification.service');
+const roleService = require('./role.service');
 
 module.exports = {
   authService,
@@ -28,4 +29,5 @@ module.exports = {
   discountService,
   menuService,
   notificationService,
+  roleService,
 };

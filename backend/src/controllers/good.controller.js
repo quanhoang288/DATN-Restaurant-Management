@@ -8,6 +8,13 @@ const createGood = async (req, res) => {
   });
 };
 
+const importGoods = async (req, res) => {
+  await goodService.importGoods(req.file);
+  return res.status(httpStatus.OK).json({
+    message: 'Imported goods successfully',
+  });
+};
+
 const getGoodList = async (req, res) => {
   const params = req.query || {};
   const goods = await goodService.getGoodList(params);
@@ -41,6 +48,7 @@ const deleteGood = async (req, res) => {
 
 module.exports = {
   createGood,
+  importGoods,
   getGoodList,
   getOptions,
   getGoodDetail,

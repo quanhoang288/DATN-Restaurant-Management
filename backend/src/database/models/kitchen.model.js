@@ -9,6 +9,12 @@ module.exports = (sequelize, DataTypes) => {
   Kitchen.init(
     {
       ...id(DataTypes),
+      branch_id: {
+        type: DataTypes.BIGINT.UNSIGNED,
+        references: {
+          model: 'branches',
+        },
+      },
       name: {
         type: DataTypes.STRING,
         allowNull: false,

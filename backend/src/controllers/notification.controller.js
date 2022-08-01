@@ -12,7 +12,17 @@ const getNotifications = catchAsync(async (req, res) => {
   return res.send(result);
 });
 
+const updateNotificationReadStatus = catchAsync(async (req, res) => {
+  const notificationId = req.params.id;
+  const { userId } = req.body;
+
+  await notificationService.markNotificationAsRead(notificationId, userId);
+
+  res.send('Update notification successfully');
+});
+
 module.exports = {
   createNotification,
   getNotifications,
+  updateNotificationReadStatus,
 };

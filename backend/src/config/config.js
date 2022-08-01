@@ -6,6 +6,7 @@ dotenv.config({ path: path.join(__dirname, '../../.env') });
 
 const envVarsSchema = Joi.object()
   .keys({
+    ASSET_DIR: Joi.string().description('Directory to store files'),
     NODE_ENV: Joi.string()
       .valid('production', 'development', 'test')
       .required(),
@@ -59,6 +60,7 @@ if (error) {
 module.exports = {
   env: envVars.NODE_ENV,
   port: envVars.PORT,
+  assetDir: envVars.ASSET_DIR,
   db: {
     username: envVars.DB_USER,
     password: envVars.DB_PASSWORD,

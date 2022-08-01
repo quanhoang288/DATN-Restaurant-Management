@@ -33,56 +33,30 @@ class SequelizePaginate {
      * Pagination.
      *
      * @param page
-     * @param paginate
+     * @param perPage
      * @param {paginateOptions} [params] - Options to filter query.
      * @returns {Promise<PaginateResult>} Total pages and docs.
      * @example
-     * const { docs, pages, total } = await MyModel.paginate({ page: 1, paginate: 25 })
+     * const { docs, pages, total } = await MyModel.paginate({ page: 1, perPage: 25 })
      * @member of Model
      */
-    const pagination = async function ({
-      page = 1,
-      paginate = 30,
-      ...params
-    } = {}) {
-      const options = Object.assign({}, params);
-      const countOptions = Object.keys(options).reduce((acc, key) => {
-        if (!['order', 'attributes'].includes(key)) {
-          if (key === 'include') {
-            if (Array.isArray(options[key])) {
-              acc[key] = options[key].filter((item) => item.keep);
-            }
-          } else {
-            acc[key] = options[key];
-          }
-        }
-        return acc;
-      }, {});
+    async function pagination({ page = 1, perPage = 30, ...params } = {}) {
+      const options = { ...params };
 
-      let total = await this.count(countOptions);
+      let total = await this.count(params);
 
       if (options.group !== undefined) {
         total = total.length;
       }
 
-      const pages = Math.ceil(total / paginate);
-      options.limit = paginate;
-      options.offset = paginate * (page - 1);
-      /* eslint-disable no-console */
-      if (params.limit) {
-        console.warn(
-          '(sequelize-pagination) Warning: limit option is ignored.',
-        );
-      }
-      if (params.offset) {
-        console.warn(
-          '(sequelize-pagination) Warning: offset option is ignored.',
-        );
-      }
+      const pages = Math.ceil(total / perPage);
+      options.limit = perPage;
+      options.offset = perPage * (page - 1);
+
       if (params.order) options.order = params.order;
       const docs = await this.findAll(options);
       return { docs, pages, total };
-    };
+    }
     const instanceOrModel = Model.Instance || Model;
     instanceOrModel.paginate = pagination;
   }

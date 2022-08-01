@@ -2,53 +2,45 @@ const { Model } = require('sequelize');
 const { id, dateTime } = require('../generate');
 
 module.exports = (sequelize, DataTypes) => {
-  class GoodComponent extends Model {
-    static associate(models) {
-      models.GoodComponent.belongsTo(models.Good, {
-        as: 'good',
-        foreignKey: 'good_id',
-      });
-      models.GoodComponent.belongsTo(models.Good, {
-        as: 'component',
-        foreignKey: 'component_id',
-      });
-    }
+  class GoodInventory extends Model {
+    static associate(models) {}
   }
 
-  GoodComponent.init(
+  GoodInventory.init(
     {
       ...id(DataTypes),
       good_id: {
         type: DataTypes.BIGINT.UNSIGNED,
-        allowNull: false,
         references: {
           model: 'goods',
         },
-      },
-      component_id: {
-        type: DataTypes.BIGINT.UNSIGNED,
         allowNull: false,
-        references: {
-          model: 'goods',
-        },
       },
       unit_id: {
         type: DataTypes.BIGINT.UNSIGNED,
-        allowNull: false,
         references: {
           model: 'units',
         },
+        allowNull: false,
+      },
+      branch_id: {
+        type: DataTypes.BIGINT.UNSIGNED,
+        references: {
+          model: 'branches',
+        },
+        allowNull: false,
       },
       quantity: {
         type: DataTypes.DOUBLE,
+        allowNull: false,
       },
       ...dateTime(DataTypes),
     },
     {
       sequelize,
-      modelName: 'GoodComponent',
-      tableName: 'good_components',
+      modelName: 'GoodInventory',
+      tableName: 'good_inventory',
     },
   );
-  return GoodComponent;
+  return GoodInventory;
 };

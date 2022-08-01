@@ -1,7 +1,9 @@
+const fs = require('fs');
 const db = require('../database/models');
 const query = require('../utils/query');
 const ApiError = require('../exceptions/api-error');
 const Errors = require('../exceptions/custom-error');
+const parseFile = require('../utils/excelParser');
 
 const { Op } = db;
 
@@ -56,19 +58,32 @@ const createGood = async (data, option = {}) => {
   }
 };
 
+const importGoods = async (fileToImport, option = {}) => {
+  console.log(fileToImport);
+  const rows = await parseFile(fileToImport.path);
+  console.log('rows length: ', rows.length);
+  // await db.Good.bulkCreate(rows, option);
+  fs.unlinkSync(fileToImport.path);
+};
+
 const getGoodList = async (params = {}) => {
   const filter = params.filter || {};
   const sort = params.sort || [];
 
-  if (params.page) {
-    const items = await db.Good.paginate({
-      page: params.page,
-      paginate: params.limit || 10,
-      where: query.filter(Op, filter),
-      order: sort,
-    });
+  // eslint-disable-next-line no-prototype-builtins
+  if (params.hasOwnProperty('page')) {
+    const items = await db.Good.paginate(
+      {
+        page: params.page,
+        perPage: params.perPage,
+      },
+      {
+        where: query.filter(Op, filter),
+        order: sort,
+      },
+    );
 
-    return query.getPagingData(items, params.page, params.limit);
+    return query.getPagingData(items, params.page, params.perPage);
   }
 
   const option = {
@@ -213,6 +228,7 @@ const deleteGood = async (goodId, option = {}) => {
 
 module.exports = {
   createGood,
+  importGoods,
   updateGood,
   getGoodList,
   getGoodDetail,

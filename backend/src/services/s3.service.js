@@ -2,26 +2,44 @@ const AWS = require('aws-sdk');
 const fs = require('fs');
 const config = require('../config/config');
 
+const { accessKeyId, bucketName, secretAccessKey } = config.s3;
+
 const s3 = new AWS.S3({
-  accessKeyId: config.s3.accessKeyId,
-  secretAccessKey: config.s3.secretAccessKey,
+  accessKeyId,
+  secretAccessKey,
 });
 
-const uploadFile = async (filePath, originalFilename) => {
+const uploadFile = (filePath, originalFilename) => {
   const blob = fs.readFileSync(filePath);
-  const uploadedFile = await s3
+  return s3
     .upload({
       Bucket: config.s3.bucketName,
       Key: originalFilename,
       Body: blob,
     })
     .promise();
-  return uploadedFile;
 };
 
-const getFile = async () => {};
+const getFileStream = (fileKey) => {
+  const downloadParams = {
+    Key: fileKey,
+    Bucket: bucketName,
+  };
+
+  return s3.getObject(downloadParams).createReadStream();
+};
+
+const generatePresignedUrl = async (fileKey, expires = 900) => {
+  const signedUrl = s3.getSignedUrl('getObject', {
+    Key: fileKey,
+    Bucket: config.s3.bucketName,
+    Expires: expires,
+  });
+  return signedUrl;
+};
 
 module.exports = {
   uploadFile,
-  getFile,
+  getFileStream,
+  generatePresignedUrl,
 };

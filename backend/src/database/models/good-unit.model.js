@@ -25,12 +25,15 @@ module.exports = (sequelize, DataTypes) => {
           model: 'goods',
         },
       },
-      name: {
+      unit_id: {
         type: DataTypes.STRING,
         allowNull: false,
       },
+      unit_cost: {
+        type: DataTypes.INTEGER,
+      },
       multiplier: {
-        type: DataTypes.FLOAT,
+        type: DataTypes.DOUBLE,
         allowNull: false,
         defaultValue: 1.0,
       },
@@ -38,7 +41,7 @@ module.exports = (sequelize, DataTypes) => {
     {
       sequelize,
       modelName: 'GoodUnit',
-      tableName: 'good_units',
+      tableName: 'good_unit',
     },
   );
   return GoodUnit;

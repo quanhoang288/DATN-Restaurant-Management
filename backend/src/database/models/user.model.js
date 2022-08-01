@@ -1,11 +1,19 @@
 const { Model } = require('sequelize');
 const bcrypt = require('bcryptjs');
 const { id, dateTime } = require('../generate');
+const hashPassword = require('../../utils/hashPassword');
 
 module.exports = (sequelize, DataTypes) => {
   class User extends Model {
     static associate(models) {
-      // define association here
+      models.User.hasOne(models.Customer, {
+        as: 'customer',
+        foreignKey: 'id',
+      });
+      models.User.hasOne(models.Staff, {
+        as: 'staff',
+        foreignKey: 'id',
+      });
     }
 
     static async isEmailTaken(email) {
@@ -45,6 +53,9 @@ module.exports = (sequelize, DataTypes) => {
   User.init(
     {
       ...id(DataTypes),
+      avatar: {
+        type: DataTypes.STRING,
+      },
       email: {
         type: DataTypes.STRING,
         allowNull: false,
@@ -89,5 +100,11 @@ module.exports = (sequelize, DataTypes) => {
       tableName: 'users',
     },
   );
+
+  User.beforeCreate(async (user) => {
+    const hashedPassword = await hashPassword(user.password);
+    user.password = hashedPassword;
+  });
+
   return User;
 };

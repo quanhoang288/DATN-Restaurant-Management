@@ -87,6 +87,7 @@ const createOrder = async (data, option = {}) => {
     }
 
     await t.commit();
+    return order;
   } catch (err) {
     t.rollback();
     throw err;

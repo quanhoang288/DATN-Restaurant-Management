@@ -23,9 +23,6 @@ module.exports = (sequelize, DataTypes) => {
       other_fee: {
         type: DataTypes.INTEGER,
       },
-      discount_amount: {
-        type: DataTypes.INTEGER,
-      },
       paid_amount: {
         type: DataTypes.INTEGER,
       },

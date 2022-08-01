@@ -4,10 +4,6 @@ const { id } = require('../generate');
 module.exports = (sequelize, DataTypes) => {
   class Notification extends Model {
     static associate(models) {
-      models.Notification.belongsTo(models.NotificationTemplate, {
-        as: 'template',
-        foreignKey: 'notification_template_id',
-      });
       models.Notification.belongsToMany(models.User, {
         as: 'users',
         foreignKey: 'notification_id',
@@ -15,12 +11,17 @@ module.exports = (sequelize, DataTypes) => {
           model: models.NotificationUser,
         },
       });
-      models.Notification.belongsToMany(models.Role, {
-        as: 'roles',
-        foreignKey: 'notification_id',
-        through: {
-          model: models.NotificationRole,
-        },
+      models.Notification.belongsTo(models.Order, {
+        as: 'order',
+        foreignKey: 'order_id',
+      });
+      models.Notification.belongsTo(models.OrderDetail, {
+        as: 'orderItem',
+        foreignKey: 'order_item_id',
+      });
+      models.Notification.belongsTo(models.Reservation, {
+        as: 'reservation',
+        foreignKey: 'reservation_id',
       });
     }
   }
@@ -28,16 +29,28 @@ module.exports = (sequelize, DataTypes) => {
   Notification.init(
     {
       ...id(DataTypes),
-      notification_template_id: {
-        type: DataTypes.BIGINT.UNSIGNED,
+      type: {
+        type: DataTypes.STRING,
         allowNull: false,
+        unique: true,
+      },
+      order_id: {
+        type: DataTypes.BIGINT.UNSIGNED,
         references: {
-          model: 'notification_templates',
+          model: 'orders',
         },
       },
-      referenced_id: {
+      order_item_id: {
         type: DataTypes.BIGINT.UNSIGNED,
-        allowNull: false,
+        references: {
+          model: 'order_details',
+        },
+      },
+      reservation_id: {
+        type: DataTypes.BIGINT.UNSIGNED,
+        references: {
+          model: 'reservations',
+        },
       },
     },
     {

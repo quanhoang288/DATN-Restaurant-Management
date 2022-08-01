@@ -4,18 +4,19 @@ module.exports = (sequelize, DataTypes) => {
   class Staff extends Model {
     static associate(models) {
       models.Staff.belongsTo(models.User, { as: 'user', foreignKey: 'id' });
-      models.Staff.belongsToMany(models.Role, {
-        as: 'roles',
-        through: {
-          model: models.StaffRole,
-        },
-        key: 'role_id',
+      models.Staff.belongsTo(models.Role, {
+        as: 'role',
+        foreignKey: 'role_id',
       });
     }
   }
 
   Staff.init(
     {
+      is_admin: {
+        type: DataTypes.TINYINT,
+        defaultValue: 0,
+      },
       status: {
         type: DataTypes.STRING,
         allowNull: false,

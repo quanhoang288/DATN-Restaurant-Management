@@ -9,17 +9,12 @@ const server = http.createServer(app);
 
 const io = new Server(server, { cors: '*' });
 
-io.on('test', (data) => console.log(data));
-
 io.on('connection', (socket) => {
   console.log('a user connected');
-  socket.on('test', (data) => console.log(data));
-});
-
-// Socket.io middleware
-app.use((req, res, next) => {
-  req.io = io;
-  next();
+  socket.on('NEW_NOTIFICATION', (notification) => {
+    console.log('receive new notification: ', notification);
+    socket.broadcast.emit('NEW_NOTIFICATION', notification);
+  });
 });
 
 server.listen(config.port, () => {

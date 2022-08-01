@@ -8,20 +8,7 @@ module.exports = (sequelize, DataTypes) => {
         as: 'reservationTable',
         foreignKey: 'reservation_table_id',
       });
-      // models.Order.belongsTo(models.Invoice, {
-      //   as: 'invoice',
-      //   foreignKey: 'invoice_id',
-      // });
-      models.Order.belongsToMany(models.Kitchen, {
-        as: 'kitchens',
-        through: {
-          model: models.KitchenOrder,
-        },
-      });
-      models.Order.hasMany(models.KitchenOrder, {
-        as: 'kitchenOrders',
-        foreignKey: 'order_id',
-      });
+
       models.Order.hasMany(models.OrderDetail, {
         as: 'details',
         foreignKey: 'order_id',

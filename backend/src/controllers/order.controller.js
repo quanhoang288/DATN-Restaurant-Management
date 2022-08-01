@@ -3,10 +3,8 @@ const orderService = require('../services/order.service');
 const catchAsync = require('../utils/catchAsync');
 
 const createOrder = catchAsync(async (req, res) => {
-  await orderService.createOrder(req.body);
-  return res.status(httpStatus.OK).json({
-    message: 'Create order succesfully',
-  });
+  const order = await orderService.createOrder(req.body);
+  return res.status(httpStatus.OK).send(order);
 });
 
 const getOrderList = async (req, res) => {

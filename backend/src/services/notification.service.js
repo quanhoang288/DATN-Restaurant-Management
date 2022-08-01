@@ -1,6 +1,10 @@
 const db = require('../database/models');
+const query = require('../utils/query');
+
 const ApiError = require('../exceptions/api-error');
 const Errors = require('../exceptions/custom-error');
+
+const { Op } = db;
 
 const createNotification = async (data, option = {}) => {
   const { type } = data;
@@ -47,10 +51,48 @@ const createNotification = async (data, option = {}) => {
   }
 };
 
-const getNotifications = async (filter = {}) => {
-  console.log('filter: ', filter);
-  return db.Notification.findAll({
+const getNotifications = async (params = {}) => {
+  const filter = params.filter || {};
+  const sort = params.sort || [];
+
+  // eslint-disable-next-line no-prototype-builtins
+  if (params.hasOwnProperty('page')) {
+    const items = await db.Notification.paginate(
+      {
+        page: params.page,
+        perPage: params.perPage,
+      },
+      {
+        where: query.filter(Op, filter),
+        order: sort,
+        include: [
+          {
+            association: 'template',
+          },
+          {
+            association: 'users',
+            attributes: ['id'],
+            through: {
+              attributes: [],
+            },
+          },
+          {
+            association: 'roles',
+            attributes: ['id'],
+            through: {
+              attributes: [],
+            },
+          },
+        ],
+      },
+    );
+
+    return query.getPagingData(items, params.page, params.perPage);
+  }
+
+  const option = {
     where: filter,
+    sort,
     include: [
       {
         association: 'template',
@@ -70,7 +112,12 @@ const getNotifications = async (filter = {}) => {
         },
       },
     ],
-  });
+  };
+  if (params.attributes) {
+    option.attributes = params.attributes;
+  }
+
+  return db.Notification.findAll(option);
 };
 
 const markNotificationAsRead = async (notificationId, userId, option = {}) => {

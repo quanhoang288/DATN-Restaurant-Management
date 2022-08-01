@@ -11,8 +11,8 @@ const sequelizeConfig = {
   dialectOptions: {
     charset: 'utf8mb4',
   },
-  logging: console.log,
-  // logging: false,
+  // logging: console.log,
+  logging: false,
   define: {
     underscored: true,
     timestamps: true,

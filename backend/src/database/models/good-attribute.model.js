@@ -4,14 +4,14 @@ const { id, dateTime } = require('../generate');
 module.exports = (sequelize, DataTypes) => {
   class GoodAttribute extends Model {
     static associate(models) {
-      models.GoodAttribute.belongsTo(models.Good, {
-        as: 'good',
-        foreignKey: 'good_id',
-      });
-      models.GoodAttribute.hasMany(models.AttributeValue, {
-        as: 'values',
-        foreignKey: 'attribute_id',
-      });
+      // models.GoodAttribute.belongsTo(models.Good, {
+      //   as: 'good',
+      //   foreignKey: 'good_id',
+      // });
+      // models.GoodAttribute.hasMany(models.AttributeValue, {
+      //   as: 'values',
+      //   foreignKey: 'attribute_id',
+      // });
     }
   }
 
@@ -22,12 +22,12 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.BIGINT.UNSIGNED,
         allowNull: false,
       },
-      code: {
+      attribute_id: {
         type: DataTypes.STRING,
         allowNull: false,
         unique: true,
       },
-      name: {
+      value: {
         type: DataTypes.STRING,
         allowNull: false,
       },

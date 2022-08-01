@@ -40,7 +40,10 @@ const createGood = {
 };
 
 const getGoods = {
-  query: Joi.object().keys({}),
+  query: Joi.object().keys({
+    page: Joi.number(),
+    perPage: Joi.number().positive(),
+  }),
 };
 
 const getGood = {

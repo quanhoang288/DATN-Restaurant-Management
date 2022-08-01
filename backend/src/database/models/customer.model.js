@@ -7,14 +7,14 @@ module.exports = (sequelize, DataTypes) => {
         as: 'customer',
         foreignKey: 'id',
       });
-      models.Customer.belongsToMany(models.Group, {
-        as: 'groups',
-        through: {
-          model: models.Group,
-          unique: false,
-        },
-        foreignKey: 'customer_id',
-      });
+      // models.Customer.belongsToMany(models.Group, {
+      //   as: 'groups',
+      //   through: {
+      //     model: models.Group,
+      //     unique: false,
+      //   },
+      //   foreignKey: 'customer_id',
+      // });
     }
   }
 

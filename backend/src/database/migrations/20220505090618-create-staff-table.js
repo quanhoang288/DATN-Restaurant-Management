@@ -11,6 +11,14 @@ module.exports = {
           key: 'id',
         },
       }),
+      role_id: {
+        type: Sequelize.DataTypes.BIGINT.UNSIGNED,
+        references: {
+          model: {
+            tableName: 'roles',
+          },
+        },
+      },
       status: {
         type: Sequelize.DataTypes.STRING,
         allowNull: false,

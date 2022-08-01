@@ -4,18 +4,34 @@ module.exports = {
   async up(queryInterface, Sequelize) {
     await queryInterface.createTable('notifications', {
       ...id(Sequelize.DataTypes),
-      notification_template_id: {
+      type: {
+        type: Sequelize.DataTypes.STRING,
+        allowNull: false,
+        unique: true,
+      },
+      order_id: {
         type: Sequelize.DataTypes.BIGINT.UNSIGNED,
         references: {
           model: {
-            tableName: 'notification_templates',
+            tableName: 'orders',
           },
-          allowNull: false,
         },
       },
-      referenced_id: {
+      order_item_id: {
         type: Sequelize.DataTypes.BIGINT.UNSIGNED,
-        allowNull: false,
+        references: {
+          model: {
+            tableName: 'order_details',
+          },
+        },
+      },
+      reservation_id: {
+        type: Sequelize.DataTypes.BIGINT.UNSIGNED,
+        references: {
+          model: {
+            tableName: 'reservations',
+          },
+        },
       },
       ...dateTime(Sequelize.DataTypes),
     });

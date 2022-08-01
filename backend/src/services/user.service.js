@@ -1,6 +1,10 @@
 const httpStatus = require('http-status');
+const fs = require('fs');
+// const path = require('path');
+
 const db = require('../database/models');
 const ApiError = require('../exceptions/api-error');
+const s3Service = require('./s3.service');
 
 /**
  * Create a user
@@ -8,10 +12,19 @@ const ApiError = require('../exceptions/api-error');
  * @returns {Promise<User>}
  */
 const createUser = async (userBody, option = {}) => {
+  console.log('creating user');
   if (await db.User.isEmailTaken(userBody.email)) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Email already taken');
   }
-  console.log('user body: ', userBody);
+  const tmpAvatarFile = userBody.avatar;
+
+  const uploadRes = await s3Service.uploadFile(
+    tmpAvatarFile.path,
+    tmpAvatarFile.filename,
+  );
+  console.log('upload result: ', uploadRes);
+  fs.unlinkSync(tmpAvatarFile.path);
+  userBody.avatar = uploadRes.Key;
   return db.User.create(userBody, option);
 };
 
@@ -45,6 +58,19 @@ const getUserByEmail = async (email) =>
     where: {
       email,
     },
+    include: [
+      {
+        association: 'staff',
+        include: [
+          {
+            association: 'role',
+          },
+        ],
+      },
+      // {
+      //   association: 'customer',
+      // },
+    ],
   });
 
 const getUserByUsername = async (username) =>
