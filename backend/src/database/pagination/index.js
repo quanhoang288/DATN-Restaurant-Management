@@ -55,6 +55,7 @@ class SequelizePaginate {
 
       if (params.order) options.order = params.order;
       const docs = await this.findAll(options);
+      console.log(docs);
       return { docs, pages, total };
     }
     const instanceOrModel = Model.Instance || Model;

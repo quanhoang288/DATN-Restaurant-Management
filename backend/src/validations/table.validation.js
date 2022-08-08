@@ -16,11 +16,10 @@ const getTable = {
 
 const getTables = {
   query: Joi.object().keys({
-    name: Joi.string(),
-    floor_num: Joi.number().positive(),
+    filters: Joi.string(),
     sort: Joi.string(),
-    limit: Joi.number().integer(),
-    page: Joi.number().integer(),
+    page: Joi.number().positive(),
+    perPage: Joi.number().positive(),
   }),
 };
 

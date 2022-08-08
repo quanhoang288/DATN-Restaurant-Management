@@ -5,17 +5,77 @@ const ApiError = require('../exceptions/api-error');
 const config = require('../config/config');
 const db = require('../database/models');
 
+const { Op } = db.Sequelize;
+
+const loginWithEmailOrPhoneNumber = async (identifier, password) => {
+  try {
+    const user = await db.User.findOne({
+      where: {
+        [Op.or]: [
+          {
+            email: identifier,
+          },
+          {
+            phone_number: identifier,
+          },
+        ],
+      },
+      include: [
+        {
+          association: 'staff',
+          include: [
+            {
+              association: 'role',
+            },
+          ],
+        },
+      ],
+    });
+    console.log('user: ', user);
+
+    if (!user || !(await user.isPasswordMatch(password))) {
+      console.log('authentication failed');
+      throw new ApiError(httpStatus.BAD_REQUEST, 'Incorrect credentials');
+    }
+
+    const tokens = await tokenService.generateAuthTokens(user);
+
+    return { user, tokens };
+  } catch (err) {
+    console.log(err);
+  }
+};
+
 /**
  * Login with username and password
  * @param {string} email
  * @param {string} password
  */
-const loginUserWithEmailAndPassword = async (email, password) => {
+const loginWithEmail = async (email, password) => {
   const user = await userService.getUserByEmail(email);
+  console.log('user: ', user);
   if (!user || !(await user.isPasswordMatch(password))) {
+    console.log('authentication failed');
     throw new ApiError(httpStatus.BAD_REQUEST, 'Incorrect email or password');
   }
   return user;
+};
+
+const loginWithPhoneNumber = async (phoneNumber, password) => {
+  const user = await db.User.findOne({
+    where: {
+      phone_number: phoneNumber,
+    },
+  });
+  console.log('user: ', user);
+
+  if (!user || !(await user.isPasswordMatch(password))) {
+    console.log('authentication failed');
+    throw new ApiError(
+      httpStatus.BAD_REQUEST,
+      'Incorrect phone number or password',
+    );
+  }
 };
 
 /**
@@ -77,7 +137,9 @@ const verifyEmail = async (userId, verifyEmailToken) => {
 };
 
 module.exports = {
-  loginUserWithEmailAndPassword,
+  loginWithEmail,
+  loginWithPhoneNumber,
+  loginWithEmailOrPhoneNumber,
   refreshAuth,
   resetPassword,
   verifyEmail,

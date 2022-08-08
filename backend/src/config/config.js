@@ -32,7 +32,9 @@ const envVarsSchema = Joi.object()
     //   'the from field in the emails sent by the app',
     // ),
     DB_USER: Joi.string().description('database username'),
-    DB_PASSWORD: Joi.string().description('password of database user'),
+    DB_PASSWORD: Joi.string()
+      .description('password of database user')
+      .allow('', null),
     DB_NAME: Joi.string().description('database to connect to'),
     DB_HOST: Joi.string().description('database server to connect to'),
     DB_PORT: Joi.string().description('database port to connect to'),
@@ -41,8 +43,8 @@ const envVarsSchema = Joi.object()
     AWS_S3_BUCKET_NAME: Joi.string().description('Bucket name'),
     TWILIO_ACCOUNT_SID: Joi.string().description('Twilio account id'),
     TWILIO_AUTH_TOKEN: Joi.string().description('Twilio authentication token'),
-    TWILIO_PHONE_NUMBER: Joi.string().description(
-      'Twilio phone number to send messages',
+    TWILIO_MESSAGING_SERVICE_SID: Joi.string().description(
+      'id of messaging service attached to a phone number',
     ),
     VONAGE_API_KEY: Joi.string(),
     VONAGE_API_SECRET: Joi.string(),
@@ -101,7 +103,7 @@ module.exports = {
   twilio: {
     accountId: envVars.TWILIO_ACCOUNT_SID,
     authToken: envVars.TWILIO_AUTH_TOKEN,
-    phoneNumber: envVars.TWILIO_PHONE_NUMBER,
+    messagingServiceSid: envVars.TWILIO_MESSAGING_SERVICE_SID,
   },
   nexmo: {
     apiKey: envVars.VONAGE_API_KEY,

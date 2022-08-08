@@ -52,6 +52,18 @@ module.exports = {
         allowNull: false,
         defaultValue: 'dine-in',
       },
+      status: {
+        type: Sequelize.DataTypes.STRING,
+        allowNull: false,
+        defaultValue: 'pending',
+        // pending, accepted, rejected
+      },
+      delivery_status: {
+        type: Sequelize.DataTypes.STRING,
+        allowNull: false,
+        defaultValue: 'pending',
+        // pending, accepted, rejected, delivering, delivered
+      },
       prepare_status: {
         type: Sequelize.DataTypes.STRING,
         allowNull: false,

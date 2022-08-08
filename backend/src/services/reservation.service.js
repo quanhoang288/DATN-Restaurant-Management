@@ -3,6 +3,7 @@ const query = require('../utils/query');
 const ApiError = require('../exceptions/api-error');
 const Errors = require('../exceptions/custom-error');
 const messagingService = require('./messaging.service');
+const { formatDate } = require('../utils/date');
 
 const { Op } = db.Sequelize;
 
@@ -201,10 +202,16 @@ const deleteReservation = async (reservationId, option = {}) => {
 };
 
 const sendReminders = async () => {
-  const now = new Date();
-  // TODO: get reservations due to remind
-  const reservationsToRemind = await db.Reservation.find({});
-  console.log('checking');
+  const reservationsToRemind = await db.sequelize.query(
+    `SELECT * FROM reservations WHERE TIMESTAMPDIFF(MINUTE, NOW(), arrive_time) BETWEEN -30 AND 60 AND STATUS <> 'serving'`,
+    {
+      type: db.sequelize.QueryTypes.SELECT,
+      model: db.Reservation,
+      mapToModel: true,
+    },
+  );
+
+  console.log('reservations: ', reservationsToRemind);
   // await Promise.all(
   //   reservationsToRemind.map((reservation) =>
   //     messagingService.sendMessage(

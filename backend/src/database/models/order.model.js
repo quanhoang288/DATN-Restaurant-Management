@@ -41,6 +41,10 @@ module.exports = (sequelize, DataTypes) => {
         as: 'subOrders',
         foreignKey: 'parent_id',
       });
+      models.Order.hasOne(models.Invoice, {
+        as: 'invoice',
+        foreignKey: 'order_id',
+      });
     }
   }
 
@@ -97,13 +101,27 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         defaultValue: 'dine-in',
       },
+      status: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        defaultValue: 'pending',
+        // pending, accepted, rejected
+      },
+      delivery_status: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        defaultValue: 'pending',
+        // pending, accepted, rejected, delivering, delivered
+      },
       prepare_status: {
         type: DataTypes.STRING,
         allowNull: false,
         defaultValue: 'pending',
+        // pending, in_progress, ready_to_serve
       },
       payment_status: {
         type: DataTypes.STRING,
+        // null, request_to_pay, paid
       },
       note: {
         type: DataTypes.STRING,

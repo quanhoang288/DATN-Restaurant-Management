@@ -31,18 +31,23 @@ const getPagingData = (items, page, limit) => {
  * @returns {{}}
  */
 // eslint-disable-next-line no-shadow
-const filter = (Op, filter, where = {}) => {
+const filter = (Op, filter) => {
+  const where = {};
   if (typeof filter === 'object') {
     // eslint-disable-next-line guard-for-in
     for (const key in filter) {
-      for (const index in filter[key]) {
-        if (key === 'like') {
-          where[index] = {
-            [Op.substring]: filter[key][index].trim(),
-          };
-        } else if (key === 'equal') {
-          where[index] = filter[key][index];
+      if (typeof filter[key] === 'object') {
+        for (const [cond, val] of Object.entries(filter[key])) {
+          if (cond === 'like') {
+            where[key] = {
+              [Op.substring]: val,
+            };
+          } else if (cond === 'equal') {
+            where[key] = val;
+          }
         }
+      } else {
+        where[key] = filter[key];
       }
     }
   }

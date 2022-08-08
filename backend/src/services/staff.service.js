@@ -24,20 +24,37 @@ const createStaff = async (data, option = {}) => {
   );
 };
 
-const getStaffList = async (filter, option) => {
+const getStaffList = async (params = {}) => {
+  const where = params.filters || {};
+  const userQueryParams = {};
+  const staffQueryParams = {};
+
+  for (const [key, val] of Object.entries(where)) {
+    if (['role_id', 'branch_id', 'is_active'].includes(key)) {
+      staffQueryParams[key] = val;
+    } else {
+      userQueryParams[key] = val;
+    }
+  }
+
   const staffList = await db.Staff.findAll({
+    where: staffQueryParams,
     include: [
       {
         association: 'user',
+        where: userQueryParams,
+        required: true,
       },
       {
         association: 'role',
+        required: true,
       },
     ],
   });
 
   return staffList.map((staff) => ({
     id: staff.id,
+    branch_id: staff.branch_id,
     full_name: staff.user?.full_name,
     email: staff.user?.email,
     address: staff.user?.address,

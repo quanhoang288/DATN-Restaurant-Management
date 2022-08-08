@@ -34,6 +34,10 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.DOUBLE,
         allowNull: false,
       },
+      unit_price: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+      },
       ...dateTime(DataTypes),
     },
     {

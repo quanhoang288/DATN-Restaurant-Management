@@ -10,6 +10,10 @@ module.exports = (sequelize, DataTypes) => {
           model: models.ReservationTable,
         },
       });
+      models.Table.belongsTo(models.Branch, {
+        as: 'branch',
+        foreignKey: 'branch_id',
+      });
     }
   }
 

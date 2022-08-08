@@ -7,10 +7,19 @@ const createOrder = catchAsync(async (req, res) => {
   return res.status(httpStatus.OK).send(order);
 });
 
+const getMonthRevenueStatistics = catchAsync(async (req, res) => {
+  const { type, groupBy } = req.query;
+  const statistics = await orderService.getMonthRevenueStatistics(
+    type,
+    groupBy,
+  );
+  console.log(statistics);
+  return res.status(httpStatus.OK).send(statistics);
+});
+
 const getOrderList = async (req, res) => {
-  // const filter = pick(req.query, ['name', 'role']);
-  // const options = pick(req.query, ['sortBy', 'limit', 'page']);
-  const result = await orderService.getOrderList();
+  const filters = JSON.parse(req.query.filters || '{}');
+  const result = await orderService.getOrderList({ ...req.query, filters });
   res.send(result);
 };
 
@@ -59,4 +68,5 @@ module.exports = {
   deleteOrder,
   payOrder,
   updateOrderItem,
+  getMonthRevenueStatistics,
 };

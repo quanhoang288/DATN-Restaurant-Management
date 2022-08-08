@@ -10,15 +10,19 @@ module.exports = {
           model: {
             tableName: 'goods',
           },
-          key: 'id',
         },
-      },
-      code: {
-        type: Sequelize.DataTypes.STRING,
         allowNull: false,
-        unique: true,
       },
-      name: {
+      attribute_id: {
+        type: Sequelize.DataTypes.BIGINT.UNSIGNED,
+        references: {
+          model: {
+            tableName: 'attributes',
+          },
+        },
+        allowNull: false,
+      },
+      value: {
         type: Sequelize.DataTypes.STRING,
         allowNull: false,
       },

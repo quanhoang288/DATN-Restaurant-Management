@@ -20,9 +20,7 @@ module.exports = {
       sale_price: {
         type: Sequelize.DataTypes.BIGINT.UNSIGNED,
       },
-      quantity: {
-        type: Sequelize.DataTypes.INTEGER,
-      },
+
       min_quantity_threshold: {
         type: Sequelize.DataTypes.INTEGER,
       },

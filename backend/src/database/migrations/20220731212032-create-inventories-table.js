@@ -2,31 +2,27 @@ const { id, dateTime } = require('../generate');
 
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('customer_groups', {
+    await queryInterface.createTable('inventories', {
       ...id(Sequelize.DataTypes),
-      customer_id: {
+      branch_id: {
         type: Sequelize.DataTypes.BIGINT.UNSIGNED,
         references: {
           model: {
-            tableName: 'customers',
+            tableName: 'branches',
           },
-          key: 'id',
+          allowNull: false,
         },
       },
-      group_id: {
-        type: Sequelize.DataTypes.BIGINT.UNSIGNED,
-        references: {
-          model: {
-            tableName: 'groups',
-          },
-          key: 'id',
-        },
+      name: {
+        type: Sequelize.DataTypes.STRING,
+        allowNull: false,
+        unique: true,
       },
       ...dateTime(Sequelize.DataTypes),
     });
   },
 
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('customer_groups');
+    await queryInterface.dropTable('inventories');
   },
 };

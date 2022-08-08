@@ -9,7 +9,11 @@ module.exports = (sequelize, DataTypes) => {
   Role.init(
     {
       ...id(DataTypes),
-
+      code: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        unique: true,
+      },
       name: {
         type: DataTypes.STRING,
         allowNull: false,

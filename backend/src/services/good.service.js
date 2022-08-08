@@ -5,16 +5,14 @@ const ApiError = require('../exceptions/api-error');
 const Errors = require('../exceptions/custom-error');
 const parseFile = require('../utils/excelParser');
 
-const { Op } = db;
+const { Op } = db.Sequelize;
 
 const createGood = async (data, option = {}) => {
-  console.log('good data: ', data);
   const duplicateNameGood = await db.Good.findOne({
     where: {
       name: data.name,
     },
   });
-  console.log(duplicateNameGood);
   if (duplicateNameGood) {
     throw new ApiError(
       Errors.DuplicateGoodName.statusCode,
@@ -59,35 +57,29 @@ const createGood = async (data, option = {}) => {
 };
 
 const importGoods = async (fileToImport, option = {}) => {
-  console.log(fileToImport);
   const rows = await parseFile(fileToImport.path);
-  console.log('rows length: ', rows.length);
-  // await db.Good.bulkCreate(rows, option);
+  await db.Good.bulkCreate(rows, option);
   fs.unlinkSync(fileToImport.path);
 };
 
 const getGoodList = async (params = {}) => {
-  const filter = params.filter || {};
+  const filters = params.filters || {};
   const sort = params.sort || [];
 
   // eslint-disable-next-line no-prototype-builtins
   if (params.hasOwnProperty('page')) {
-    const items = await db.Good.paginate(
-      {
-        page: params.page,
-        perPage: params.perPage,
-      },
-      {
-        where: query.filter(Op, filter),
-        order: sort,
-      },
-    );
+    const items = await db.Good.paginate({
+      page: params.page || 1,
+      perPage: params.perPage || 5,
+      where: query.filter(Op, filters),
+      order: sort,
+    });
 
     return query.getPagingData(items, params.page, params.perPage);
   }
 
   const option = {
-    where: filter,
+    where: query.filter(Op, filters),
     sort,
   };
   if (params.attributes) {

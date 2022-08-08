@@ -23,8 +23,16 @@ module.exports = {
       address: {
         type: Sequelize.DataTypes.STRING,
       },
+      phone_number: {
+        type: Sequelize.DataTypes.STRING,
+      },
       email_verified: {
         type: Sequelize.DataTypes.TINYINT.UNSIGNED,
+      },
+      is_admin: {
+        type: Sequelize.DataTypes.TINYINT,
+        allowNull: false,
+        defaultValue: 0,
       },
       refresh_token: {
         type: Sequelize.DataTypes.STRING,

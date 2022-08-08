@@ -4,10 +4,18 @@ module.exports = {
   async up(queryInterface, Sequelize) {
     await queryInterface.createTable('kitchens', {
       ...id(Sequelize.DataTypes),
+      branch_id: {
+        type: Sequelize.DataTypes.BIGINT.UNSIGNED,
+        references: {
+          model: {
+            tableName: 'branches',
+          },
+        },
+        allowNull: false,
+      },
       name: {
         type: Sequelize.DataTypes.STRING,
         allowNull: false,
-        unique: true,
       },
       type: {
         type: Sequelize.DataTypes.STRING,

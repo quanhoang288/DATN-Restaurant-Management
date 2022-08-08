@@ -26,6 +26,7 @@ module.exports = (sequelize, DataTypes) => {
     }
 
     async isPasswordMatch(password) {
+      console.log('test matching password', password);
       return bcrypt.compare(password, this.password);
     }
 
@@ -71,8 +72,16 @@ module.exports = (sequelize, DataTypes) => {
       address: {
         type: DataTypes.STRING,
       },
+      phone_number: {
+        type: DataTypes.STRING,
+      },
       email_verified: {
         type: DataTypes.TINYINT,
+      },
+      is_admin: {
+        type: DataTypes.TINYINT,
+        allowNull: false,
+        defaultValue: 0,
       },
       refresh_token: {
         type: DataTypes.STRING,

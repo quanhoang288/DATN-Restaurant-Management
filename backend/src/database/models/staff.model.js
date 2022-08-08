@@ -13,13 +13,17 @@ module.exports = (sequelize, DataTypes) => {
 
   Staff.init(
     {
-      is_admin: {
-        type: DataTypes.TINYINT,
-        defaultValue: 0,
+      branch_id: {
+        type: DataTypes.BIGINT.UNSIGNED,
+        references: {
+          model: 'branches',
+        },
       },
-      status: {
-        type: DataTypes.STRING,
-        allowNull: false,
+      role_id: {
+        type: DataTypes.BIGINT.UNSIGNED,
+        references: {
+          model: 'roles',
+        },
       },
     },
     {

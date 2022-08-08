@@ -1,4 +1,3 @@
-'use strict';
 const { id, dateTime } = require('../generate');
 
 module.exports = {
@@ -11,8 +10,8 @@ module.exports = {
           model: {
             tableName: 'goods',
           },
-          key: 'id',
         },
+        allowNull: false,
       },
       component_id: {
         type: Sequelize.DataTypes.BIGINT.UNSIGNED,
@@ -20,11 +19,20 @@ module.exports = {
           model: {
             tableName: 'goods',
           },
-          key: 'id',
         },
+        allowNull: false,
+      },
+      unit_id: {
+        type: Sequelize.DataTypes.BIGINT.UNSIGNED,
+        references: {
+          model: {
+            tableName: 'units',
+          },
+        },
+        allowNull: false,
       },
       quantity: {
-        type: Sequelize.DataTypes.INTEGER,
+        type: Sequelize.DataTypes.DOUBLE,
       },
       ...dateTime(Sequelize.DataTypes),
     });

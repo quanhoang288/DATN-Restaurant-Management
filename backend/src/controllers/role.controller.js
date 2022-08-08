@@ -8,7 +8,8 @@ const createRole = catchAsync(async (req, res) => {
 });
 
 const getRoles = catchAsync(async (req, res) => {
-  const result = await roleService.getRoleList();
+  const filters = JSON.parse(req.query.filters || '{}');
+  const result = await roleService.getRoleList({ filters });
   res.send(result);
 });
 

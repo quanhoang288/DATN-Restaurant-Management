@@ -6,6 +6,8 @@ const orderController = require('../../controllers/order.controller');
 
 const router = express.Router();
 
+router.get('/reports/month-revenue', orderController.getMonthRevenueStatistics);
+
 router
   .route('/')
   .post(

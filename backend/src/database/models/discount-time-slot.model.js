@@ -2,11 +2,16 @@ const { Model } = require('sequelize');
 const { id } = require('../generate');
 
 module.exports = (sequelize, DataTypes) => {
-  class DiscountTimeRange extends Model {
-    static associate(models) {}
+  class DiscountTimeSlot extends Model {
+    static associate(models) {
+      models.DiscountTimeSlot.belongsTo(models.Discount, {
+        as: 'discount',
+        foreignKey: 'discount_id',
+      });
+    }
   }
 
-  DiscountTimeRange.init(
+  DiscountTimeSlot.init(
     {
       ...id(DataTypes),
       discount_id: {
@@ -19,16 +24,18 @@ module.exports = (sequelize, DataTypes) => {
       },
       start_time: {
         type: DataTypes.STRING,
+        allowNull: false,
       },
       end_time: {
         type: DataTypes.STRING,
+        allowNull: false,
       },
     },
     {
       sequelize,
-      modelName: 'DiscountTimeRange',
-      tableName: 'discount_time_ranges',
+      modelName: 'DiscountTimeSlot',
+      tableName: 'discount_time_slots',
     },
   );
-  return DiscountTimeRange;
+  return DiscountTimeSlot;
 };

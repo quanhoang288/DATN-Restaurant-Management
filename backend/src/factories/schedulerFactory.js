@@ -5,9 +5,9 @@ const schedulerFactory = () => ({
     // eslint-disable-next-line no-new
     new CronJob(
       '00 * * * * *',
-      async () => {
+      () => {
         console.log('Running Worker... ');
-        await worker.run();
+        worker.run();
       },
       null,
       true,

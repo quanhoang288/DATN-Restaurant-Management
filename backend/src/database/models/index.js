@@ -20,20 +20,22 @@ const sequelizeConfig = {
     updatedAt: 'updated_at',
     paranoid: true,
     deletedAt: 'deleted_at',
-    defaultScope: {
-      attributes: {
-        exclude: ['created_at', 'updated_at', 'deleted_at'],
-      },
-    },
+    // defaultScope: {
+    //   attributes: {
+    //     exclude: ['created_at', 'updated_at', 'deleted_at'],
+    //   },
+    // },
   },
   migrationStorageTableName: 'migrations',
   seederStorageTableName: 'seeders',
 };
 
+console.log(config.db.password);
+
 const sequelize = new Sequelize(
   config.db.database,
   config.db.username,
-  config.db.password,
+  config.db.password || '',
   {
     ...sequelizeConfig,
     port: config.db.port,

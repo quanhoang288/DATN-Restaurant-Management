@@ -46,14 +46,8 @@ module.exports = (sequelize, DataTypes) => {
       description: {
         type: DataTypes.STRING,
       },
-      quantity: {
-        type: DataTypes.INTEGER,
-      },
       type: {
         type: DataTypes.STRING,
-      },
-      import_price: {
-        type: DataTypes.BIGINT.UNSIGNED,
       },
       sale_price: {
         type: DataTypes.BIGINT.UNSIGNED,

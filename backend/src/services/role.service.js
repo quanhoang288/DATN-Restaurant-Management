@@ -10,7 +10,10 @@ const updateRole = async (roleId, data, option = {}) => {
   return role.save(option);
 };
 
-const getRoleList = async () => db.Role.findAll({});
+const getRoleList = async (params = {}) => {
+  const where = params.filters || {};
+  return db.Role.findAll({ where });
+};
 
 const getRoleDetail = async (roleId) => {
   const role = await db.Role.findByPk(roleId);

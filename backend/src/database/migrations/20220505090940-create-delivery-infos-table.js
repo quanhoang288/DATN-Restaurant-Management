@@ -13,12 +13,6 @@ module.exports = {
           key: 'id',
         },
       },
-      customer_name: {
-        type: Sequelize.DataTypes.STRING,
-      },
-      customer_phone_number: {
-        type: Sequelize.DataTypes.STRING,
-      },
       delivery_address: {
         type: Sequelize.DataTypes.STRING,
         allowNull: false,

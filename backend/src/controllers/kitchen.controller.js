@@ -1,5 +1,4 @@
 const httpStatus = require('http-status');
-const pick = require('../utils/pick');
 const catchAsync = require('../utils/catchAsync');
 const { kitchenService } = require('../services');
 
@@ -9,9 +8,9 @@ const createKitchen = catchAsync(async (req, res) => {
 });
 
 const getKitchens = catchAsync(async (req, res) => {
-  const filter = pick(req.query, ['name', 'role']);
-  const options = pick(req.query, ['sortBy', 'limit', 'page']);
-  const result = await kitchenService.getKitchenList(filter, options);
+  const filters = JSON.parse(req.query.filters || '{}');
+
+  const result = await kitchenService.getKitchenList({ ...req.query, filters });
   res.send(result);
 });
 

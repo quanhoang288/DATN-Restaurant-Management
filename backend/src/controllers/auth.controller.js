@@ -11,17 +11,17 @@ const {
 
 // const services = require('../services')
 
-const register = async (req, res) => {
-  const user = await userService.createUser(req.body);
-  const tokens = await tokenService.generateAuthTokens(user);
-  res.status(httpStatus.CREATED).send({ user, tokens });
-};
+const register = catchAsync(async (req, res) => {});
 
 const login = catchAsync(async (req, res) => {
-  const { email, password } = req.body;
-  const user = await authService.loginUserWithEmailAndPassword(email, password);
-  const tokens = await tokenService.generateAuthTokens(user);
-  res.send({ user, tokens });
+  console.log('loging in...');
+  const { identifier, password } = req.body;
+  const userData = await authService.loginWithEmailOrPhoneNumber(
+    identifier,
+    password,
+  );
+
+  res.send(userData);
 });
 
 const logout = catchAsync(async (req, res) => {

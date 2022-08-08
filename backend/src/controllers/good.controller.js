@@ -16,8 +16,8 @@ const importGoods = async (req, res) => {
 };
 
 const getGoodList = async (req, res) => {
-  const params = req.query || {};
-  const goods = await goodService.getGoodList(params);
+  const filters = JSON.parse(req.query.filters || '{}');
+  const goods = await goodService.getGoodList({ ...req.query, filters });
   return res.status(httpStatus.OK).send(goods);
 };
 

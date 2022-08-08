@@ -43,6 +43,7 @@ const getGoods = {
   query: Joi.object().keys({
     page: Joi.number(),
     perPage: Joi.number().positive(),
+    filters: Joi.string(),
   }),
 };
 

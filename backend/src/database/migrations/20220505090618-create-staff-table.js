@@ -11,6 +11,14 @@ module.exports = {
           key: 'id',
         },
       }),
+      branch_id: {
+        type: Sequelize.DataTypes.BIGINT.UNSIGNED,
+        references: {
+          model: {
+            tableName: 'branches',
+          },
+        },
+      },
       role_id: {
         type: Sequelize.DataTypes.BIGINT.UNSIGNED,
         references: {
@@ -19,9 +27,10 @@ module.exports = {
           },
         },
       },
-      status: {
-        type: Sequelize.DataTypes.STRING,
+      is_active: {
+        type: Sequelize.DataTypes.TINYINT,
         allowNull: false,
+        defaultValue: 0,
       },
     });
   },

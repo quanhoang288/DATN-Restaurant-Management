@@ -2,17 +2,16 @@ const { id, dateTime } = require('../generate');
 
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('kitchen_goods', {
+    await queryInterface.createTable('inventory_history_items', {
       ...id(Sequelize.DataTypes),
-      kitchen_id: {
+      inventory_history_id: {
         type: Sequelize.DataTypes.BIGINT.UNSIGNED,
         references: {
           model: {
-            tableName: 'kitchens',
+            tableName: 'inventory_histories',
           },
-          key: 'id',
+          allowNull: false,
         },
-        allowNull: false,
       },
       good_id: {
         type: Sequelize.DataTypes.BIGINT.UNSIGNED,
@@ -20,12 +19,24 @@ module.exports = {
           model: {
             tableName: 'goods',
           },
-          key: 'id',
+          allowNull: false,
         },
+      },
+      unit_id: {
+        type: Sequelize.DataTypes.BIGINT.UNSIGNED,
+        references: {
+          model: {
+            tableName: 'units',
+          },
+          allowNull: false,
+        },
+      },
+      unit_price: {
+        type: Sequelize.DataTypes.INTEGER,
         allowNull: false,
       },
       quantity: {
-        type: Sequelize.DataTypes.INTEGER,
+        type: Sequelize.DataTypes.DOUBLE,
         allowNull: false,
       },
       ...dateTime(Sequelize.DataTypes),
@@ -33,6 +44,6 @@ module.exports = {
   },
 
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('kitchen_goods');
+    await queryInterface.dropTable('inventory_history_items');
   },
 };

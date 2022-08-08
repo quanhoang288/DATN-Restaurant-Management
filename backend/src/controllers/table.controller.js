@@ -1,5 +1,4 @@
 const httpStatus = require('http-status');
-const pick = require('../utils/pick');
 const ApiError = require('../exceptions/api-error');
 const catchAsync = require('../utils/catchAsync');
 const { tableService } = require('../services');
@@ -12,9 +11,8 @@ const createTable = catchAsync(async (req, res) => {
 });
 
 const getTables = catchAsync(async (req, res) => {
-  const filter = pick(req.query, ['name', 'role']);
-  const options = pick(req.query, ['sortBy', 'limit', 'page']);
-  const result = await tableService.getTableList(filter, options);
+  const filters = JSON.parse(req.query.filters || '{}');
+  const result = await tableService.getTableList({ ...req.query, filters });
   res.send(result);
 });
 

@@ -23,10 +23,10 @@ module.exports = (sequelize, DataTypes) => {
         },
         allowNull: false,
       },
-      branch_id: {
+      inventory_id: {
         type: DataTypes.BIGINT.UNSIGNED,
         references: {
-          model: 'branches',
+          model: 'inventories',
         },
         allowNull: false,
       },

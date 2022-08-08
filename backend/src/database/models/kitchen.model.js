@@ -3,7 +3,12 @@ const { id, dateTime } = require('../generate');
 
 module.exports = (sequelize, DataTypes) => {
   class Kitchen extends Model {
-    static associate(models) {}
+    static associate(models) {
+      models.Kitchen.belongsTo(models.Branch, {
+        as: 'branch',
+        foreignKey: 'branch_id',
+      });
+    }
   }
 
   Kitchen.init(

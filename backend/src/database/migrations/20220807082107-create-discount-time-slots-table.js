@@ -2,22 +2,22 @@ const { id, dateTime } = require('../generate');
 
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable('attribute_values', {
+    await queryInterface.createTable('discount_time_slots', {
       ...id(Sequelize.DataTypes),
-      attribute_id: {
+      discount_id: {
         type: Sequelize.DataTypes.BIGINT.UNSIGNED,
         references: {
           model: {
-            tableName: 'good_attributes',
+            tableName: 'discounts',
           },
-          key: 'id',
         },
+        allowNull: false,
       },
-      name: {
+      start_time: {
         type: Sequelize.DataTypes.STRING,
         allowNull: false,
       },
-      value: {
+      end_time: {
         type: Sequelize.DataTypes.STRING,
         allowNull: false,
       },
@@ -26,6 +26,6 @@ module.exports = {
   },
 
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('attribute_values');
+    await queryInterface.dropTable('discount_time_slots');
   },
 };
