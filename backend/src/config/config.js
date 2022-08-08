@@ -46,8 +46,8 @@ const envVarsSchema = Joi.object()
     TWILIO_MESSAGING_SERVICE_SID: Joi.string().description(
       'id of messaging service attached to a phone number',
     ),
-    VONAGE_API_KEY: Joi.string(),
-    VONAGE_API_SECRET: Joi.string(),
+    // VONAGE_API_KEY: Joi.string(),
+    // VONAGE_API_SECRET: Joi.string(),
   })
   .unknown();
 
@@ -105,8 +105,8 @@ module.exports = {
     authToken: envVars.TWILIO_AUTH_TOKEN,
     messagingServiceSid: envVars.TWILIO_MESSAGING_SERVICE_SID,
   },
-  nexmo: {
-    apiKey: envVars.VONAGE_API_KEY,
-    apiSecret: envVars.VONAGE_API_SECRET,
-  },
+  // nexmo: {
+  //   apiKey: envVars.VONAGE_API_KEY,
+  //   apiSecret: envVars.VONAGE_API_SECRET,
+  // },
 };
