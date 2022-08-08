@@ -1,5 +1,5 @@
-import React from 'react'
-import { View, StyleSheet, Text } from '@react-pdf/renderer'
+import React from "react";
+import { View, StyleSheet, Text } from "@react-pdf/renderer";
 
 const styles = StyleSheet.create({
   tableContainer: {
@@ -7,21 +7,21 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   tableRow: {
-    width: '100%',
-    flexDirection: 'row',
-    borderBottomColor: '#bff0fd',
+    width: "100%",
+    flexDirection: "row",
+    borderBottomColor: "#bff0fd",
     borderBottomWidth: 1,
-    alignItems: 'center',
-    fontStyle: 'bold',
+    alignItems: "center",
+    fontStyle: "bold",
     height: 60,
   },
   tableHeader: {
-    width: '100%',
-    flexDirection: 'row',
+    width: "100%",
+    flexDirection: "row",
     borderBottomWidth: 1,
     flexGrow: 1,
   },
-})
+});
 
 function InvoiceTableRow({ item, index }) {
   return (
@@ -32,17 +32,17 @@ function InvoiceTableRow({ item, index }) {
       <Text style={{ width: 100 }}>{item.price}</Text>
       <Text style={{ width: 100 }}>{item.price * item.quantity}</Text>
     </View>
-  )
+  );
 }
 
 const InvoiceItemsTable = ({ items }) => (
   <View style={styles.tableContainer}>
     <View style={styles.tableHeader}>
       <Text style={{ width: 50 }}>STT</Text>
-      <Text style={{ width: 200 }}>Tên món</Text>
+      <Text style={{ width: 200 }}>Ten mon</Text>
       <Text style={{ width: 100 }}>SL</Text>
       <Text style={{ width: 100 }}>Don gia</Text>
-      <Text style={{ width: 100 }}>Thành tiền</Text>
+      <Text style={{ width: 100 }}>Thanh tien</Text>
     </View>
     <View style={{ borderBottomWidth: 1 }}>
       {(items || []).map((item, idx) => (
@@ -50,7 +50,6 @@ const InvoiceItemsTable = ({ items }) => (
       ))}
     </View>
   </View>
-)
+);
 
-export default InvoiceItemsTable
-
+export default InvoiceItemsTable;

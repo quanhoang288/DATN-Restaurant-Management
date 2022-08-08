@@ -1,13 +1,21 @@
-import { Button, Card, CardActionArea, CardActions, CardContent, CardMedia, Typography } from '@material-ui/core'
-import React, { useState } from 'react'
-import { useEffect } from 'react'
-import { useHistory } from 'react-router-dom/cjs/react-router-dom.min'
-import { getMenus } from '../../../apis/menu'
-import CustomerMain from '../../../containers/CustomerMain/CustomerMain'
+import {
+  Button,
+  Card,
+  CardActionArea,
+  CardActions,
+  CardContent,
+  CardMedia,
+  Typography,
+} from "@material-ui/core";
+import React, { useState } from "react";
+import { useEffect } from "react";
+import { useHistory } from "react-router-dom/cjs/react-router-dom.min";
+import { getMenus } from "../../../apis/menu";
+import CustomerMain from "../../../containers/CustomerMain/CustomerMain";
 
 function Menu(props) {
-  const { menu } = props
-  const history = useHistory()
+  const { menu } = props;
+  const history = useHistory();
   return (
     <Card>
       <CardActionArea onClick={() => history.push(`/menus/${menu.id}`)}>
@@ -23,36 +31,36 @@ function Menu(props) {
             {menu.name}
           </Typography>
           <Typography variant='body2' color='textSecondary' component='p'>
-            {menu.description || 'Description'}
+            {menu.description || "Description"}
           </Typography>
         </CardContent>
       </CardActionArea>
     </Card>
-  )
+  );
 }
 
 function MenuList(props) {
-  const [menuList, setMenuList] = useState([])
+  const [menuList, setMenuList] = useState([]);
 
   const fetchMenuList = async () => {
-    setMenuList((await getMenus()).data)
-  }
+    setMenuList((await getMenus()).data);
+  };
 
   useEffect(() => {
-    fetchMenuList()
-  }, [])
+    fetchMenuList();
+  }, []);
 
   return (
     <CustomerMain>
       <div
         style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(4, 1fr)',
+          display: "grid",
+          gridTemplateColumns: "repeat(4, 1fr)",
           rowGap: 20,
-          alignItems: 'center',
+          alignItems: "center",
           flex: 1,
           marginLeft: 10,
-          padding: '2rem 2rem',
+          padding: "2rem 2rem",
           columnGap: 20,
         }}
       >
@@ -61,8 +69,7 @@ function MenuList(props) {
         ))}
       </div>
     </CustomerMain>
-  )
+  );
 }
 
-export default MenuList
-
+export default MenuList;

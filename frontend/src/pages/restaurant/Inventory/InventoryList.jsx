@@ -1,39 +1,34 @@
 import { Button, TextField, Typography } from "@material-ui/core";
 import React, { useEffect, useState } from "react";
-import { getTables, deleteTable } from "../../../apis/table";
 import CustomTable from "../../../components/Table/CustomTable";
-import TableCreate from "./TableCreate";
 import ConfirmDialog from "../../../components/Modal/ConfirmDialog";
+import InventoryCreate from "./InventoryCreate";
+import { getInventories } from "../../../apis/inventory";
 
 const cols = [
-  { id: "id", label: "Mã bàn", isSortable: true },
-  { id: "name", label: "Tên bàn", isSortable: true },
-  { id: "floor_num", label: "Tầng", isSortable: true },
+  { id: "id", label: "STT", isSortable: true },
+  { id: "name", label: "Tên kho", isSortable: true },
   { id: "branch", label: "Chi nhánh", isSortable: true },
 ];
 
-function TableList(props) {
+function InventoryList(props) {
   const [isCreateModalVisible, setCreateModalVisible] = useState(false);
   const [isDeleteDialogVisible, setDeleteDialogVisible] = useState(false);
-  const [tableList, setTableList] = useState([]);
-  const [totalCount, setTotalCount] = useState(0);
-
+  const [inventoryList, setInventoryList] = useState([]);
   const [selected, setSelected] = useState(null);
 
-  const fetchCurPage = async (page, perPage) => {
-    const res = (await getTables({ page, perPage })).data;
-    setTableList(
-      res.data.map((table) => ({
-        ...table,
-        branch: table.branch?.name,
+  const fetchInventoryList = async () => {
+    const inventories = (await getInventories()).data;
+    setInventoryList(
+      inventories.map((inventory) => ({
+        ...inventory,
+        branch: inventory.branch.name,
       }))
     );
-    setTotalCount(res.total);
   };
 
-  const handleDeleteTable = async (id) => {
+  const handleDeleteInventory = async (id) => {
     if (id) {
-      await deleteTable(id);
       setDeleteDialogVisible(false);
     }
   };
@@ -59,25 +54,45 @@ function TableList(props) {
     },
   ];
 
+  useEffect(() => {
+    fetchInventoryList();
+  }, []);
+
   return (
     <div>
       <ConfirmDialog
         isModalVisible={isDeleteDialogVisible}
-        title='Xóa bàn'
+        title='Xóa kho'
         confirmTitle='Xóa'
         cancelTitle='Hủy bỏ'
-        description='Bạn có chắc chắn muốn xóa bàn này?'
-        handleConfirm={() => handleDeleteTable(selected)}
+        description='Bạn có chắc chắn muốn xóa kho này không?'
+        handleConfirm={() => handleDeleteInventory(selected)}
         handleCancel={() => setDeleteDialogVisible(false)}
       />
-      <TableCreate
-        tableId={selected}
+      <InventoryCreate
+        inventoryId={selected}
         isModalVisible={isCreateModalVisible}
         handleCloseModal={() => {
           setSelected(null);
           setCreateModalVisible(false);
+          fetchInventoryList();
         }}
       />
+      {/* <div className='list__header' style={{ justifyContent: "flex-end" }}>
+        <div>
+          <Button
+            size='small'
+            variant='contained'
+            onClick={() => setCreateModalVisible(true)}
+          >
+            Thêm mới
+          </Button>
+          <Button size='small' variant='contained'>
+            Import
+          </Button>
+        </div>
+      </div> */}
+
       <div
         style={{
           display: "flex",
@@ -88,7 +103,7 @@ function TableList(props) {
       >
         <div style={{ display: "flex", flex: 1 }}>
           <TextField
-            label='Mã/Tên bàn'
+            label='Mã/Tên kho'
             InputLabelProps={{
               shrink: true,
               style: {
@@ -117,49 +132,34 @@ function TableList(props) {
             <option value='confirmed'>Đã xác nhận (Chờ nhận bàn)</option>
             <option value='serving'>Đã nhận bàn</option>
           </TextField>
-          <TextField
-            label='Tầng'
-            InputLabelProps={{
-              shrink: true,
-              style: {
-                fontSize: 20,
-              },
-            }}
-            type='number'
-            variant='standard'
-            style={{ marginRight: 20 }}
-          />
         </div>
         <div>
           <Button
             size='small'
             variant='contained'
             onClick={() => setCreateModalVisible(true)}
-            color='primary'
           >
             Thêm mới
           </Button>
-          <Button
-            size='small'
-            variant='contained'
-            // onClick={() => setImportModalVisible(true)}
-          >
+          <Button size='small' variant='contained'>
             Import
           </Button>
         </div>
       </div>
 
       <div>
-        <CustomTable
-          rows={tableList}
-          totalCount={totalCount}
-          handleFetchRows={fetchCurPage}
-          cols={cols}
-          actionButtons={actionButtons}
-        />
+        {inventoryList.length > 0 ? (
+          <CustomTable
+            rows={inventoryList}
+            cols={cols}
+            actionButtons={actionButtons}
+          />
+        ) : (
+          <Typography variant='h6'>Không có dữ liệu</Typography>
+        )}
       </div>
     </div>
   );
 }
 
-export default TableList;
+export default InventoryList;

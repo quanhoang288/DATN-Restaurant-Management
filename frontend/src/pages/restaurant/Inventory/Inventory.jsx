@@ -1,30 +1,31 @@
 import React, { useState } from "react";
-import CustomTabs from "../../../components/CustomTabs/CustomTabs";
-import KitchenList from "./KitchenList";
-import TableList from "./TableList";
-import Main from "../../../containers/Main/Main";
-import TabPanel from "../../../components/CustomTabs/TabPanel";
 import { Typography } from "@material-ui/core";
 
-function FacilityList(props) {
-  const [activeTab, setActiveTab] = useState(1);
+import CustomTabs from "../../../components/CustomTabs/CustomTabs";
+import Main from "../../../containers/Main/Main";
+import TabPanel from "../../../components/CustomTabs/TabPanel";
+import InventoryList from "./InventoryList";
+import InventoryHistoryList from "./InventoryHistoryList";
+
+function Inventory(props) {
+  const [activeTab, setActiveTab] = useState(0);
 
   return (
     <Main>
-      <div className='facility__container'>
-        <div className='list__header'>
+      <div>
+        {/* <div className='list__header'>
           <Typography variant='h5'>Cơ sở vật chất</Typography>
-        </div>
+        </div> */}
         <CustomTabs
-          labels={["Khu vực chế biến", "Bàn ăn"]}
+          labels={["Thông tin kho", "Lịch sử nhập kho"]}
           activeTab={activeTab}
           onChangeActiveTab={(val) => setActiveTab(val)}
         >
           <TabPanel value={activeTab} index={0}>
-            <KitchenList isActive={activeTab === 0} />
+            <InventoryList />
           </TabPanel>
           <TabPanel value={activeTab} index={1}>
-            <TableList isActive={activeTab === 1} />
+            <InventoryHistoryList />
           </TabPanel>
         </CustomTabs>
       </div>
@@ -32,4 +33,4 @@ function FacilityList(props) {
   );
 }
 
-export default FacilityList;
+export default Inventory;

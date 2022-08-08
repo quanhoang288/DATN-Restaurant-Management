@@ -1,7 +1,14 @@
-import React from 'react'
-import { Page, Document, StyleSheet, View, Text, Image } from '@react-pdf/renderer'
-import InvoiceItemsTable from './InvoiceItemsTable'
-import { getDiscountAmount, getInvoiceTotal } from '../../../utils/order'
+import React from "react";
+import {
+  Page,
+  Document,
+  StyleSheet,
+  View,
+  Text,
+  Image,
+} from "@react-pdf/renderer";
+import InvoiceItemsTable from "./InvoiceItemsTable";
+import { getDiscountAmount, getInvoiceTotal } from "../../../utils/order";
 
 const styles = StyleSheet.create({
   page: {
@@ -12,12 +19,12 @@ const styles = StyleSheet.create({
   logo: {
     width: 74,
     height: 66,
-    marginLeft: 'auto',
-    marginRight: 'auto',
+    marginLeft: "auto",
+    marginRight: "auto",
   },
   headerContainer: {
-    flexDirection: 'column',
-    alignItems: 'center',
+    flexDirection: "column",
+    alignItems: "center",
   },
   restaurantInfo: {
     marginTop: 5,
@@ -25,7 +32,7 @@ const styles = StyleSheet.create({
   invoiceInfo: {
     marginTop: 10,
   },
-})
+});
 
 function InvoiceHeader(props) {
   return (
@@ -43,7 +50,7 @@ function InvoiceHeader(props) {
         <Text>Tel: 0382203949 - 0903940393</Text>
       </View>
     </View>
-  )
+  );
 }
 
 export default function Invoice({ order, cashier }) {
@@ -52,32 +59,59 @@ export default function Invoice({ order, cashier }) {
       <Page size='A4' style={styles.page}>
         <InvoiceHeader />
         <View style={styles.invoiceInfo}>
-          <Text>{`Thu ngân: ${cashier.full_name}`}</Text>
-          <Text>Ban: A12</Text>
-          <Text>Ngay: 27/06/2022</Text>
+          <Text>{`Thu ngan: ${cashier.full_name}`}</Text>
+          <Text>Ban: 1</Text>
+          <Text>Ngay: 6/8/2022</Text>
         </View>
         <InvoiceItemsTable items={order.details} />
         <View>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 5 }}>
-            <Text>Tạm tính</Text>
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              marginBottom: 5,
+            }}
+          >
+            <Text>Tam tinh</Text>
             <Text>{getInvoiceTotal(order)}</Text>
           </View>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 5 }}>
-            <Text style={{ fontWeight: 'bold' }}>Thu khác (VAT)</Text>
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              marginBottom: 5,
+            }}
+          >
+            <Text style={{ fontWeight: "bold" }}>Thu khac (VAT)</Text>
             <Text>10000</Text>
           </View>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingBottom: 5, marginBottom: 10, borderBottomWidth: 1 }}>
-            <Text>Khuyến mãi</Text>
-            <Text>{getDiscountAmount(getInvoiceTotal(order), order.discounts)}</Text>
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              paddingBottom: 5,
+              marginBottom: 10,
+              borderBottomWidth: 1,
+            }}
+          >
+            <Text>Khuyen mai</Text>
+            <Text>
+              {getDiscountAmount(getInvoiceTotal(order), order.discounts)}
+            </Text>
           </View>
 
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-            <Text>Tổng tiền</Text>
-            <Text>{getInvoiceTotal(order) + 10000 - getDiscountAmount(getInvoiceTotal(order), order.discounts)}</Text>
+          <View
+            style={{ flexDirection: "row", justifyContent: "space-between" }}
+          >
+            <Text>Tong tien</Text>
+            <Text>
+              {getInvoiceTotal(order) +
+                10000 -
+                getDiscountAmount(getInvoiceTotal(order), order.discounts)}
+            </Text>
           </View>
         </View>
       </Page>
     </Document>
-  )
+  );
 }
-

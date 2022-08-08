@@ -1,24 +1,23 @@
-import api from './api'
+import api from "./api";
 
-const getStaffList = () => api.get('staff')
+const getStaffList = (params = {}) => api.get("staff", { params });
 
-const getStaff = (id) => api.get(`staff/${id}`)
+const getStaff = (id) => api.get(`staff/${id}`);
 
 const createStaff = (data = {}) => {
-  const formData = new FormData()
+  const formData = new FormData();
   for (const [key, value] of Object.entries(data)) {
-    if (key === 'avatar') {
-      formData.append('image', value)
+    if (key === "avatar") {
+      formData.append("image", value);
     } else {
-      formData.append(key, value)
+      formData.append(key, value);
     }
   }
-  return api.post('staff', formData)
-}
+  return api.post("staff", formData);
+};
 
-const updateStaff = (id, updateData) => api.put(`staff/${id}`, updateData)
+const updateStaff = (id, updateData) => api.put(`staff/${id}`, updateData);
 
-const deleteStaff = (id) => api.delete(`staff/${id}`)
+const deleteStaff = (id) => api.delete(`staff/${id}`);
 
-export { createStaff, getStaffList, getStaff, updateStaff, deleteStaff }
-
+export { createStaff, getStaffList, getStaff, updateStaff, deleteStaff };

@@ -1,15 +1,18 @@
-import pick from '../pick'
+import pick from "../pick";
 export const convertToOrderDTO = (stateData) => ({
   // customer_id: stateData.customerId ?? null,
   // customer_name: stateData.customerName ?? null,
   // customer_phone_number: stateData.phoneNumber ?? null,
-  details: stateData.details.map((item) => pick(item, ['good_id', 'quantity'])),
+  shipper_id: stateData.shipperId,
+  delivery_info_id: stateData.delivery_info_id,
+  delivery_address: stateData.delivery_address,
+  details: stateData.details.map((item) => pick(item, ["good_id", "quantity"])),
   table: stateData.table?.id,
   note: stateData.note,
   // status: stateData.status,
   discounts: stateData.discounts,
   type: stateData.type,
-})
+});
 
 export const fromDTOToStateData = (dto) => ({
   type: dto.type,
@@ -26,14 +29,13 @@ export const fromDTOToStateData = (dto) => ({
     status: good.OrderDetail?.status,
   })),
   discounts: (dto.orderDiscounts || []).map((orderDiscount) => {
-    const constraint = orderDiscount.discountConstraint
-    const discount = constraint.discount
+    const constraint = orderDiscount.discountConstraint;
+    const discount = constraint.discount;
     return {
       ...discount,
       constraint,
       discountItems: orderDiscount.discountItems,
-    }
+    };
   }),
   status: dto.status,
-})
-
+});

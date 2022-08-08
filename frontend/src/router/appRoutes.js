@@ -1,23 +1,25 @@
-import routes from '../constants/route'
-import GoodList from '../pages/restaurant/Good/GoodList'
-import FacilityList from '../pages/restaurant/Facility/FacilityList'
-import MenuList from '../pages/restaurant/Menu/MenuList'
-import StaffList from '../pages/restaurant/Staff/StaffList'
-import CustomerList from '../pages/restaurant/Customer/CustomerList'
-import DiscountList from '../pages/restaurant/Discount/DiscountList'
-import Dashboard from '../pages/restaurant/Dashboard/Dashboard'
-import ReservationList from '../pages/restaurant/Reservation/ReservationList'
-import KitchenDisplay from '../pages/restaurant/KDS/KitchenDisplay'
-import OrderList from '../pages/restaurant/Order/OrderList'
-import Setting from '../pages/restaurant/Setting/Setting'
-import Home from '../pages/customer/Home/Home'
-import CustomerMenuList from '../pages/customer/Menu/MenuList'
-import MenuDetail from '../pages/customer/Menu/MenuDetail'
-import Reservation from '../pages/customer/Reservation/Reservation'
-import Checkout from '../pages/customer/Payment/Checkout'
-import Order from '../pages/customer/Order/Order'
-import AdminAuth from '../pages/restaurant/AdminAuth/AdminAuth'
-import ReservationDetail from '../pages/customer/Reservation/ReservationDetail'
+import routes from "../constants/route";
+import GoodList from "../pages/restaurant/Good/GoodList";
+import FacilityList from "../pages/restaurant/Facility/FacilityList";
+import MenuList from "../pages/restaurant/Menu/MenuList";
+import StaffList from "../pages/restaurant/Staff/StaffList";
+import CustomerList from "../pages/restaurant/Customer/CustomerList";
+import DiscountList from "../pages/restaurant/Discount/DiscountList";
+import Dashboard from "../pages/restaurant/Dashboard/Dashboard";
+import ReservationList from "../pages/restaurant/Reservation/ReservationList";
+import KitchenDisplay from "../pages/restaurant/KDS/KitchenDisplay";
+import OrderList from "../pages/restaurant/Order/OrderList";
+import Setting from "../pages/restaurant/Setting/Setting";
+import Home from "../pages/customer/Home/Home";
+import CustomerMenuList from "../pages/customer/Menu/MenuList";
+import MenuDetail from "../pages/customer/Menu/MenuDetail";
+import Reservation from "../pages/customer/Reservation/Reservation";
+import Checkout from "../pages/customer/Payment/Checkout";
+import Order from "../pages/customer/Order/Order";
+import AdminAuth from "../pages/restaurant/AdminAuth/AdminAuth";
+import ReservationDetail from "../pages/customer/Reservation/ReservationDetail";
+import BranchList from "../pages/restaurant/Branch/BranchList";
+import Inventory from "../pages/restaurant/Inventory/Inventory";
 
 const appRoutes = [
   {
@@ -27,8 +29,26 @@ const appRoutes = [
     isPrivate: false,
   },
   {
+    path: routes.BRANCH,
+    component: BranchList,
+    exact: true,
+    isPrivate: false,
+  },
+  {
+    path: routes.FINANCE,
+    component: BranchList,
+    exact: true,
+    isPrivate: false,
+  },
+  {
     path: routes.GOODS,
     component: GoodList,
+    exact: true,
+    isPrivate: false,
+  },
+  {
+    path: routes.INVENTORY,
+    component: Inventory,
     exact: true,
     isPrivate: false,
   },
@@ -136,7 +156,6 @@ const appRoutes = [
     exact: true,
     isPrivate: false,
   },
-]
+];
 
-export default appRoutes
-
+export default appRoutes;
