@@ -8,7 +8,7 @@ const createNotification = catchAsync(async (req, res) => {
 });
 
 const getNotifications = catchAsync(async (req, res) => {
-  const result = await notificationService.getNotifications();
+  const result = await notificationService.getNotifications(req.query);
   return res.send(result);
 });
 

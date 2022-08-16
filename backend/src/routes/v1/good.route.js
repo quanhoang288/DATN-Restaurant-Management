@@ -9,7 +9,11 @@ const router = express.Router();
 
 router
   .route('/')
-  .post(validate(goodValidation.createGood), goodController.createGood)
+  .post(
+    upload.single('image'),
+    validate(goodValidation.createGood),
+    goodController.createGood,
+  )
   .get(validate(goodValidation.getGoods), goodController.getGoodList);
 
 router.post('/import', upload.single('file'), goodController.importGoods);
@@ -17,7 +21,11 @@ router.post('/import', upload.single('file'), goodController.importGoods);
 router
   .route('/:id')
   .get(validate(goodValidation.getGood), goodController.getGoodDetail)
-  .put(validate(goodValidation.updateGood), goodController.updateGood)
+  .put(
+    upload.single('image'),
+    validate(goodValidation.updateGood),
+    goodController.updateGood,
+  )
   .delete(validate(goodValidation.deleteGood), goodController.deleteGood);
 
 module.exports = router;

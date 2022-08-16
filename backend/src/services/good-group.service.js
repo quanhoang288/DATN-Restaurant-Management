@@ -6,7 +6,9 @@ const { Op } = db;
 
 const createGoodGroup = async (data, option = {}) => {
   const duplicateGroup = await db.GoodGroup.findOne({
-    name: data.name,
+    where: {
+      name: data.name,
+    },
   });
   if (duplicateGroup) {
     throw new ApiError(
@@ -41,7 +43,7 @@ const updateGoodGroup = async (id, data, option = {}) => {
   return goodGroup.save(option);
 };
 
-const getGoodGroupList = async () => {};
+const getGoodGroupList = async () => db.GoodGroup.findAll({});
 
 const getGoodGroupDetail = async (id) => {
   const goodGroup = await db.GoodGroup.findByPk(id);

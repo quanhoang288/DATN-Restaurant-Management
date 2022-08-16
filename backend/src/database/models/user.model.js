@@ -26,14 +26,13 @@ module.exports = (sequelize, DataTypes) => {
     }
 
     async isPasswordMatch(password) {
-      console.log('test matching password', password);
       return bcrypt.compare(password, this.password);
     }
 
-    static isRefreshTokenValid(refreshToken) {
+    isRefreshTokenValid(refreshToken) {
       return (
         this.refresh_token === refreshToken &&
-        this.refresh_token_expires_at > new Date()
+        new Date(this.refresh_token_expires_at) > new Date()
       );
     }
 
@@ -73,6 +72,9 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING,
       },
       phone_number: {
+        type: DataTypes.STRING,
+      },
+      dob: {
         type: DataTypes.STRING,
       },
       email_verified: {

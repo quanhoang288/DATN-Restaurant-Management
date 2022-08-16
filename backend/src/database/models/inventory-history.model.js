@@ -8,6 +8,18 @@ module.exports = (sequelize, DataTypes) => {
         as: 'items',
         foreignKey: 'inventory_history_id',
       });
+      models.InventoryHistory.belongsTo(models.Inventory, {
+        as: 'sourceInventory',
+        foreignKey: 'source_inventory_id',
+      });
+      models.InventoryHistory.belongsTo(models.Inventory, {
+        as: 'targetInventory',
+        foreignKey: 'target_inventory_id',
+      });
+      models.InventoryHistory.belongsTo(models.Kitchen, {
+        as: 'kitchen',
+        foreignKey: 'kitchen_id',
+      });
     }
   }
 
@@ -24,6 +36,13 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.BIGINT.UNSIGNED,
         references: {
           model: 'inventories',
+        },
+        allowNull: false,
+      },
+      kitchen_id: {
+        type: DataTypes.BIGINT.UNSIGNED,
+        references: {
+          model: 'kitchens',
         },
         allowNull: false,
       },

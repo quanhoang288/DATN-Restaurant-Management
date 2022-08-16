@@ -22,10 +22,7 @@ module.exports = (sequelize, DataTypes) => {
           key: 'customer_id',
         },
       },
-      customer_name: {
-        type: DataTypes.STRING,
-      },
-      customer_phone_number: {
+      name: {
         type: DataTypes.STRING,
       },
       delivery_address: {

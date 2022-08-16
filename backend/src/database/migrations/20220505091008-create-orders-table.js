@@ -20,6 +20,14 @@ module.exports = {
           },
         },
       },
+      branch_id: {
+        type: Sequelize.DataTypes.BIGINT.UNSIGNED,
+        references: {
+          model: {
+            tableName: 'branches',
+          },
+        },
+      },
       customer_id: {
         type: Sequelize.DataTypes.BIGINT.UNSIGNED,
         references: {
@@ -74,6 +82,17 @@ module.exports = {
       },
       note: {
         type: Sequelize.DataTypes.STRING,
+      },
+      reject_reason: {
+        type: Sequelize.DataTypes.STRING,
+      },
+      prepare_reject_reason: {
+        type: Sequelize.DataTypes.STRING,
+      },
+      created_by_customer: {
+        type: Sequelize.DataTypes.TINYINT,
+        allowNull: false,
+        defaultValue: 0,
       },
       ...dateTime(Sequelize.DataTypes),
     });

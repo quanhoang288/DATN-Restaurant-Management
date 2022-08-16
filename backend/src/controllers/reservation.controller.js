@@ -1,5 +1,4 @@
 const httpStatus = require('http-status');
-const pick = require('../utils/pick');
 const catchAsync = require('../utils/catchAsync');
 const { reservationService } = require('../services');
 
@@ -9,9 +8,11 @@ const createReservation = catchAsync(async (req, res) => {
 });
 
 const getReservations = catchAsync(async (req, res) => {
-  const filter = {};
-  // const options = pick(req.query, ['sortBy', 'limit', 'page']);
-  const result = await reservationService.getReservationList(filter);
+  const filters = JSON.parse(req.query.filters || '{}');
+  const result = await reservationService.getReservationList({
+    ...req.query,
+    filters,
+  });
   res.send(result);
 });
 

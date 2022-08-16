@@ -1,12 +1,15 @@
+const fs = require('fs');
 const query = require('../utils/query');
 const db = require('../database/models');
 const Errors = require('../exceptions/custom-error');
 const ApiError = require('../exceptions/api-error');
-const orderService = require('../services/order.service');
+const orderService = require('./order.service');
+const s3Service = require('./s3.service');
 
 const { Op } = db.Sequelize;
 
 const createDiscount = async (data, option = {}) => {
+  console.log('discount data: ', data);
   //   - hóa đơn
   // 	    - giảm giá
   // 		    - discount constraint: from, amount, unit, discount id
@@ -26,26 +29,50 @@ const createDiscount = async (data, option = {}) => {
   const constraints = data.constraints || [];
   delete data.constraints;
 
+  if (data.image) {
+    const tmpImageFile = data.image;
+
+    const uploadRes = await s3Service.uploadFile(
+      tmpImageFile.path,
+      tmpImageFile.filename,
+    );
+    console.log('upload result: ', uploadRes);
+    fs.unlinkSync(tmpImageFile.path);
+    data.image = uploadRes.Key;
+  }
+
   const t = await db.sequelize.transaction();
   option.transaction = t;
 
   try {
-    const discount = await db.Discount.create(data, option);
+    const discount = await db.Discount.create(data, {
+      ...option,
+      include: [
+        {
+          association: 'timeSlots',
+        },
+      ],
+    });
+
+    console.log('discount: ', discount);
+
     await createDiscountConstraints(
       constraints,
       discount.id,
       data.method,
       option,
     );
-    t.commit();
+    console.log('ok');
+    await t.commit();
     return discount;
   } catch (err) {
+    console.log(err);
     t.rollback();
     throw err;
   }
 };
 
-const createDiscountConstraints = (
+const createDiscountConstraints = async (
   data,
   discountId,
   discountMethod,
@@ -53,24 +80,23 @@ const createDiscountConstraints = (
 ) => {
   console.log('creating discount constraints', data);
   if (discountMethod === 'invoice-discount') {
-    return db.DiscountConstraint.bulkCreate(
+    const constraints = await db.DiscountConstraint.bulkCreate(
       data.map((constraintData) => ({
         ...constraintData,
         discount_id: discountId,
       })),
+      option,
     );
+    console.log(constraints);
+    return constraints;
   }
 
   return Promise.all(
     data.map(async (constraintData) => {
       const orderItems = constraintData.orderItems || [];
-      const orderGroupItems = constraintData.orderGroupItems || [];
       const discountItems = constraintData.discountItems || [];
-      const discountGroupItems = constraintData.discountGroupItems || [];
       delete constraintData.orderItems;
-      delete constraintData.orderGroupItems;
       delete constraintData.discountItems;
-      delete constraintData.discountGroupItems;
 
       const discountConstraint = await db.DiscountConstraint.create(
         {
@@ -79,6 +105,7 @@ const createDiscountConstraints = (
         },
         option,
       );
+      console.log('constraint', discountConstraint);
       return Promise.all([
         db.DiscountConstraintGood.bulkCreate(
           [
@@ -95,34 +122,32 @@ const createDiscountConstraints = (
           ],
           option,
         ),
-        db.DiscountConstraintGoodGroup.bulkCreate(
-          orderGroupItems.concat(discountGroupItems).map((group) => ({
-            good_group_id: group.id,
-            discount_id: discountId,
-          })),
-        ),
       ]);
     }),
   );
 };
 
 const getDiscounts = async (params = {}) => {
-  const filter = params.filter || {};
-  const sort = params.sort || [];
+  const filters = params.filters || {};
+  const sort = params.sort || [['created_at', 'DESC']];
 
-  if (params.page) {
-    const items = await db.Discount.paginate({
-      page: params.page,
-      paginate: params.limit || 10,
-      where: query.filter(Op, filter),
-      order: sort,
-    });
+  try {
+    if (params.page) {
+      const items = await db.Discount.paginate({
+        page: params.page,
+        perPage: params.perPage || 10,
+        where: query.filter(Op, filters),
+        order: sort,
+      });
 
-    return query.getPagingData(items, params.page, params.limit);
+      return query.getPagingData(items, params.page, params.perPage);
+    }
+  } catch (err) {
+    console.log(err);
   }
 
   const option = {
-    where: filter,
+    where: filters,
     sort,
   };
 
@@ -170,29 +195,58 @@ const getDiscount = async (discountId) => {
 };
 
 const updateDiscount = async (discountId, updateData, option = {}) => {
+  console.log('update data: ', updateData);
   const discount = await getDiscount(discountId);
   const constraints = updateData.constraints || [];
   delete updateData.constraints;
+  discount.set(updateData);
 
   const t = await db.sequelize.transaction();
   option.transaction = t;
 
-  const constraintDeletePromises = (discount.constraints || []).map(
-    async (constraint) => {
-      await Promise.all([
-        constraint.removeGoods(constraint.goods, option),
-        constraint.removeGoodGroups(constraint.goodGroups, option),
-      ]);
-      return constraint.destroy(option);
-    },
+  const discountConstraints = discount.constraints || [];
+
+  const newConstraints = constraints.filter((constraint) => !constraint.id);
+  const constraintsToUpdate = discountConstraints.filter((constraint) =>
+    constraints.some((c) => c.id === constraint.id),
   );
-  discount.set(updateData);
-  try {
-    await Promise.all(
-      constraintDeletePromises,
+  const constraintsToDelete = discountConstraints.filter(
+    (constraint) => !constraints.some((c) => c.id === constraint.id),
+  );
+
+  const updatePromises = [discount.save(option)];
+
+  if (newConstraints.length) {
+    updatePromises.push(
       createDiscountConstraints(constraints, discount.id, option),
-      discount.save(option),
     );
+  }
+
+  if (constraintsToUpdate.length) {
+    updatePromises.push(
+      Promise.all(
+        constraintsToUpdate.map((constraint) => {
+          const data = constraints.find((c) => c.id === constraint.id);
+          if (data) {
+            constraint.set(data);
+          }
+          return constraint.save(option);
+        }),
+      ),
+    );
+  }
+
+  if (constraintsToDelete.length) {
+    updatePromises.push(
+      constraintsToDelete.map(async (constraint) => {
+        await Promise.all([constraint.removeGoods(constraint.goods, option)]);
+        return constraint.destroy(option);
+      }),
+    );
+  }
+
+  try {
+    await Promise.all(updatePromises);
     t.commit();
   } catch (err) {
     t.rollback();
@@ -207,12 +261,10 @@ const deleteDiscount = async (discountId, option = {}) => {
 
   try {
     await Promise.all(
-      (discount.constraints || []).map((constraint) =>
-        Promise.all([
-          constraint.removeGoods(constraint.goods, option),
-          constraint.removeGoodGroups(constraint.goodGroups, option),
-        ]),
-      ),
+      (discount.constraints || []).map(async (constraint) => {
+        await Promise.all([constraint.removeGoods(constraint.goods, option)]);
+        return constraint.destroy(option);
+      }),
     );
     await discount.destroy(option);
     t.commit();
@@ -227,10 +279,14 @@ const getAvailableDiscounts = async (orderId) => {
   const order = await orderService.getOrderDetail(orderId);
   const orderItems = order.goods || [];
   const orderTotal = orderItems.reduce(
-    (prevSum, item) => prevSum + item.sale_price,
+    (prevSum, item) =>
+      prevSum + item.sale_price * (item.OrderDetail?.quantity || 1),
     0,
   );
   let invoiceDiscounts = await db.Discount.findAll({
+    where: {
+      is_active: 1,
+    },
     include: [
       {
         association: 'constraints',

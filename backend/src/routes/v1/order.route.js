@@ -6,7 +6,9 @@ const orderController = require('../../controllers/order.controller');
 
 const router = express.Router();
 
-router.get('/reports/month-revenue', orderController.getMonthRevenueStatistics);
+router.get('/items', orderController.getKitchenOrderItems);
+router.post('/items/bulk-update', orderController.bulkUpdateKitchenItems);
+router.post('/items/:itemId/update', orderController.updateOrderItem);
 
 router
   .route('/')
@@ -22,7 +24,6 @@ router
   );
 
 router.post('/:id/payment', orderController.payOrder);
-router.post('/:id/items/:itemId/update', orderController.updateOrderItem);
 
 router
   .route('/:id')

@@ -17,6 +17,14 @@ module.exports = {
         type: Sequelize.DataTypes.STRING,
         allowNull: false,
       },
+      phone_number: {
+        type: Sequelize.DataTypes.STRING,
+        allowNull: false,
+      },
+      num_floors: {
+        type: Sequelize.DataTypes.INTEGER,
+        allowNull: false,
+      },
       is_active: {
         type: Sequelize.TINYINT,
         allowNull: false,

@@ -3,7 +3,20 @@ const { id, dateTime } = require('../generate');
 
 module.exports = (sequelize, DataTypes) => {
   class GoodInventory extends Model {
-    static associate(models) {}
+    static associate(models) {
+      models.GoodInventory.belongsTo(models.Inventory, {
+        as: 'inventory',
+        foreignKey: 'inventory_id',
+      });
+      models.GoodInventory.belongsTo(models.Good, {
+        as: 'good',
+        foreignKey: 'good_id',
+      });
+      models.GoodInventory.belongsTo(models.Unit, {
+        as: 'unit',
+        foreignKey: 'unit_id',
+      });
+    }
   }
 
   GoodInventory.init(

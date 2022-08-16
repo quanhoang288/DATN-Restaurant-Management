@@ -3,6 +3,9 @@ const userService = require('./user.service');
 const db = require('../database/models');
 const Errors = require('../exceptions/custom-error');
 const ApiError = require('../exceptions/api-error');
+const query = require('../utils/query');
+
+const { Op } = db.Sequelize;
 
 const createStaff = async (data, option = {}) => {
   const userData = pick(data, [
@@ -37,8 +40,51 @@ const getStaffList = async (params = {}) => {
     }
   }
 
-  const staffList = await db.Staff.findAll({
-    where: staffQueryParams,
+  const sort = params.sort || [];
+
+  if (params.page) {
+    const items = await db.Staff.paginate({
+      page: params.page || 1,
+      perPage: params.perPage || 10,
+      where: query.filter(Op, staffQueryParams),
+      order: sort,
+      include: [
+        {
+          association: 'user',
+          where: userQueryParams,
+          required: true,
+        },
+        {
+          association: 'role',
+          required: true,
+        },
+      ],
+    });
+
+    const paginationRes = query.getPagingData(
+      items,
+      params.page,
+      params.perPage,
+    );
+    return {
+      ...paginationRes,
+      data: paginationRes.data.map((staff) => ({
+        id: staff.id,
+        branch_id: staff.branch_id,
+        full_name: staff.user?.full_name,
+        email: staff.user?.email,
+        address: staff.user?.address,
+        phone_number: staff.user?.phone_number ?? null,
+        gender: staff.user?.gender ?? null,
+        status: staff.status,
+        role: staff.role?.name,
+      })),
+    };
+  }
+
+  const option = {
+    where: query.filter(Op, staffQueryParams),
+    sort,
     include: [
       {
         association: 'user',
@@ -50,7 +96,9 @@ const getStaffList = async (params = {}) => {
         required: true,
       },
     ],
-  });
+  };
+
+  const staffList = await db.Staff.findAll(option);
 
   return staffList.map((staff) => ({
     id: staff.id,
@@ -97,7 +145,21 @@ const updateStaff = async (staffId, updateData, option = {}) => {
 
 const deleteStaff = async (staffId, option = {}) => {
   const staff = await getStaff(staffId);
-  return Promise.all([staff.roles.destroy(option), staff.destroy(option)]);
+
+  console.log('staff: ', staff);
+
+  const t = await db.sequelize.transaction();
+  option.transaction = t;
+
+  try {
+    await db.User.destroy({ where: { id: staffId } });
+    await staff.destroy(option);
+    t.commit();
+  } catch (error) {
+    console.log(error);
+    t.rollback();
+    throw error;
+  }
 };
 
 module.exports = {

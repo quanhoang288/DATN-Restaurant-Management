@@ -16,7 +16,7 @@ const createStaff = catchAsync(async (req, res) => {
 
 const getStaffList = catchAsync(async (req, res) => {
   const filters = JSON.parse(req.query.filters || '{}');
-  const staffList = await staffService.getStaffList({ filters });
+  const staffList = await staffService.getStaffList({ ...req.query, filters });
   return res.send(staffList);
 });
 

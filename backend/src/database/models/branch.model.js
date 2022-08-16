@@ -22,6 +22,14 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING,
         allowNull: false,
       },
+      phone_number: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      num_floors: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+      },
       is_active: {
         type: DataTypes.TINYINT,
         allowNull: false,

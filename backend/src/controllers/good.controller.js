@@ -2,7 +2,17 @@ const httpStatus = require('http-status');
 const goodService = require('../services/good.service');
 
 const createGood = async (req, res) => {
-  await goodService.createGood(req.body);
+  const data = req.body;
+  if (data.units) {
+    data.units = JSON.parse(data.units).value;
+  }
+  if (data.components) {
+    data.components = JSON.parse(data.components).value;
+  }
+  if (req.file) {
+    data.image = req.file;
+  }
+  await goodService.createGood(data);
   return res.status(httpStatus.OK).json({
     message: 'Create good successfully',
   });
@@ -33,7 +43,17 @@ const getGoodDetail = async (req, res) => {
 };
 
 const updateGood = async (req, res) => {
-  await goodService.updateGood(req.params.id, req.body);
+  const data = req.body;
+  if (data.units) {
+    data.units = JSON.parse(data.units).value;
+  }
+  if (data.components) {
+    data.components = JSON.parse(data.components).value;
+  }
+  if (req.file) {
+    data.image = req.file;
+  }
+  await goodService.updateGood(req.params.id, data);
   return res.status(httpStatus.OK).json({
     message: 'Update good successfully',
   });

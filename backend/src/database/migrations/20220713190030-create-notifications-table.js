@@ -7,7 +7,6 @@ module.exports = {
       type: {
         type: Sequelize.DataTypes.STRING,
         allowNull: false,
-        unique: true,
       },
       order_id: {
         type: Sequelize.DataTypes.BIGINT.UNSIGNED,
@@ -30,6 +29,14 @@ module.exports = {
         references: {
           model: {
             tableName: 'reservations',
+          },
+        },
+      },
+      customer_id: {
+        type: Sequelize.DataTypes.BIGINT.UNSIGNED,
+        references: {
+          model: {
+            tableName: 'customers',
           },
         },
       },

@@ -51,6 +51,9 @@ module.exports = (sequelize, DataTypes) => {
       note: {
         type: DataTypes.STRING,
       },
+      reject_reason: {
+        type: DataTypes.STRING,
+      },
       status: {
         type: DataTypes.STRING,
       },

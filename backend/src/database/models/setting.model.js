@@ -9,13 +9,9 @@ module.exports = (sequelize, DataTypes) => {
   Setting.init(
     {
       ...id(DataTypes),
-      code: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        unique: true,
-      },
       name: {
         type: DataTypes.STRING,
+        unique: true,
         allowNull: false,
       },
       value: {

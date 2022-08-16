@@ -23,17 +23,13 @@ const getKitchenList = async (params = {}) => {
 
   // eslint-disable-next-line no-prototype-builtins
   if (params.hasOwnProperty('page')) {
-    const items = await db.Kitchen.paginate(
-      {
-        page: params.page,
-        perPage: params.perPage,
-      },
-      {
-        where: query.filter(Op, filters),
-        order: sort,
-        include: [{ association: 'branch' }],
-      },
-    );
+    const items = await db.Kitchen.paginate({
+      page: params.page,
+      perPage: params.perPage,
+      where: query.filter(Op, filters),
+      order: sort,
+      include: [{ association: 'branch' }],
+    });
 
     return query.getPagingData(items, params.page, params.perPage);
   }

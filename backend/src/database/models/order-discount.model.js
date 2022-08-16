@@ -16,6 +16,8 @@ module.exports = (sequelize, DataTypes) => {
       models.OrderDiscount.hasMany(models.OrderDiscountGood, {
         as: 'discountGoods',
         foreignKey: 'order_discount_id',
+        hooks: true,
+        onDelete: 'cascade',
       });
       models.OrderDiscount.belongsToMany(models.Good, {
         as: 'discountItems',

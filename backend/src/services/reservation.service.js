@@ -65,50 +65,60 @@ const createReservation = async (data, option = {}) => {
 };
 
 const getReservationList = async (params = {}) => {
-  const filter = params.filter || {};
-  const sort = params.sort || [];
+  const filters = params.filters || {};
+  const sort = params.sort || [['created_at', 'DESC']];
 
   if (params.page) {
     const items = await db.Reservation.paginate({
-      page: params.page,
-      paginate: params.limit || 10,
-      where: query.filter(Op, filter),
+      page: params.page || 1,
+      perPage: params.perPage || 10,
+      where: query.filter(Op, filters),
       order: sort,
     });
 
-    return query.getPagingData(items, params.page, params.limit);
+    return query.getPagingData(items, params.page, params.perPage);
   }
 
   const option = {
-    where: filter,
+    where: query.filter(Op, filters),
     sort,
   };
-  if (params.attributes) {
-    option.attributes = params.attributes;
-  }
 
   return db.Reservation.findAll(option);
 };
 
 const getReservationDetail = async (reservationId) => {
-  const reservation = await db.Reservation.findByPk(reservationId, {
-    include: [
-      {
-        association: 'tables',
-        attributes: ['id', 'name'],
-        through: {
-          attributes: [],
+  try {
+    const reservation = await db.Reservation.findByPk(reservationId, {
+      include: [
+        {
+          association: 'tables',
+          attributes: ['id', 'name', 'branch_id'],
+          through: {
+            attributes: [],
+          },
         },
-      },
-    ],
-  });
-  if (!reservation) {
-    throw new ApiError(
-      Errors.ReservationNotFound.statusCode,
-      Errors.ReservationNotFound.message,
-    );
+        {
+          association: 'customer',
+          include: [
+            {
+              association: 'user',
+              attributes: ['id', 'full_name'],
+            },
+          ],
+        },
+      ],
+    });
+    if (!reservation) {
+      throw new ApiError(
+        Errors.ReservationNotFound.statusCode,
+        Errors.ReservationNotFound.message,
+      );
+    }
+    return reservation;
+  } catch (error) {
+    console.log(error);
   }
-  return reservation;
 };
 
 const updateReservation = async (reservationId, data, option = {}) => {
@@ -215,7 +225,7 @@ const sendReminders = async () => {
   // await Promise.all(
   //   reservationsToRemind.map((reservation) =>
   //     messagingService.sendMessage(
-  //       reservation.customer_phone_number,
+  //       '+84384426529',
   //       `Hi ${reservation.customer_name}. This is a reminder message to inform you that you have an reservation coming up at ${reservation.arrive_time}`,
   //     ),
   //   ),

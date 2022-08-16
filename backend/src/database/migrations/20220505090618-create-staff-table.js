@@ -1,4 +1,4 @@
-const { id } = require('../generate');
+const { id, dateTime } = require('../generate');
 
 module.exports = {
   async up(queryInterface, Sequelize) {
@@ -32,6 +32,7 @@ module.exports = {
         allowNull: false,
         defaultValue: 0,
       },
+      ...dateTime(Sequelize.DataTypes),
     });
   },
 

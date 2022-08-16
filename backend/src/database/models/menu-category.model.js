@@ -8,6 +8,12 @@ module.exports = (sequelize, DataTypes) => {
         as: 'menu',
         foreignKey: 'menu_id',
       });
+      models.MenuCategory.hasMany(models.CategoryItem, {
+        as: 'categoryItems',
+        foreignKey: 'category_id',
+        hooks: true,
+        onDelete: 'cascade',
+      });
       models.MenuCategory.belongsToMany(models.Good, {
         as: 'items',
         through: {

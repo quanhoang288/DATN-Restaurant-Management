@@ -13,10 +13,13 @@ module.exports = {
         type: Sequelize.DataTypes.STRING,
         allowNull: false,
       },
-      status: {
+      image: {
         type: Sequelize.DataTypes.STRING,
+      },
+      is_active: {
+        type: Sequelize.DataTypes.TINYINT,
         allowNull: false,
-        defaultValue: 'active',
+        defaultValue: 1,
       },
       ...dateTime(Sequelize.DataTypes),
     });

@@ -11,7 +11,10 @@ const {
 
 // const services = require('../services')
 
-const register = catchAsync(async (req, res) => {});
+const register = catchAsync(async (req, res) => {
+  const userData = await authService.register(req.body);
+  res.send(userData);
+});
 
 const login = catchAsync(async (req, res) => {
   console.log('loging in...');
@@ -30,7 +33,7 @@ const logout = catchAsync(async (req, res) => {
 });
 
 const refreshTokens = catchAsync(async (req, res) => {
-  const tokens = await authService.refreshAuth(req.body.refreshToken);
+  const tokens = await authService.refreshAuth(req.body);
   res.send({ ...tokens });
 });
 

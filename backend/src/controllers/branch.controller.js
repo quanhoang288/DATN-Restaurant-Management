@@ -9,7 +9,6 @@ const createBranch = catchAsync(async (req, res) => {
 
 const getBranches = catchAsync(async (req, res) => {
   const filters = JSON.parse(req.query.filters || '{}');
-  console.log(req.query);
   const branches = await branchService.getBranchList({ ...req.query, filters });
   res.send(branches);
 });

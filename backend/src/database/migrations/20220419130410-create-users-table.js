@@ -26,6 +26,9 @@ module.exports = {
       phone_number: {
         type: Sequelize.DataTypes.STRING,
       },
+      dob: {
+        type: Sequelize.DataTypes.STRING,
+      },
       email_verified: {
         type: Sequelize.DataTypes.TINYINT.UNSIGNED,
       },

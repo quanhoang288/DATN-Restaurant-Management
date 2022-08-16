@@ -8,10 +8,13 @@ module.exports = {
         type: Sequelize.DataTypes.BIGINT.UNSIGNED,
         references: {
           model: {
-            tableName: 'discounts',
+            tableName: 'customers',
           },
           key: 'id',
         },
+      },
+      name: {
+        type: Sequelize.DataTypes.STRING,
       },
       delivery_address: {
         type: Sequelize.DataTypes.STRING,

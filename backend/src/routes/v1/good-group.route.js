@@ -9,13 +9,13 @@ const router = express.Router();
 router
   .route('/')
   .post(
-    auth,
-    validate(goodGroupValidation.createGoodGroup),
+    // auth,
+    // validate(goodGroupValidation.createGoodGroup),
     goodGroupController.createGoodGroup,
   )
   .get(
-    auth,
-    validate(goodGroupValidation.getGoodGroups),
+    // auth,
+    // validate(goodGroupValidation.getGoodGroups),
     goodGroupController.getGoodGroupList,
   );
 

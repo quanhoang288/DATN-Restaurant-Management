@@ -1,12 +1,29 @@
+const fs = require('fs');
+
 const db = require('../database/models');
 const ApiError = require('../exceptions/api-error');
 const Errors = require('../exceptions/custom-error');
+const query = require('../utils/query');
+const s3Service = require('./s3.service');
 
 const { Op } = db.Sequelize;
 
 const createMenu = async (data, option = {}) => {
+  console.log('menu data: ', data);
   const categories = data.categories || [];
   delete data.categories;
+
+  if (data.image) {
+    const tmpImageFile = data.image;
+
+    const uploadRes = await s3Service.uploadFile(
+      tmpImageFile.path,
+      tmpImageFile.filename,
+    );
+    console.log('upload result: ', uploadRes);
+    fs.unlinkSync(tmpImageFile.path);
+    data.image = uploadRes.Key;
+  }
 
   const t = await db.sequelize.transaction();
   option.transaction = t;
@@ -71,6 +88,19 @@ const updateMenu = async (menuId, data, option = {}) => {
     }
   });
   delete data.categories;
+
+  if (data.image) {
+    const tmpImageFile = data.image;
+
+    const uploadRes = await s3Service.uploadFile(
+      tmpImageFile.path,
+      tmpImageFile.filename,
+    );
+    console.log('upload result: ', uploadRes);
+    fs.unlinkSync(tmpImageFile.path);
+    data.image = uploadRes.Key;
+  }
+
   menu.set(data);
 
   const t = await db.sequelize.transaction();
@@ -92,7 +122,16 @@ const updateMenu = async (menuId, data, option = {}) => {
   ];
 
   if (categoriesToDelete.length > 0) {
-    updatePromises.push(menu.removeCategories(categoriesToDelete, option));
+    updatePromises.push(
+      db.MenuCategory.destroy({
+        where: {
+          id: {
+            [Op.in]: categoriesToDelete.map((category) => category.id),
+          },
+        },
+        ...option,
+      }),
+    );
   }
 
   try {
@@ -104,8 +143,38 @@ const updateMenu = async (menuId, data, option = {}) => {
   }
 };
 
-const getMenus = async () =>
-  db.Menu.findAll({
+const getMenus = async (params = {}) => {
+  const filters = params.filters || {};
+  const sort = params.sort || [['created_at', 'DESC']];
+
+  // eslint-disable-next-line no-prototype-builtins
+  if (params.hasOwnProperty('page')) {
+    const items = await db.Menu.paginate({
+      page: params.page,
+      perPage: params.perPage || 10,
+      where: query.filter(Op, filters),
+      order: sort,
+      include: [
+        {
+          association: 'categories',
+          include: [
+            {
+              association: 'items',
+              through: {
+                attributes: [],
+              },
+            },
+          ],
+        },
+      ],
+    });
+
+    return query.getPagingData(items, params.page, params.perPage);
+  }
+
+  const option = {
+    where: query.filter(Op, filters),
+    sort,
     include: [
       {
         association: 'categories',
@@ -119,7 +188,10 @@ const getMenus = async () =>
         ],
       },
     ],
-  });
+  };
+
+  return db.Menu.findAll(option);
+};
 
 const getMenu = async (menuId) => {
   const menu = db.Menu.findByPk(menuId, {
@@ -129,7 +201,7 @@ const getMenu = async (menuId) => {
         include: [
           {
             association: 'items',
-            attributes: ['id', 'name', 'sale_price'],
+            attributes: ['id', 'name', 'sale_price', 'image'],
             through: {
               attributes: [],
             },

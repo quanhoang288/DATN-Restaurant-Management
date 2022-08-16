@@ -1,4 +1,5 @@
 const { Model } = require('sequelize');
+const { id } = require('../generate');
 
 module.exports = (sequelize, DataTypes) => {
   class Staff extends Model {
@@ -13,6 +14,11 @@ module.exports = (sequelize, DataTypes) => {
 
   Staff.init(
     {
+      ...id(DataTypes, {
+        references: {
+          model: 'users',
+        },
+      }),
       branch_id: {
         type: DataTypes.BIGINT.UNSIGNED,
         references: {
@@ -30,7 +36,6 @@ module.exports = (sequelize, DataTypes) => {
       sequelize,
       modelName: 'Staff',
       tableName: 'staff',
-      timestamps: false,
     },
   );
   return Staff;

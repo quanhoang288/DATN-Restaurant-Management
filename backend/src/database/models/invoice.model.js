@@ -26,6 +26,11 @@ module.exports = (sequelize, DataTypes) => {
       paid_amount: {
         type: DataTypes.INTEGER,
       },
+      discount: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 0,
+      },
     },
     {
       sequelize,

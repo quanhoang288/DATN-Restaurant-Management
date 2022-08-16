@@ -20,8 +20,6 @@ const getBranchList = async (params = {}) => {
       order: sort,
     });
 
-    console.log('items');
-
     return query.getPagingData(items, params.page, params.perPage);
   }
 

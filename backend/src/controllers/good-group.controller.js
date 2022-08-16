@@ -17,9 +17,7 @@ const updateGoodGroup = async (req, res) => {
 
 const getGoodGroupList = async (req, res) => {
   const goodGroups = await goodGroupService.getGoodGroupList();
-  return res.status(httpStatus.OK).json({
-    data: goodGroups,
-  });
+  return res.send(goodGroups);
 };
 
 const getGoodGroupDetail = async (req, res) => {

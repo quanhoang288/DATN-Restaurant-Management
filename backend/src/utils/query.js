@@ -38,12 +38,33 @@ const filter = (Op, filter) => {
     for (const key in filter) {
       if (typeof filter[key] === 'object') {
         for (const [cond, val] of Object.entries(filter[key])) {
-          if (cond === 'like') {
-            where[key] = {
-              [Op.substring]: val,
-            };
-          } else if (cond === 'equal') {
-            where[key] = val;
+          switch (cond) {
+            case 'like': {
+              where[key] = {
+                [Op.substring]: val,
+              };
+              break;
+            }
+            case 'ne': {
+              where[key] = {
+                [Op.ne]: val,
+              };
+              break;
+            }
+            case 'in': {
+              where[key] = {
+                [Op.in]: val,
+              };
+              break;
+            }
+            case 'notIn': {
+              where[key] = {
+                [Op.notIn]: val,
+              };
+              break;
+            }
+            default:
+              where[key] = val;
           }
         }
       } else {

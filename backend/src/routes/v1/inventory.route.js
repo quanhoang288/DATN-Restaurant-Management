@@ -1,7 +1,8 @@
 const express = require('express');
-// const validate = require('../../middlewares/validate');
+const validate = require('../../middlewares/validate');
 // const auth = require('../../middlewares/auth');
 const inventoryController = require('../../controllers/inventory.controller');
+const { inventoryValidation } = require('../../validations');
 
 const router = express.Router();
 
@@ -13,6 +14,7 @@ router
   )
   .get(
     // auth,
+    validate(inventoryValidation.getInventories),
     inventoryController.getInventories,
   );
 

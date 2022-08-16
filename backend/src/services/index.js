@@ -17,6 +17,10 @@ const branchService = require('./branch.service');
 const inventoryService = require('./inventory.service');
 const inventoryHistoryService = require('./inventory-history.service');
 const unitService = require('./unit.service');
+const deliveryInfoService = require('./delivery-info.service');
+const customerService = require('./customer.service');
+const reportService = require('./report.service');
+const settingService = require('./setting.service');
 
 module.exports = {
   authService,
@@ -38,4 +42,8 @@ module.exports = {
   inventoryService,
   inventoryHistoryService,
   unitService,
+  deliveryInfoService,
+  customerService,
+  reportService,
+  settingService,
 };

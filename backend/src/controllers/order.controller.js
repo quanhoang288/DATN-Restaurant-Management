@@ -7,16 +7,6 @@ const createOrder = catchAsync(async (req, res) => {
   return res.status(httpStatus.OK).send(order);
 });
 
-const getMonthRevenueStatistics = catchAsync(async (req, res) => {
-  const { type, groupBy } = req.query;
-  const statistics = await orderService.getMonthRevenueStatistics(
-    type,
-    groupBy,
-  );
-  console.log(statistics);
-  return res.status(httpStatus.OK).send(statistics);
-});
-
 const getOrderList = async (req, res) => {
   const filters = JSON.parse(req.query.filters || '{}');
   const result = await orderService.getOrderList({ ...req.query, filters });
@@ -50,14 +40,27 @@ const payOrder = catchAsync(async (req, res) => {
 });
 
 const updateOrderItem = catchAsync(async (req, res) => {
-  await orderService.updateOrderItem(
-    req.params.id,
-    req.params.itemId,
-    req.body,
-  );
+  await orderService.updateOrderItem(req.params.itemId, req.body);
   return res
     .status(httpStatus.OK)
     .json({ message: 'Update item successfully' });
+});
+
+const getKitchenOrderItems = catchAsync(async (req, res) => {
+  const filters = JSON.parse(req.query.filters || '{}');
+  const items = await orderService.getKitchenOrderItems(
+    filters.branch_id || null,
+    filters.status,
+  );
+  return res.send(items);
+});
+
+const bulkUpdateKitchenItems = catchAsync(async (req, res) => {
+  const { itemId, status } = req.body;
+  await orderService.bulkUpdateItems(itemId, status);
+  return res
+    .status(httpStatus.OK)
+    .json({ message: 'Bulk update kitchen items successfully' });
 });
 
 module.exports = {
@@ -68,5 +71,6 @@ module.exports = {
   deleteOrder,
   payOrder,
   updateOrderItem,
-  getMonthRevenueStatistics,
+  getKitchenOrderItems,
+  bulkUpdateKitchenItems,
 };

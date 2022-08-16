@@ -4,20 +4,23 @@ const createMenu = {
   body: Joi.object().keys({
     name: Joi.string().required().min(1),
     type: Joi.string().required().valid('food', 'beverage').default('food'),
-    status: Joi.string()
-      .required()
-      .valid('active', 'inactive')
-      .default('active'),
-    categories: Joi.array().items(
-      Joi.object().keys({
-        name: Joi.string().required(),
-        items: Joi.array().items(Joi.number().positive()),
-      }),
-    ),
+    is_active: Joi.number().required().valid(0, 1).default(1),
+    // categories: Joi.array().items(
+    //   Joi.object().keys({
+    //     name: Joi.string().required(),
+    //     items: Joi.array().items(Joi.number().positive()),
+    //   }),
+    // ),
   }),
 };
 
-const getMenus = {};
+const getMenus = {
+  query: Joi.object().keys({
+    page: Joi.number().positive(),
+    perPage: Joi.number().positive(),
+    filters: Joi.string(),
+  }),
+};
 
 const getMenu = {
   params: Joi.object().keys({
@@ -32,14 +35,14 @@ const updateMenu = {
   body: Joi.object().keys({
     name: Joi.string().min(1),
     type: Joi.string(),
-    status: Joi.string().valid('active', 'inactive').default('active'),
-    categories: Joi.array().items(
-      Joi.object().keys({
-        id: Joi.number().positive(),
-        name: Joi.string(),
-        items: Joi.array().items(Joi.number().positive()),
-      }),
-    ),
+    is_active: Joi.number().required().valid(0, 1).default(1),
+    // categories: Joi.array().items(
+    //   Joi.object().keys({
+    //     id: Joi.number().positive(),
+    //     name: Joi.string(),
+    //     items: Joi.array().items(Joi.number().positive()),
+    //   }),
+    // ),
   }),
 };
 

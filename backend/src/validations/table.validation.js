@@ -3,8 +3,9 @@ const Joi = require('joi');
 const createTable = {
   body: Joi.object().keys({
     name: Joi.string().required().min(1),
+    branch_id: Joi.number().required().positive(),
     floor_num: Joi.number().positive().required().default(1),
-    order: Joi.number().positive().required(),
+    // order: Joi.number().positive().required(),
   }),
 };
 
@@ -16,10 +17,9 @@ const getTable = {
 
 const getTables = {
   query: Joi.object().keys({
-    filters: Joi.string(),
-    sort: Joi.string(),
     page: Joi.number().positive(),
     perPage: Joi.number().positive(),
+    filters: Joi.string(),
   }),
 };
 

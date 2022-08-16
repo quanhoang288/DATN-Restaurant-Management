@@ -12,7 +12,7 @@ router
     notificationController.createNotification,
   )
   .get(
-    // auth,
+    // auth(),
     notificationController.getNotifications,
   );
 

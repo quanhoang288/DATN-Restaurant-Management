@@ -8,13 +8,20 @@ const jwtOptions = {
 };
 
 const jwtVerify = async (payload, done) => {
+  console.log(payload);
   try {
-    const user = await db.User.findByPk(payload.sub);
+    const user = await db.User.findByPk(payload.sub, {
+      include: [
+        { association: 'staff', include: [{ association: 'role' }] },
+        { association: 'customer' },
+      ],
+    });
     if (!user) {
       return done(null, false);
     }
     done(null, user);
   } catch (error) {
+    console.log(error);
     done(error, false);
   }
 };

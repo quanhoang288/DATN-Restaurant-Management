@@ -31,20 +31,17 @@ const updateTable = async (tableId, data, option = {}) => {
 const getTableList = async (params = {}) => {
   const filters = params.filters || {};
   const sort = params.sort || [];
+  console.log(filters);
 
   // eslint-disable-next-line no-prototype-builtins
   if (params.hasOwnProperty('page')) {
-    const items = await db.Table.paginate(
-      {
-        page: params.page,
-        perPage: params.perPage,
-      },
-      {
-        where: query.filter(Op, filters),
-        order: sort,
-        include: [{ association: 'branch' }, { association: 'reservations' }],
-      },
-    );
+    const items = await db.Table.paginate({
+      page: params.page,
+      perPage: params.perPage,
+      where: query.filter(Op, filters),
+      order: sort,
+      include: [{ association: 'branch' }, { association: 'reservations' }],
+    });
 
     return query.getPagingData(items, params.page, params.perPage);
   }

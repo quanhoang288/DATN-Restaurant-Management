@@ -11,15 +11,6 @@ module.exports = {
           key: 'id',
         },
       }),
-      date_of_birth: {
-        type: Sequelize.DataTypes.DATE,
-      },
-      phone_number: {
-        type: Sequelize.DataTypes.STRING,
-      },
-      address: {
-        type: Sequelize.DataTypes.STRING,
-      },
       ...dateTime(Sequelize.DataTypes),
     });
   },

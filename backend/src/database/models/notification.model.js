@@ -11,6 +11,10 @@ module.exports = (sequelize, DataTypes) => {
           model: models.NotificationUser,
         },
       });
+      models.Notification.belongsTo(models.Customer, {
+        as: 'customer',
+        foreignKey: 'customer_id',
+      });
       models.Notification.belongsTo(models.Order, {
         as: 'order',
         foreignKey: 'order_id',
@@ -23,6 +27,13 @@ module.exports = (sequelize, DataTypes) => {
         as: 'reservation',
         foreignKey: 'reservation_id',
       });
+      models.Notification.belongsToMany(models.Role, {
+        as: 'roles',
+        foreignKey: 'role_id',
+        through: {
+          model: models.NotificationRole,
+        },
+      });
     }
   }
 
@@ -32,7 +43,6 @@ module.exports = (sequelize, DataTypes) => {
       type: {
         type: DataTypes.STRING,
         allowNull: false,
-        unique: true,
       },
       order_id: {
         type: DataTypes.BIGINT.UNSIGNED,
@@ -50,6 +60,12 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.BIGINT.UNSIGNED,
         references: {
           model: 'reservations',
+        },
+      },
+      customer_id: {
+        type: DataTypes.BIGINT.UNSIGNED,
+        references: {
+          model: 'customers',
         },
       },
     },

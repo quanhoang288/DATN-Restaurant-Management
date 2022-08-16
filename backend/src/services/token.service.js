@@ -70,9 +70,10 @@ const verifyToken = async (userId, token, type) => {
 
   if (type === config.tokenType.REFRESH) {
     if (!user.isRefreshTokenValid(token)) {
-      throw new Error('Invalid refresh token');
+      throw new ApiError(httpStatus.UNAUTHORIZED, 'Invalid refresh token');
     }
   }
+  return user;
 };
 
 /**

@@ -23,9 +23,13 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING,
         allowNull: false,
       },
-      status: {
+      image: {
         type: DataTypes.STRING,
+      },
+      is_active: {
+        type: DataTypes.TINYINT,
         allowNull: false,
+        defaultValue: 1,
       },
     },
     {

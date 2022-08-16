@@ -8,6 +8,15 @@ module.exports = (sequelize, DataTypes) => {
         as: 'reservationTable',
         foreignKey: 'reservation_table_id',
       });
+      models.Order.belongsTo(models.Branch, {
+        as: 'branch',
+        foreignKey: 'branch_id',
+      });
+
+      models.Order.belongsTo(models.Customer, {
+        as: 'customer',
+        foreignKey: 'customer_id',
+      });
 
       models.Order.hasMany(models.OrderDetail, {
         as: 'details',
@@ -63,12 +72,12 @@ module.exports = (sequelize, DataTypes) => {
           model: 'reservation_tables',
         },
       },
-      // invoice_id: {
-      //   type: DataTypes.BIGINT.UNSIGNED,
-      //   references: {
-      //     model: 'invoices',
-      //   },
-      // },
+      branch_id: {
+        type: DataTypes.BIGINT.UNSIGNED,
+        references: {
+          model: 'branches',
+        },
+      },
       delivery_info_id: {
         type: DataTypes.BIGINT.UNSIGNED,
         references: {
@@ -125,6 +134,17 @@ module.exports = (sequelize, DataTypes) => {
       },
       note: {
         type: DataTypes.STRING,
+      },
+      reject_reason: {
+        type: DataTypes.STRING,
+      },
+      prepare_reject_reason: {
+        type: DataTypes.STRING,
+      },
+      created_by_customer: {
+        type: DataTypes.TINYINT,
+        allowNull: false,
+        defaultValue: 1,
       },
     },
     {

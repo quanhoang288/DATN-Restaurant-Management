@@ -18,7 +18,14 @@ module.exports = {
           model: {
             tableName: 'inventories',
           },
-          allowNull: false,
+        },
+      },
+      kitchen_id: {
+        type: Sequelize.DataTypes.BIGINT.UNSIGNED,
+        references: {
+          model: {
+            tableName: 'kitchen_id',
+          },
         },
       },
       type: {

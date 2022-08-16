@@ -16,15 +16,19 @@ const createUser = async (userBody, option = {}) => {
   if (await db.User.isEmailTaken(userBody.email)) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Email already taken');
   }
-  const tmpAvatarFile = userBody.avatar;
 
-  const uploadRes = await s3Service.uploadFile(
-    tmpAvatarFile.path,
-    tmpAvatarFile.filename,
-  );
-  console.log('upload result: ', uploadRes);
-  fs.unlinkSync(tmpAvatarFile.path);
-  userBody.avatar = uploadRes.Key;
+  if (userBody.avatar) {
+    const tmpAvatarFile = userBody.avatar;
+
+    const uploadRes = await s3Service.uploadFile(
+      tmpAvatarFile.path,
+      tmpAvatarFile.filename,
+    );
+    console.log('upload result: ', uploadRes);
+    fs.unlinkSync(tmpAvatarFile.path);
+    userBody.avatar = uploadRes.Key;
+  }
+
   return db.User.create(userBody, option);
 };
 

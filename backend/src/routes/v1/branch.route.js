@@ -1,7 +1,8 @@
 const express = require('express');
-// const validate = require('../../middlewares/validate');
-// const auth = require('../../middlewares/auth');
+const validate = require('../../middlewares/validate');
+const auth = require('../../middlewares/auth');
 const branchController = require('../../controllers/branch.controller');
+const { branchValidation } = require('../../validations');
 
 const router = express.Router();
 
@@ -12,7 +13,8 @@ router
     branchController.createBranch,
   )
   .get(
-    // auth,
+    // auth(),
+    validate(branchValidation.getBranches),
     branchController.getBranches,
   );
 

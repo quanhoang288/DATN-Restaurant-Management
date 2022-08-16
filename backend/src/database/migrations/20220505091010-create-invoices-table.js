@@ -18,6 +18,11 @@ module.exports = {
       paid_amount: {
         type: Sequelize.DataTypes.INTEGER,
       },
+      discount: {
+        type: Sequelize.DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 0,
+      },
       ...dateTime(Sequelize.DataTypes),
     });
   },

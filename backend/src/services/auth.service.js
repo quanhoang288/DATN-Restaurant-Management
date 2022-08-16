@@ -7,6 +7,35 @@ const db = require('../database/models');
 
 const { Op } = db.Sequelize;
 
+const register = async (credentials, option = {}) => {
+  const t = await db.sequelize.transaction();
+  option.transaction = t;
+
+  let user;
+
+  try {
+    user = await userService.createUser(credentials, option);
+    await db.Customer.create(
+      {
+        id: user.id,
+      },
+      option,
+    );
+    t.commit();
+  } catch (err) {
+    t.rollback();
+    console.log(err);
+    throw err;
+  }
+  if (user) {
+    const tokens = await tokenService.generateAuthTokens(user);
+    return { user, tokens };
+  }
+
+  // internal error
+  throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, 'Internal server error');
+};
+
 const loginWithEmailOrPhoneNumber = async (identifier, password) => {
   try {
     const user = await db.User.findOne({
@@ -29,9 +58,11 @@ const loginWithEmailOrPhoneNumber = async (identifier, password) => {
             },
           ],
         },
+        {
+          association: 'customer',
+        },
       ],
     });
-    console.log('user: ', user);
 
     if (!user || !(await user.isPasswordMatch(password))) {
       console.log('authentication failed');
@@ -83,7 +114,10 @@ const loginWithPhoneNumber = async (phoneNumber, password) => {
  * @param {string} refreshToken
  * @returns {Promise<Object>}
  */
-const refreshAuth = async (userId, refreshToken) => {
+const refreshAuth = async ({
+  user_id: userId,
+  refresh_token: refreshToken,
+}) => {
   try {
     const user = await tokenService.verifyToken(
       userId,
@@ -143,4 +177,5 @@ module.exports = {
   refreshAuth,
   resetPassword,
   verifyEmail,
+  register,
 };

@@ -11,6 +11,9 @@ module.exports = {
       description: {
         type: Sequelize.DataTypes.STRING,
       },
+      image: {
+        type: Sequelize.DataTypes.STRING,
+      },
       type: {
         type: Sequelize.DataTypes.STRING,
         allowNull: false,
@@ -21,28 +24,18 @@ module.exports = {
       end_date: {
         type: Sequelize.DataTypes.DATE,
       },
-      start_day: {
-        type: Sequelize.DataTypes.INTEGER,
-      },
-      end_day: {
-        type: Sequelize.DataTypes.INTEGER,
-      },
-      start_hour: {
-        type: Sequelize.DataTypes.TIME,
-      },
-      end_hour: {
-        type: Sequelize.DataTypes.TIME,
-      },
       method: {
         type: Sequelize.DataTypes.STRING,
       },
-      is_applied_to_all_customers: {
-        type: Sequelize.DataTypes.BOOLEAN,
-        defaultValue: false,
-      },
       is_auto_applied: {
-        type: Sequelize.DataTypes.BOOLEAN,
-        defaultValue: false,
+        type: Sequelize.DataTypes.TINYINT,
+        allowNull: false,
+        defaultValue: 0,
+      },
+      is_active: {
+        type: Sequelize.DataTypes.TINYINT,
+        allowNull: false,
+        defaultValue: 1,
       },
       ...dateTime(Sequelize.DataTypes),
     });

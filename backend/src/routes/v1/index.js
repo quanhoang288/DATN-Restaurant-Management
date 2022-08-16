@@ -16,6 +16,11 @@ const branchRoute = require('./branch.route');
 const inventoryRoute = require('./inventory.route');
 const inventoryHistoryRoute = require('./inventory-history.route');
 const unitRoute = require('./unit.route');
+const deliveryInfoRoute = require('./delivery-info.route');
+const notificationRoute = require('./notification.route');
+const customerRoute = require('./customer.route');
+const reportRoute = require('./report.route');
+const settingRoute = require('./setting.route');
 
 const router = express.Router();
 
@@ -65,6 +70,10 @@ const routes = [
     route: menuRoute,
   },
   {
+    path: '/notifications',
+    route: notificationRoute,
+  },
+  {
     path: '/invoices',
     route: invoiceRoute,
   },
@@ -87,6 +96,22 @@ const routes = [
   {
     path: '/units',
     route: unitRoute,
+  },
+  {
+    path: '/delivery-infos',
+    route: deliveryInfoRoute,
+  },
+  {
+    path: '/customers',
+    route: customerRoute,
+  },
+  {
+    path: '/reports',
+    route: reportRoute,
+  },
+  {
+    path: '/settings',
+    route: settingRoute,
   },
 ];
 

@@ -9,7 +9,10 @@ const createInventory = catchAsync(async (req, res) => {
 
 const getInventories = catchAsync(async (req, res) => {
   const filters = JSON.parse(req.query.filters || '{}');
-  const inventories = await inventoryService.getInventoryList({ filters });
+  const inventories = await inventoryService.getInventoryList({
+    ...req.query,
+    filters,
+  });
   res.send(inventories);
 });
 

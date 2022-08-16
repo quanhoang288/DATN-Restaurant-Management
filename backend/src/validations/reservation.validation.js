@@ -15,7 +15,13 @@ const createReservation = {
   }),
 };
 
-const getReservations = {};
+const getReservations = {
+  query: Joi.object().keys({
+    page: Joi.number().positive(),
+    perPage: Joi.number().positive(),
+    filters: Joi.string(),
+  }),
+};
 
 const getReservation = {};
 
@@ -29,7 +35,7 @@ const updateReservation = {
     // customer_name: Joi.string().min(1),
     customer_phone_number: Joi.string(),
     num_people: Joi.number().positive(),
-    note: Joi.string(),
+    note: Joi.string().allow(''),
     tables: Joi.array().items(Joi.number().positive()),
     status: Joi.string()
       .valid('pending', 'confirmed', 'serving')

@@ -8,9 +8,9 @@ module.exports = (sequelize, DataTypes) => {
         as: 'good',
         foreignKey: 'good_id',
       });
-      models.GoodUnit.belongsTo(models.Good, {
-        as: 'component',
-        foreignKey: 'component_id',
+      models.GoodUnit.belongsTo(models.Unit, {
+        as: 'unit',
+        foreignKey: 'unit_id',
       });
     }
   }

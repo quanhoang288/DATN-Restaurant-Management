@@ -8,6 +8,10 @@ module.exports = (sequelize, DataTypes) => {
         as: 'constraints',
         foreignKey: 'discount_id',
       });
+      models.Discount.hasMany(models.DiscountTimeSlot, {
+        as: 'timeSlots',
+        foreignKey: 'discount_id',
+      });
     }
   }
 
@@ -21,6 +25,9 @@ module.exports = (sequelize, DataTypes) => {
       description: {
         type: DataTypes.STRING,
       },
+      image: {
+        type: DataTypes.STRING,
+      },
       type: {
         type: DataTypes.STRING,
         allowNull: false,
@@ -31,28 +38,18 @@ module.exports = (sequelize, DataTypes) => {
       end_date: {
         type: DataTypes.DATE,
       },
-      start_day: {
-        type: DataTypes.INTEGER,
-      },
-      end_day: {
-        type: DataTypes.INTEGER,
-      },
-      start_hour: {
-        type: DataTypes.DATE,
-      },
-      end_hour: {
-        type: DataTypes.DATE,
-      },
       method: {
         type: DataTypes.STRING,
       },
-      is_applied_to_all_customers: {
-        type: DataTypes.TINYINT,
-        defaultValue: 0,
-      },
       is_auto_applied: {
         type: DataTypes.TINYINT,
+        allowNull: false,
         defaultValue: 0,
+      },
+      is_active: {
+        type: DataTypes.TINYINT,
+        allowNull: false,
+        defaultValue: 1,
       },
       ...dateTime(DataTypes),
     },

@@ -4,6 +4,14 @@ module.exports = {
   async up(queryInterface, Sequelize) {
     await queryInterface.createTable('goods', {
       ...id(Sequelize.DataTypes),
+      good_group_id: {
+        type: Sequelize.DataTypes.BIGINT.UNSIGNED,
+        references: {
+          model: {
+            tableName: 'good_groups',
+          },
+        },
+      },
       name: {
         type: Sequelize.DataTypes.STRING,
         allowNull: false,
@@ -14,10 +22,13 @@ module.exports = {
       type: {
         type: Sequelize.DataTypes.STRING,
       },
-      import_price: {
-        type: Sequelize.DataTypes.BIGINT.UNSIGNED,
+      image: {
+        type: Sequelize.DataTypes.STRING,
       },
       sale_price: {
+        type: Sequelize.DataTypes.BIGINT.UNSIGNED,
+      },
+      delivery_sale_price: {
         type: Sequelize.DataTypes.BIGINT.UNSIGNED,
       },
 
@@ -26,6 +37,16 @@ module.exports = {
       },
       max_quantity_threshold: {
         type: Sequelize.DataTypes.INTEGER,
+      },
+      is_sold_directly: {
+        type: Sequelize.DataTypes.TINYINT,
+        allowNull: false,
+        defaultValue: 0,
+      },
+      is_available: {
+        type: Sequelize.DataTypes.TINYINT,
+        allowNull: false,
+        defaultValue: 1,
       },
       manufacture_date: {
         type: Sequelize.DataTypes.DATE,

@@ -30,6 +30,9 @@ module.exports = {
       note: {
         type: Sequelize.DataTypes.STRING,
       },
+      reject_reason: {
+        type: Sequelize.DataTypes.STRING,
+      },
       status: {
         type: Sequelize.DataTypes.STRING,
       },

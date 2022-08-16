@@ -1,6 +1,7 @@
 const express = require('express');
 const auth = require('../../middlewares/auth');
 const validate = require('../../middlewares/validate');
+const upload = require('../../middlewares/upload');
 const discountValidation = require('../../validations/discount.validation');
 const discountController = require('../../controllers/discount.controller');
 
@@ -10,7 +11,9 @@ router
   .route('/')
   .post(
     // auth('manageUsers'),
+    upload.single('image'),
     validate(discountValidation.createDiscount),
+    // numberConverter(),
     discountController.createDiscount,
   )
   .get(
@@ -28,6 +31,7 @@ router
   )
   .put(
     // auth('manageUsers'),
+    upload.single('image'),
     validate(discountValidation.updateDiscount),
     discountController.updateDiscount,
   )

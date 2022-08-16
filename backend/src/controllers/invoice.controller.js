@@ -9,6 +9,12 @@ const createInvoice = catchAsync(async (req, res) => {
   });
 });
 
+const getInvoice = catchAsync(async (req, res) => {
+  const invoice = await invoiceService.getInvoice(req.params.id);
+  return res.send(invoice);
+});
+
 module.exports = {
   createInvoice,
+  getInvoice,
 };

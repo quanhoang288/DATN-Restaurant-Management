@@ -8,6 +8,17 @@ module.exports = (sequelize, DataTypes) => {
         as: 'branch',
         foreignKey: 'branch_id',
       });
+      models.Inventory.belongsToMany(models.Good, {
+        as: 'goods',
+        through: {
+          model: models.GoodInventory,
+        },
+        foreignKey: 'inventory_id',
+      });
+      models.Inventory.hasMany(models.GoodInventory, {
+        as: 'inventoryGoods',
+        foreignKey: 'inventory_id',
+      });
     }
   }
 

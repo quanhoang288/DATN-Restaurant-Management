@@ -4,6 +4,7 @@ const createKitchen = {
   body: Joi.object().keys({
     name: Joi.string().required().min(1),
     type: Joi.string().required().default('food'),
+    branch_id: Joi.number().required().positive(),
     floor_num: Joi.number().positive().default(1),
   }),
 };
@@ -16,11 +17,9 @@ const getKitchen = {
 
 const getKitchens = {
   query: Joi.object().keys({
-    name: Joi.string(),
-    type: Joi.string(),
-    sort: Joi.string(),
-    limit: Joi.number().integer(),
-    page: Joi.number().integer(),
+    page: Joi.number().positive(),
+    perPage: Joi.number().positive(),
+    filters: Joi.string(),
   }),
 };
 
