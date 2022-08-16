@@ -10,10 +10,13 @@ import TablePagination from "@material-ui/core/TablePagination";
 import TableRow from "@material-ui/core/TableRow";
 import TableSortLabel from "@material-ui/core/TableSortLabel";
 import Paper from "@material-ui/core/Paper";
-import { Button, Typography } from "@material-ui/core";
+import { Button, TextField, Typography } from "@material-ui/core";
+import FilterListIcon from "@material-ui/icons/FilterList";
 import pick from "../../utils/pick";
 import ChipLabel from "../ChipLabel/ChipLabel";
 import { useEffect } from "react";
+import { ASSET_BASE_URL } from "../../configs";
+import noImageAvailable from "../../assets/no-image-available.jpg";
 
 function descendingComparator(a, b, orderBy) {
   if (b[orderBy] < a[orderBy]) {
@@ -85,7 +88,7 @@ EnhancedTableHead.propTypes = {
   onRequestSort: PropTypes.func.isRequired,
   onSelectAllClick: PropTypes.func.isRequired,
   order: PropTypes.oneOf(["asc", "desc"]).isRequired,
-  orderBy: PropTypes.string.isRequired,
+  // orderBy: PropTypes.string.isRequired,
   rowCount: PropTypes.number.isRequired,
 };
 
@@ -104,6 +107,16 @@ function EnhancedTableRow(props) {
                   (mapping) => mapping.value === row[field]?.value ?? row[field]
                 )?.variant
               }
+            />
+          ) : (cols || [])[idx].type === "image" ? (
+            <img
+              src={
+                row[field]
+                  ? `${ASSET_BASE_URL}/images/${row[field]}`
+                  : noImageAvailable
+              }
+              alt='profile-preview'
+              style={{ maxWidth: 50, minHeight: 30, maxHeight: 50 }}
             />
           ) : (
             row[field]?.name ?? row[field]
@@ -166,11 +179,14 @@ export default function EnhancedTable(props) {
     searchParams,
     refreshing,
     handleRefresh,
+    filterEnabled,
   } = props;
+
+  console.log(rows);
 
   const classes = useStyles();
   const [order, setOrder] = useState("asc");
-  const [orderBy, setOrderBy] = useState("id");
+  const [orderBy, setOrderBy] = useState(null);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
 
@@ -276,4 +292,5 @@ EnhancedTable.defaultProps = {
   paginationEnabled: true,
   searchParams: {},
   refreshing: false,
+  filterEnabled: false,
 };

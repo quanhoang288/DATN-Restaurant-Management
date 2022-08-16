@@ -20,14 +20,30 @@ import { parseSearchParams } from "../../../utils/parseSearchParams";
 
 const cols = [
   { id: "id", label: "Mã đơn", isSortable: true },
-  { id: "reservation_table_id", label: "Mã bàn", isSortable: true },
-  { id: "type", label: "Loại đơn", isSortable: true },
+  { id: "table", label: "Bàn", isSortable: true },
+  {
+    id: "type",
+    label: "Loại đơn",
+    isSortable: true,
+    type: "chip",
+    variantMapping: [
+      {
+        value: "dine-in",
+        variant: "primary",
+      },
+      { value: "takeaway", variant: "info" },
+      {
+        value: "delivery",
+        variant: "success",
+      },
+    ],
+  },
   { id: "customer_name", label: "Tên khách hàng", isSortable: true },
   { id: "customer_phone_number", label: "SĐT", isSortable: true },
   { id: "delivery_address", label: "Địa chỉ giao hàng", isSortable: true },
-
+  // { id: "total", label: "Tổng tiền", isSortable: true },
   {
-    id: "prepare_status",
+    id: "status",
     label: "Trạng thái",
     isSortable: true,
     type: "chip",
@@ -36,9 +52,28 @@ const cols = [
         value: "pending",
         variant: "info",
       },
-      { value: "in_progress", variant: "primary" },
+      { value: "accepted", variant: "primary" },
+      { value: "rejected", variant: "failure" },
+      { value: "canceled", variant: "warning" },
       {
         value: "done",
+        variant: "success",
+      },
+    ],
+  },
+  {
+    id: "payment_status",
+    label: "Thanh toán",
+    isSortable: true,
+    type: "chip",
+    variantMapping: [
+      {
+        value: "pending",
+        variant: "info",
+      },
+      { value: "request_to_pay", variant: "primary" },
+      {
+        value: "paid",
         variant: "success",
       },
     ],
@@ -59,95 +94,92 @@ function OrderList(props) {
   const [searchParams, setSearchParams] = useState({});
   const numFloors = 4;
 
-  const fetchOrderList = async () => {
-    const res = await getOrders();
-    setOrderList(
-      res.data.map((order) => ({
-        ...order,
-        type:
-          order.type === "dine-in"
-            ? "Phục vụ tại bàn"
-            : order.type === "delivery"
-            ? "Giao đi"
-            : "Mang về",
-        prepare_status:
-          order.prepare_status === "pending"
-            ? {
-                name: "Chờ chế biến",
-                value: "pending",
-              }
-            : order.prepare_status === "in_progress"
-            ? {
-                name: "Đang chế biến",
-                value: "in_progress",
-              }
-            : {
-                name: "Hoàn thành",
-                value: "done",
-              },
-      }))
-    );
-  };
-
   const fetchCurPage = async (page, perPage, searchParams = {}) => {
-    const filters = parseSearchParams(searchParams);
+    const filters = parseSearchParams({
+      ...searchParams,
+    });
     const res = (
-      await getOrders({ page, perPage, filters: JSON.stringify(filters) })
+      await getOrders({
+        page,
+        perPage,
+        filters: JSON.stringify({
+          ...filters,
+          status: { notIn: ["canceled", "rejected"] },
+        }),
+      })
     ).data;
 
     setOrderList(
       res.data.map((order) => ({
         ...order,
+        table: order.reservationTable?.table.name,
+        customer_name: order.customer
+          ? order.customer.user.full_name
+          : order.customer_name,
+        customer_phone_number: order.customer
+          ? order.customer.user.phone_number
+          : order.customer_phone_number,
+        delivery_address:
+          order.deliveryInfo?.delivery_address || order.delivery_address,
         type:
           order.type === "dine-in"
-            ? "Phục vụ tại bàn"
-            : order.type === "delivery"
-            ? "Giao đi"
-            : "Mang về",
-        prepare_status:
-          order.prepare_status === "pending"
             ? {
-                name: "Chờ chế biến",
+                name: "Phục vụ tại bàn",
+                value: "dine-in",
+              }
+            : order.type === "delivery"
+            ? {
+                name: "Giao đi",
+                value: "delivery",
+              }
+            : {
+                name: "Mang về",
+                value: "takeaway",
+              },
+        status:
+          order.status === "pending"
+            ? {
+                name: "Chờ xử lý",
                 value: "pending",
               }
-            : order.prepare_status === "in_progress"
+            : order.status === "accepted"
             ? {
-                name: "Đang chế biến",
-                value: "in_progress",
+                name: "Đang phục vụ",
+                value: "accepted",
+              }
+            : order.status === "rejected"
+            ? {
+                name: "Đã từ chối",
+                value: "rejected",
+              }
+            : order.status === "canceled"
+            ? {
+                name: "Đã hủy",
+                value: "canceled",
               }
             : {
                 name: "Hoàn thành",
                 value: "done",
               },
+        payment_status:
+          order.payment_status === "pending"
+            ? {
+                name: "Chưa thanh toán",
+                value: "pending",
+              }
+            : order.payment_status === "request_to_pay"
+            ? {
+                name: "Yêu cầu thanh toán",
+                value: "request_to_pay",
+              }
+            : {
+                name: "Đã thanh toán",
+                value: "paid",
+              },
       }))
     );
     setTotalCount(res.total);
   };
-  // const refreshOrderList = async () => {
-  //   const res = await getOrders()
-  //   setOrderList(
-  //     res.data.map((order) => ({
-  //       ...order,
-  //       type: order.type === 'dine-in' ? 'Phục vụ tại bàn' : order.type === 'delivery' ? 'Giao đi' : 'Mang về',
-  //       prepare_status:
-  //         order.prepare_status === 'pending'
-  //           ? {
-  //               name: 'Chờ chế biến',
-  //               value: 'pending',
-  //             }
-  //           : order.prepare_status === 'in_progress'
-  //           ? {
-  //               name: 'Đang chế biến',
-  //               value: 'in_progress',
-  //             }
-  //           : {
-  //               name: 'Hoàn thành',
-  //               value: 'done',
-  //             },
-  //     }))
-  //   )
-  //   setDeleteSuccessful(false)
-  // }
 
   const fetchTableOptions = async (floorNum) => {
     const res = await getTables();
@@ -185,21 +217,17 @@ function OrderList(props) {
   ];
 
   useEffect(() => {
-    fetchOrderList();
-  }, []);
-
-  useEffect(() => {
     if (selectedFloor !== null) {
       fetchTableOptions(selectedFloor);
     }
   }, [selectedFloor]);
 
-  useEffect(() => {
-    if (isDeleteSuccessful) {
-      console.log("delete successful");
-      fetchOrderList();
-    }
-  }, [isDeleteSuccessful]);
+  // useEffect(() => {
+  //   if (isDeleteSuccessful) {
+  //     console.log("delete successful");
+  //     // fetchOrderList();
+  //   }
+  // }, [isDeleteSuccessful]);
 
   return (
     <Main>
@@ -219,193 +247,111 @@ function OrderList(props) {
         handleConfirm={() => handleDeleteOrder(selected)}
         handleCancel={() => setDeleteDialogVisible(false)}
       />
-      <OrderCreate
-        orderId={selected}
-        isModalVisible={isCreateModalVisible}
-        handleCloseModal={() => {
-          setSelected(null);
-          setCreateModalVisible(false);
-        }}
-      />
+      {isCreateModalVisible && (
+        <OrderCreate
+          orderId={selected}
+          isModalVisible={isCreateModalVisible}
+          handleCloseModal={() => {
+            setSelected(null);
+            setCreateModalVisible(false);
+          }}
+        />
+      )}
+
       <div className='list__header'>
         <Typography variant='h5'>Đơn phục vụ</Typography>
       </div>
-      <CustomTabs
-        labels={["Danh sách đơn", "Sơ đồ"]}
-        activeTab={activeTab}
-        onChangeActiveTab={(val) => setActiveTab(val)}
+
+      <div
+        style={{
+          display: "flex",
+          marginBottom: "2rem",
+          justifyContent: "space-between",
+        }}
       >
-        <TabPanel value={activeTab} index={0}>
-          <div
-            style={{
-              display: "flex",
-              marginBottom: "2rem",
-              justifyContent: "space-between",
+        <div style={{ display: "flex", flex: 1 }}>
+          <TextField
+            label='Khách hàng'
+            InputLabelProps={{
+              shrink: true,
+              style: {
+                fontSize: 20,
+              },
+            }}
+            variant='standard'
+            style={{ marginRight: 20 }}
+          />
+          <TextField
+            label='SĐT'
+            InputLabelProps={{
+              shrink: true,
+              style: {
+                fontSize: 20,
+              },
+            }}
+            variant='standard'
+            style={{ marginRight: 20 }}
+          />
+
+          <TextField
+            label='Bàn'
+            select
+            SelectProps={{
+              native: true,
+            }}
+            InputLabelProps={{
+              shrink: true,
+              style: {
+                fontSize: 20,
+              },
+            }}
+            style={{ marginRight: 20 }}
+          >
+            <option value=''>Tất cả</option>
+            {tableOptions.map((opt) => (
+              <option value={opt.id}>{opt.name}</option>
+            ))}
+          </TextField>
+          <TextField
+            label='Trạng thái'
+            select
+            SelectProps={{
+              native: true,
+              placeholder: "Chọn trạng thái",
+            }}
+            InputLabelProps={{
+              shrink: true,
+              style: {
+                fontSize: 20,
+              },
             }}
           >
-            <div style={{ display: "flex", flex: 1 }}>
-              <TextField
-                label='Khách hàng'
-                InputLabelProps={{
-                  shrink: true,
-                  style: {
-                    fontSize: 20,
-                  },
-                }}
-                variant='standard'
-                style={{ marginRight: 20 }}
-              />
-              <TextField
-                label='SĐT'
-                InputLabelProps={{
-                  shrink: true,
-                  style: {
-                    fontSize: 20,
-                  },
-                }}
-                variant='standard'
-                style={{ marginRight: 20 }}
-              />
+            <option>Tất cả</option>
+            <option value='pending'>Chờ xác nhận</option>
+            <option value='in_progress'>Đang chế biến</option>
+            <option value='done'>Đã hoàn thành</option>
+          </TextField>
+        </div>
 
-              <TextField
-                label='Bàn'
-                select
-                SelectProps={{
-                  native: true,
-                }}
-                InputLabelProps={{
-                  shrink: true,
-                  style: {
-                    fontSize: 20,
-                  },
-                }}
-                style={{ marginRight: 20 }}
-              >
-                <option value=''>Tất cả</option>
-                {tableOptions.map((opt) => (
-                  <option value={opt.id}>{opt.name}</option>
-                ))}
-              </TextField>
-              <TextField
-                label='Trạng thái'
-                select
-                SelectProps={{
-                  native: true,
-                  placeholder: "Chọn trạng thái",
-                }}
-                InputLabelProps={{
-                  shrink: true,
-                  style: {
-                    fontSize: 20,
-                  },
-                }}
-              >
-                <option>Tất cả</option>
-                <option value='pending'>Chờ xác nhận</option>
-                <option value='in_progress'>Đang chế biến</option>
-                <option value='done'>Đã hoàn thành</option>
-              </TextField>
-            </div>
-            <Button
-              variant='contained'
-              color='primary'
-              onClick={() => setCreateModalVisible(true)}
-            >
-              Thêm mới
-            </Button>
-          </div>
+        <Button
+          variant='contained'
+          color='primary'
+          onClick={() => setCreateModalVisible(true)}
+        >
+          Thêm mới
+        </Button>
+      </div>
 
-          <div>
-            <CustomTable
-              rows={orderList}
-              cols={cols}
-              actionButtons={actionButtons}
-              handleFetchRows={fetchCurPage}
-              totalCount={totalCount}
-              searchParams={searchParams}
-            />
-          </div>
-        </TabPanel>
-
-        <TabPanel value={activeTab} index={1}>
-          <div>
-            <div style={{ display: "flex", marginTop: 20, marginBottom: 20 }}>
-              <div style={{ display: "flex", marginRight: 50 }}>
-                <Typography>Toàn bộ nhà hàng: Trống 38/38 bàn</Typography>
-                <Typography>Tầng 2: Trống 12/12 bàn</Typography>
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <div style={{ display: "flex" }}>
-                  <div
-                    style={{ height: 20, width: 20, backgroundColor: "blue" }}
-                  ></div>
-                  <Typography>Bàn trống</Typography>
-                </div>
-                <div style={{ display: "flex" }}>
-                  <div
-                    style={{ height: 20, width: 20, backgroundColor: "grey" }}
-                  ></div>
-                  <Typography>Bàn đang phục vụ</Typography>
-                </div>
-                <div style={{ display: "flex" }}>
-                  <div
-                    style={{ height: 20, width: 20, backgroundColor: "orange" }}
-                  ></div>
-                  <Typography>Bàn đặt trước</Typography>
-                </div>
-              </div>
-            </div>
-            <div style={{ display: "flex", marginBottom: 20 }}>
-              <List
-                component='nav'
-                style={{
-                  minWidth: 150,
-                  borderRight: "1px solid",
-                  textAlign: "center",
-                }}
-              >
-                {[...Array(numFloors).keys()].map((floorIdx) => (
-                  <ListItem button selected={selectedFloor === floorIdx + 1}>
-                    <ListItemText
-                      primary={`Tầng ${floorIdx + 1}`}
-                      onClick={() => setSelectedFloor(floorIdx + 1)}
-                    />
-                  </ListItem>
-                ))}
-              </List>
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(4, 1fr)",
-                  rowGap: 20,
-                  alignItems: "center",
-                  flex: 1,
-                  marginLeft: 10,
-                }}
-                className='table__list'
-              >
-                {(tableOptions || []).map((opt) => (
-                  <div
-                    style={{
-                      height: 80,
-                      width: 80,
-                      borderRadius: "50%",
-                      backgroundColor: "blue",
-                      display: "flex",
-                      justifyContent: "center",
-                      alignItems: "center",
-                      margin: "auto",
-                    }}
-                    className='table__item'
-                  >
-                    <Typography>{opt.name}</Typography>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </TabPanel>
-      </CustomTabs>
+      <div>
+        <CustomTable
+          rows={orderList}
+          cols={cols}
+          actionButtons={actionButtons}
+          handleFetchRows={fetchCurPage}
+          totalCount={totalCount}
+          searchParams={searchParams}
+        />
+      </div>
     </Main>
   );
 }

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Page,
   Document,
@@ -6,15 +6,23 @@ import {
   View,
   Text,
   Image,
+  Font,
 } from "@react-pdf/renderer";
 import InvoiceItemsTable from "./InvoiceItemsTable";
 import { getDiscountAmount, getInvoiceTotal } from "../../../utils/order";
+import { formatDate } from "../../../utils/date";
+
+Font.register({
+  family: "Roboto",
+  src: "https://cdnjs.cloudflare.com/ajax/libs/ink/3.1.10/fonts/Roboto/roboto-light-webfont.ttf",
+});
 
 const styles = StyleSheet.create({
   page: {
     fontSize: 14,
     paddingTop: 30,
     paddingHorizontal: 60,
+    fontFamily: "Roboto",
   },
   logo: {
     width: 74,
@@ -54,14 +62,30 @@ function InvoiceHeader(props) {
 }
 
 export default function Invoice({ order, cashier }) {
+  const [restaurantInfo, setRestaurantInfo] = useState({});
+
+  // const fetchRestaurantInfo = async ()
+
   return (
     <Document>
       <Page size='A4' style={styles.page}>
         <InvoiceHeader />
         <View style={styles.invoiceInfo}>
-          <Text>{`Thu ngan: ${cashier.full_name}`}</Text>
-          <Text>Ban: 1</Text>
-          <Text>Ngay: 6/8/2022</Text>
+          <Text>{`Thu ngân: ${cashier.full_name}`}</Text>
+          <Text>{`Loại đơn: ${
+            order.type === "dine-in"
+              ? "Phục vụ tại bàn"
+              : order.type === "takeaway"
+              ? "Mang về"
+              : "Giao đi"
+          }`}</Text>
+          {order.type === "dine-in" && (
+            <Text>{`Bàn: ${order.tableName || ""}`}</Text>
+          )}
+          <Text>{`Ngày tạo: ${formatDate(
+            order.created_at || new Date(),
+            "DD/MM/YYYY hh:mm"
+          )}`}</Text>
         </View>
         <InvoiceItemsTable items={order.details} />
         <View>
@@ -72,7 +96,7 @@ export default function Invoice({ order, cashier }) {
               marginBottom: 5,
             }}
           >
-            <Text>Tam tinh</Text>
+            <Text>Tạm tính</Text>
             <Text>{getInvoiceTotal(order)}</Text>
           </View>
           <View
@@ -82,7 +106,7 @@ export default function Invoice({ order, cashier }) {
               marginBottom: 5,
             }}
           >
-            <Text style={{ fontWeight: "bold" }}>Thu khac (VAT)</Text>
+            <Text>Thu khác (VAT)</Text>
             <Text>10000</Text>
           </View>
           <View
@@ -94,7 +118,7 @@ export default function Invoice({ order, cashier }) {
               borderBottomWidth: 1,
             }}
           >
-            <Text>Khuyen mai</Text>
+            <Text>Khuyến mãi</Text>
             <Text>
               {getDiscountAmount(getInvoiceTotal(order), order.discounts)}
             </Text>
@@ -103,7 +127,7 @@ export default function Invoice({ order, cashier }) {
           <View
             style={{ flexDirection: "row", justifyContent: "space-between" }}
           >
-            <Text>Tong tien</Text>
+            <Text>Tổng tiền</Text>
             <Text>
               {getInvoiceTotal(order) +
                 10000 -

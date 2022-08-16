@@ -1,6 +1,7 @@
-import api from './api'
+import api from "./api";
 
-const createInvoice = (data) => api.post('invoices', data)
+const createInvoice = (data) => api.post("invoices", data);
 
-export { createInvoice }
+const getInvoice = (invoiceId) => api.get(`invoices/${invoiceId}`);
 
+export { createInvoice, getInvoice };

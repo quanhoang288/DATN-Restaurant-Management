@@ -17,58 +17,54 @@ import ConfirmDialog from "../../../components/Modal/ConfirmDialog";
 import CustomTable from "../../../components/Table/CustomTable";
 import Main from "../../../containers/Main/Main";
 import MenuCreate from "./MenuCreate";
+import { parseSearchParams } from "../../../utils/parseSearchParams";
 
 const cols = [
   { id: "id", label: "STT", isSortable: true },
+  { id: "image", label: "", type: "image", isSortable: false },
   { id: "name", label: "Tên thực đơn", isSortable: true },
   { id: "type", label: "Loại", isSortable: true },
+  {
+    id: "status",
+    label: "Trạng thái",
+    isSortable: true,
+    type: "chip",
+    variantMapping: [
+      {
+        value: "active",
+        variant: "success",
+      },
+      {
+        value: "inactive",
+        variant: "info",
+      },
+    ],
+  },
 ];
-
-const testMenuList = [
-  { id: 1, name: "Menu hải sản", type: "Đồ ăn" },
-  { id: 2, name: "Menu các loại thịt", type: "Đồ ăn" },
-  { id: 3, name: "Menu đồ ăn vặt", type: "Đồ ăn" },
-  { id: 4, name: "Menu đồ ăn chay", type: "Đồ ăn" },
-  // { id: 2, name: "Menu các loại thịt", type: "Đồ ăn" },
-  { id: 5, name: "Menu đồ uống", type: "Đồ uống" },
-];
-
-function Menu(props) {
-  const { menu } = props;
-  return (
-    <Card>
-      <CardActionArea>
-        <CardMedia
-          component='img'
-          alt='Contemplative Reptile'
-          height='140'
-          image='https://cdn4.vectorstock.com/i/1000x1000/71/83/sign-board-discount-vector-1947183.jpg'
-          title='Discount thumbnail'
-        />
-        <CardContent>
-          <Typography gutterBottom variant='h5' component='h2'>
-            {menu.name}
-          </Typography>
-          <Typography variant='body2' color='textSecondary' component='p'>
-            {menu.description || "Description"}
-          </Typography>
-        </CardContent>
-      </CardActionArea>
-    </Card>
-  );
-}
 
 function MenuList(props) {
   const [isCreateModalVisible, setCreateModalVisible] = useState(false);
   const [isDeleteDialogVisible, setDeleteDialogVisible] = useState(false);
   const [menuList, setMenuList] = useState([]);
   const [selected, setSelected] = useState(null);
-  const [viewMode, setViewMode] = useState("table");
+  const [totalCount, setTotalCount] = useState(0);
+  const [searchParams, setSearchParams] = useState({});
 
-  const fetchMenuList = async () => {
-    const res = await getMenus();
-    // setMenuList(res.data)
-    setMenuList(testMenuList);
+  const fetchCurPage = async (page, perPage, searchParams = {}) => {
+    const filters = parseSearchParams(searchParams);
+    const res = (
+      await getMenus({ page, perPage, filters: JSON.stringify(filters) })
+    ).data;
+    setMenuList(
+      res.data.map((menu) => ({
+        ...menu,
+        type: menu.type === "food" ? "Đồ ăn" : "Đồ uống",
+        status: menu.is_active
+          ? { name: "Đang sử dụng", value: "active" }
+          : { name: "Không sử dụng", value: "inactive" },
+      }))
+    );
+    setTotalCount(res.total);
   };
 
   const handleDeleteMenu = async (id) => {
@@ -100,8 +96,8 @@ function MenuList(props) {
   ];
 
   useEffect(() => {
-    fetchMenuList();
-  }, []);
+    console.log(searchParams);
+  }, [searchParams]);
 
   return (
     <Main>
@@ -118,7 +114,11 @@ function MenuList(props) {
         <MenuCreate
           menuId={selected}
           isModalVisible={isCreateModalVisible}
-          handleCloseModal={() => setCreateModalVisible(false)}
+          handleCloseModal={() => {
+            setCreateModalVisible(false);
+            setSelected(null);
+            fetchCurPage(1, 5);
+          }}
         />
 
         <div className='list__header'>
@@ -143,6 +143,13 @@ function MenuList(props) {
               }}
               variant='standard'
               style={{ marginRight: 20 }}
+              value={searchParams.id}
+              onChange={(e) =>
+                setSearchParams({
+                  ...searchParams,
+                  id: e.target.value ? Number.parseInt(e.target.value) : "",
+                })
+              }
             />
 
             <TextField
@@ -157,12 +164,44 @@ function MenuList(props) {
                   fontSize: 20,
                 },
               }}
-              style={{ marginRight: 20 }}
+              style={{ marginRight: 20, minWidth: 150 }}
+              value={searchParams.type}
+              onChange={(e) =>
+                setSearchParams({ ...searchParams, type: e.target.value })
+              }
             >
-              <option>Tất cả</option>
-              <option value='pending'>Chờ xác nhận</option>
-              <option value='confirmed'>Đã xác nhận (Chờ nhận bàn)</option>
-              <option value='serving'>Đã nhận bàn</option>
+              <option value=''>Tất cả</option>
+              <option value='food'>Đồ ăn</option>
+              <option value='beverage'>Đồ uống</option>
+            </TextField>
+
+            <TextField
+              label='Trạng thái'
+              select
+              SelectProps={{
+                native: true,
+              }}
+              InputLabelProps={{
+                shrink: true,
+                style: {
+                  fontSize: 20,
+                },
+              }}
+              style={{ marginRight: 20 }}
+              value={searchParams.is_active}
+              onChange={(e) =>
+                setSearchParams({
+                  ...searchParams,
+                  is_active:
+                    e.target.value !== ""
+                      ? Number.parseInt(e.target.value)
+                      : null,
+                })
+              }
+            >
+              <option value=''>Tất cả</option>
+              <option value='1'>Đang sử dụng</option>
+              <option value='0'>Ngừng sử dụng</option>
             </TextField>
           </div>
           <div>
@@ -176,31 +215,15 @@ function MenuList(props) {
           </div>
         </div>
 
-        {viewMode === "table" ? (
-          <CustomTable
-            cols={cols}
-            rows={menuList}
-            // paginationEnabled={false}
-            actionButtons={actionButtons}
-          />
-        ) : (
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(4, 1fr)",
-              rowGap: 20,
-              alignItems: "center",
-              flex: 1,
-              paddingTop: "1rem",
-              // padding: '2rem 2rem',
-              columnGap: 20,
-            }}
-          >
-            {menuList.map((menu) => (
-              <Menu menu={menu} />
-            ))}
-          </div>
-        )}
+        <CustomTable
+          cols={cols}
+          rows={menuList}
+          // paginationEnabled={false}
+          actionButtons={actionButtons}
+          handleFetchRows={fetchCurPage}
+          totalCount={totalCount}
+          searchParams={searchParams}
+        />
       </div>
     </Main>
   );

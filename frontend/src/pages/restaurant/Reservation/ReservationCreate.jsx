@@ -45,6 +45,11 @@ import {
   convertToReservationDTO,
   fromDTOToStateData,
 } from "../../../utils/converter/convertToReservationDTO";
+import { getCustomers } from "../../../apis/customer";
+import { useSelector } from "react-redux";
+import { getBranches } from "../../../apis/branch";
+import { parseSearchParams } from "../../../utils/parseSearchParams";
+import Toast from "../../../components/Toast/Toast";
 
 const defaultReservationData = {
   arriveTime: null,
@@ -55,6 +60,7 @@ const defaultReservationData = {
   note: "",
   tables: [],
   status: "pending",
+  reject_reason: null,
 };
 
 function ReservationCreate({
@@ -69,18 +75,57 @@ function ReservationCreate({
   const [selectedFloor, setSelectedFloor] = useState(1);
   const [tableOptions, setTableOptions] = useState([]);
   const [isDeleteDialogVisible, setDeleteDialogVisible] = useState(false);
-  const [isSelectedTableReserved, setSelectedTableReserved] = useState(false);
+  const [customers, setCustomers] = useState([]);
+  const [customerKeyword, setCustomerKeyword] = useState("");
+  const [errors, setErrors] = useState({});
+  const [isValidationFailBefore, setValidationFailBefore] = useState(false);
+  const [branchId, setBranchId] = useState(null);
+  const [branchOptions, setBranchOptions] = useState([]);
+  const [isSaveSuccessful, setSaveSuccessful] = useState(false);
+  const [isEditable, setEditable] = useState(true);
+
+  const authUser = useSelector((state) => state.auth.user);
+
   const numFloors = 4;
+
+  const fetchCustomerOptions = async (keyword = "") => {
+    const options = keyword
+      ? (
+          await getCustomers({
+            filters: JSON.stringify({ full_name: { like: keyword } }),
+          })
+        ).data
+      : [];
+    setCustomers(options);
+  };
 
   const fetchReservationdata = async (reservationId) => {
     if (reservationId) {
+      console.log("fetching reservation data");
       const res = await getReservation(reservationId);
-      setReservationData(fromDTOToStateData(res.data));
+      const stateData = fromDTOToStateData(res.data);
+      setReservationData(stateData);
+      setCustomerKeyword(
+        stateData.customer
+          ? stateData.customer.user?.full_name
+          : stateData.customerName
+      );
+      console.log(stateData.status);
+      setEditable(stateData.status !== "done");
     }
   };
 
-  const fetchTableOptions = async (floorNum) => {
-    const res = await getTables();
+  const fetchBranchOptions = async () => {
+    const res = await getBranches();
+    setBranchOptions(res?.data || []);
+  };
+
+  const fetchTableOptions = async (floorNum, branchId) => {
+    const filters = parseSearchParams({
+      branch_id: branchId,
+      floor_num: floorNum,
+    });
+    const res = await getTables({ filters: JSON.stringify(filters) });
     setTableOptions(res.data);
   };
 
@@ -109,23 +154,64 @@ function ReservationCreate({
     [reservationData]
   );
 
+  const validateReservationData = useCallback((data) => {
+    let isValid = true;
+
+    const newErrors = {};
+
+    if (!data.arriveTime) {
+      newErrors.arriveTime = "Thời gian đến là bắt buộc";
+      isValid = false;
+    }
+    if (!data.phoneNumber) {
+      newErrors.phoneNumber = "SĐT là bắt buộc";
+      isValid = false;
+    }
+    if (!data.customerId && !data.customerName) {
+      newErrors.customerName = "Tên khách hàng là bắt buộc";
+      isValid = false;
+    }
+    if (!data.numPeople) {
+      newErrors.numPeople = "Số lượng khách là bắt buộc";
+      isValid = false;
+    }
+
+    if (!isValid) {
+      setValidationFailBefore(true);
+    }
+    setErrors(newErrors);
+    return isValid;
+  }, []);
+
   const handleSaveReservation = useCallback(async () => {
+    console.log("saving reservation");
+    const isValidData = validateReservationData(reservationData);
+    if (!isValidData) {
+      return;
+    }
     const reservationPayload = convertToReservationDTO(reservationData);
+    console.log(reservationPayload);
+    let saveRes;
     if (reservationId) {
-      await updateReservation(reservationId, reservationPayload);
+      saveRes = await updateReservation(reservationId, reservationPayload);
     } else {
-      await createReservation(reservationPayload);
+      saveRes = await createReservation(reservationPayload);
+    }
+    if (!saveRes) {
+      return;
     }
     setReservationData(defaultReservationData);
-    handleCloseModal();
+    handleCloseModal(true);
+    setSaveSuccessful(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reservationData, reservationId]);
 
   useEffect(() => {
     if (selectedFloor !== null) {
-      fetchTableOptions(selectedFloor);
+      fetchTableOptions(selectedFloor, branchId);
     }
-  }, [selectedFloor]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedFloor, branchId]);
 
   useEffect(() => {
     if (reservationId) {
@@ -133,10 +219,54 @@ function ReservationCreate({
     } else {
       setReservationData(defaultReservationData);
     }
+    fetchBranchOptions();
   }, [reservationId]);
+
+  useEffect(() => {
+    if (isValidationFailBefore) {
+      validateReservationData(reservationData);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reservationData, isValidationFailBefore]);
+
+  useEffect(() => {
+    console.log("keyword: ", customerKeyword);
+    setReservationData({
+      ...reservationData,
+      customerName: customerKeyword || null,
+    });
+
+    fetchCustomerOptions(customerKeyword);
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [customerKeyword]);
+
+  useEffect(() => {
+    if (authUser.staff?.branch_id) {
+      setBranchId(authUser.staff.branch_id);
+    }
+  }, [authUser]);
+
+  useEffect(() => {
+    console.log("reservation data: ", reservationData);
+    if (reservationData.tables.length) {
+      setBranchId(reservationData.tables[0].branch_id);
+    }
+  }, [reservationData]);
 
   return (
     <>
+      {isSaveSuccessful && (
+        <Toast
+          message={
+            reservationId
+              ? "Cập nhập thông tin thành công"
+              : "Thêm thông tin thành công"
+          }
+          variant='success'
+          handleClose={() => setSaveSuccessful(false)}
+        />
+      )}
       <ConfirmDialog
         isModalVisible={isDeleteDialogVisible}
         title='Xóa đặt bàn'
@@ -174,9 +304,12 @@ function ReservationCreate({
                         arriveTime: e.target.value,
                       })
                     }
+                    disabled={!isEditable}
                     label='Thời gian'
                     InputLabelProps={{ shrink: true, style: { fontSize: 20 } }}
                     style={{ marginRight: 30 }}
+                    error={errors.arriveTime !== undefined}
+                    helperText={errors.arriveTime}
                   />
                   <TextField
                     label='Số người'
@@ -184,12 +317,15 @@ function ReservationCreate({
                     onChange={(e) =>
                       setReservationData({
                         ...reservationData,
-                        numPeople: e.target.value,
+                        numPeople: Number.parseInt(e.target.value) || null,
                       })
                     }
+                    disabled={!isEditable}
                     type='number'
                     margin='normal'
                     InputLabelProps={{ shrink: true, style: { fontSize: 20 } }}
+                    error={errors.numPeople !== undefined}
+                    helperText={errors.numPeople}
                   />
                 </div>
                 <div
@@ -199,15 +335,26 @@ function ReservationCreate({
                     className='navbar__searchBar__container'
                     freeSolo
                     id='free-solo-2-demo'
-                    options={[]}
-                    value={reservationData.customerName}
-                    onChange={(e, val) =>
+                    options={customers || []}
+                    inputValue={customerKeyword}
+                    onInputChange={(e, val) => {
+                      setCustomerKeyword(val);
+                    }}
+                    disabled={!isEditable}
+                    value={
+                      reservationData.customerName ||
+                      customers.find(
+                        (customer) => customer.id === reservationData.customerId
+                      )
+                    }
+                    onChange={(e, val) => {
                       setReservationData({
                         ...reservationData,
-                        customerName: val,
-                      })
-                    }
-                    getOptionLabel={(option) => option.name}
+                        customerId: val ? val.id : null,
+                        phoneNumber: val ? val.phone_number : null,
+                      });
+                    }}
+                    getOptionLabel={(option) => option.full_name}
                     filterOptions={(options, state) => options}
                     renderInput={(params) => (
                       <TextField
@@ -222,6 +369,8 @@ function ReservationCreate({
                         }}
                         style={{ minWidth: 250 }}
                         // margin='normal'
+                        error={errors.customerName !== undefined}
+                        helperText={errors.customerName}
                       />
                     )}
                   />
@@ -234,11 +383,40 @@ function ReservationCreate({
                         phoneNumber: e.target.value,
                       })
                     }
+                    disabled={!isEditable}
                     InputLabelProps={{ shrink: true, style: { fontSize: 20 } }}
                     style={{ marginLeft: 50 }}
+                    error={errors.phoneNumber !== undefined}
+                    helperText={errors.phoneNumber}
                   />
                 </div>
-                <FormControl margin='normal'>
+
+                <TextField
+                  label='Chi nhánh'
+                  fullWidth
+                  select
+                  margin='normal'
+                  InputLabelProps={{
+                    shrink: true,
+                    style: {
+                      fontSize: 20,
+                    },
+                  }}
+                  disabled={!authUser.is_admin || !isEditable}
+                  style={{ marginRight: "1rem" }}
+                  SelectProps={{ native: true }}
+                  value={branchId}
+                  onChange={(e) =>
+                    setBranchId(Number.parseInt(e.target.value) || null)
+                  }
+                >
+                  <option value=''>Chọn chi nhánh</option>
+                  {branchOptions.map((opt) => (
+                    <option value={opt.id}>{opt.name}</option>
+                  ))}
+                </TextField>
+
+                <FormControl margin='normal' disabled={!isEditable}>
                   <FormLabel id='demo-radio-buttons-group-label'>
                     Trạng thái đặt bàn
                   </FormLabel>
@@ -270,8 +448,38 @@ function ReservationCreate({
                       control={<Radio />}
                       label='Đã nhận bàn'
                     />
+                    <FormControlLabel
+                      value='rejected'
+                      control={<Radio />}
+                      label='Từ chối'
+                    />
+                    <FormControlLabel
+                      value='done'
+                      control={<Radio />}
+                      label='Đã trả bàn'
+                    />
                   </RadioGroup>
                 </FormControl>
+                {reservationData.status === "rejected" && (
+                  <TextField
+                    label='Lí do từ chối'
+                    value={reservationData.reject_reason}
+                    onChange={(e) =>
+                      setReservationData({
+                        ...reservationData,
+                        reject_reason: e.target.value,
+                      })
+                    }
+                    InputLabelProps={{
+                      shrink: true,
+                      style: {
+                        fontSize: 18,
+                      },
+                    }}
+                    fullWidth
+                    style={{ marginBottom: "1rem" }}
+                  />
+                )}
                 <TextField
                   label='Ghi chú cho nhà hàng'
                   value={reservationData.note}
@@ -281,6 +489,14 @@ function ReservationCreate({
                       note: e.target.value,
                     })
                   }
+                  disabled={!isEditable}
+                  InputLabelProps={{
+                    shrink: true,
+                    style: {
+                      fontSize: 18,
+                      paddingTop: 10,
+                    },
+                  }}
                   variant='outlined'
                   fullWidth
                   multiline
@@ -290,52 +506,58 @@ function ReservationCreate({
             </TabPanel>
             <TabPanel value={activeTab} index={1}>
               <div>
-                <div
-                  style={{
-                    display: "flex",
-                    marginTop: 5,
-                    // marginBottom: 5,
-                    justifyContent: "flex-end",
-                  }}
-                >
+                {isEditable && (
                   <div
-                    style={{ display: "flex", justifyContent: "space-between" }}
+                    style={{
+                      display: "flex",
+                      marginTop: 5,
+                      // marginBottom: 5,
+                      justifyContent: "flex-end",
+                    }}
                   >
-                    <div style={{ display: "flex", marginRight: "1rem" }}>
-                      <div
-                        style={{
-                          height: 20,
-                          width: 20,
-                          backgroundColor: "grey",
-                          marginRight: 5,
-                        }}
-                      ></div>
-                      <Typography>Bàn trống</Typography>
-                    </div>
-                    <div style={{ display: "flex", marginRight: "1rem" }}>
-                      <div
-                        style={{
-                          height: 20,
-                          width: 20,
-                          backgroundColor: "blue",
-                          marginRight: 5,
-                        }}
-                      ></div>
-                      <Typography>Bàn đang phục vụ</Typography>
-                    </div>
-                    <div style={{ display: "flex" }}>
-                      <div
-                        style={{
-                          height: 20,
-                          width: 20,
-                          backgroundColor: "orange",
-                          marginRight: 5,
-                        }}
-                      ></div>
-                      <Typography>Bàn đặt trước</Typography>
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                      }}
+                    >
+                      <div style={{ display: "flex", marginRight: "1rem" }}>
+                        <div
+                          style={{
+                            height: 20,
+                            width: 20,
+                            backgroundColor: "grey",
+                            marginRight: 5,
+                          }}
+                        ></div>
+                        <Typography>Bàn trống</Typography>
+                      </div>
+                      <div style={{ display: "flex", marginRight: "1rem" }}>
+                        <div
+                          style={{
+                            height: 20,
+                            width: 20,
+                            backgroundColor: "blue",
+                            marginRight: 5,
+                          }}
+                        ></div>
+                        <Typography>Bàn đang phục vụ</Typography>
+                      </div>
+                      <div style={{ display: "flex" }}>
+                        <div
+                          style={{
+                            height: 20,
+                            width: 20,
+                            backgroundColor: "orange",
+                            marginRight: 5,
+                          }}
+                        ></div>
+                        <Typography>Bàn đặt trước</Typography>
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
+
                 <div
                   className='search__container'
                   style={{
@@ -344,68 +566,76 @@ function ReservationCreate({
                     marginBottom: 10,
                   }}
                 >
-                  <TextField
-                    label='Xếp vào bàn'
-                    margin='normal'
-                    InputLabelProps={{
-                      shrink: true,
-                      style: {
-                        fontSize: 20,
-                      },
-                    }}
-                    style={{ marginRight: 20 }}
-                  />
                   {reservationData.tables.length > 0 && (
-                    <Typography>{`Bàn đang chọn: ${reservationData.tables
+                    <Typography>{`Bàn đã chọn: ${reservationData.tables
                       .map((table) => table.name)
                       .join(", ")}`}</Typography>
                   )}
                 </div>
 
-                <div style={{ display: "flex", marginBottom: 20 }}>
-                  <List
-                    component='nav'
-                    style={{
-                      minWidth: 150,
-                      borderRight: "1px solid",
-                      textAlign: "center",
-                    }}
-                  >
-                    {[...Array(numFloors).keys()].map((floorIdx) => (
-                      <ListItem
-                        button
-                        selected={selectedFloor === floorIdx + 1}
-                      >
-                        <ListItemText
-                          primary={`Tầng ${floorIdx + 1}`}
-                          onClick={() => setSelectedFloor(floorIdx + 1)}
-                        />
-                      </ListItem>
-                    ))}
-                  </List>
-                  <div
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns: "repeat(4, 1fr)",
-                      rowGap: 20,
-                      alignItems: "center",
-                      flex: 1,
-                      marginLeft: 10,
-                    }}
-                    className='table__list'
-                  >
-                    {tableOptions.map((opt) =>
-                      reservationData.tables.some(
-                        (table) => table.id === opt.id
-                      ) ? (
-                        <Badge
-                          color='primary'
-                          badgeContent={
-                            reservationData.tables.findIndex(
-                              (table) => table.id === opt.id
-                            ) + 1
-                          }
+                {isEditable && (
+                  <div style={{ display: "flex", marginBottom: 20 }}>
+                    <List
+                      component='nav'
+                      style={{
+                        minWidth: 150,
+                        borderRight: "1px solid",
+                        textAlign: "center",
+                      }}
+                    >
+                      {[...Array(numFloors).keys()].map((floorIdx) => (
+                        <ListItem
+                          button
+                          selected={selectedFloor === floorIdx + 1}
                         >
+                          <ListItemText
+                            primary={`Tầng ${floorIdx + 1}`}
+                            onClick={() => setSelectedFloor(floorIdx + 1)}
+                          />
+                        </ListItem>
+                      ))}
+                    </List>
+                    <div
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "repeat(4, 1fr)",
+                        rowGap: 20,
+                        alignItems: "center",
+                        flex: 1,
+                        marginLeft: 10,
+                      }}
+                      className='table__list'
+                    >
+                      {tableOptions.map((opt) =>
+                        reservationData.tables.some(
+                          (table) => table.id === opt.id
+                        ) ? (
+                          <Badge
+                            color='primary'
+                            badgeContent={
+                              reservationData.tables.findIndex(
+                                (table) => table.id === opt.id
+                              ) + 1
+                            }
+                          >
+                            <div
+                              className={`table__item ${
+                                opt.reservations.some((res) =>
+                                  ["pending", "confirmed"].includes(res.status)
+                                )
+                                  ? "table__item__reserved"
+                                  : opt.reservations.some(
+                                      (res) => res.status === "serving"
+                                    )
+                                  ? "table__item__used"
+                                  : "table__item__available"
+                              }`}
+                              onClick={() => handleToggleTable(opt)}
+                            >
+                              <Typography>{opt.name}</Typography>
+                            </div>
+                          </Badge>
+                        ) : (
                           <div
                             className={`table__item ${
                               opt.reservations.some((res) =>
@@ -422,41 +652,34 @@ function ReservationCreate({
                           >
                             <Typography>{opt.name}</Typography>
                           </div>
-                        </Badge>
-                      ) : (
-                        <div
-                          className={`table__item ${
-                            opt.reservations.some((res) =>
-                              ["pending", "confirmed"].includes(res.status)
-                            )
-                              ? "table__item__reserved"
-                              : opt.reservations.some(
-                                  (res) => res.status === "serving"
-                                )
-                              ? "table__item__used"
-                              : "table__item__available"
-                          }`}
-                          onClick={() => handleToggleTable(opt)}
-                        >
-                          <Typography>{opt.name}</Typography>
-                        </div>
-                      )
-                    )}
+                        )
+                      )}
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             </TabPanel>
           </CustomTabs>
           <div style={{ display: "flex", float: "right", marginTop: 2 }}>
+            {reservationData.status !== "done" && (
+              <Button
+                variant='contained'
+                color='primary'
+                onClick={handleSaveReservation}
+              >
+                Lưu
+              </Button>
+            )}
+
             <Button
               variant='contained'
-              color='primary'
-              onClick={handleSaveReservation}
+              onClick={() => {
+                setReservationData(defaultReservationData);
+                setActiveTab(0);
+                handleCloseModal();
+              }}
             >
-              Lưu
-            </Button>
-            <Button variant='contained' onClick={handleCloseModal}>
-              Hủy bỏ
+              Đóng
             </Button>
           </div>
         </div>

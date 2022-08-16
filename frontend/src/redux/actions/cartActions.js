@@ -1,18 +1,19 @@
 export const cartActionTypes = {
-  ADD: 'add',
-  REMOVE: 'remove',
-  UPDATE: 'update',
-}
+  ADD: "add",
+  REMOVE: "remove",
+  UPDATE: "update",
+  RESET: "reset",
+};
 
-const addToCart = (itemId) => ({
+const addToCart = (item) => ({
   type: cartActionTypes.ADD,
-  payload: itemId,
-})
+  payload: item,
+});
 
 const removeFromCart = (itemId) => ({
   type: cartActionTypes.REMOVE,
   payload: itemId,
-})
+});
 
 const updateCart = (itemId, quantity) => ({
   type: cartActionTypes.UPDATE,
@@ -20,7 +21,8 @@ const updateCart = (itemId, quantity) => ({
     itemId,
     quantity,
   },
-})
+});
 
-export { addToCart, removeFromCart, updateCart }
+const resetCart = () => ({ type: cartActionTypes.RESET });
 
+export { addToCart, removeFromCart, updateCart, resetCart };

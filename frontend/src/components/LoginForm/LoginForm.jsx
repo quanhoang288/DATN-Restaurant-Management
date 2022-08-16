@@ -1,13 +1,26 @@
-import React from 'react'
-import { Box, Button, CircularProgress, Link, TextField } from '@material-ui/core'
-import { useSelector } from 'react-redux'
-import Layout from '../../containers/Layout/Layout'
-import { LOGIN_MODAL } from '../../constants'
-import './LoginForm.css'
+import React from "react";
+import {
+  Box,
+  Button,
+  CircularProgress,
+  Link,
+  TextField,
+} from "@material-ui/core";
+import { useSelector } from "react-redux";
+import Layout from "../../containers/Layout/Layout";
+import { LOGIN_MODAL } from "../../constants";
+import "./LoginForm.css";
 
 function LoginForm(props) {
-  const { credentials, handleRegisterClick, handleSubmit, handleTextChange, submitButtonDisabled, isAdminAuthentication } = props
-  const isLoggingIn = useSelector((state) => state.auth.isLoggingIn)
+  const {
+    credentials,
+    handleRegisterClick,
+    handleSubmit,
+    handleTextChange,
+    submitButtonDisabled,
+    isAdminAuthentication,
+  } = props;
+  const isLoggingIn = useSelector((state) => state.auth.isLoggingIn);
 
   return (
     <Layout>
@@ -19,7 +32,9 @@ function LoginForm(props) {
           label='Email'
           name='email'
           value={credentials.email}
-          onChange={(e) => handleTextChange(LOGIN_MODAL, e.target.name, e.target.value)}
+          onChange={(e) =>
+            handleTextChange(LOGIN_MODAL, e.target.name, e.target.value)
+          }
           autoFocus
         />
         <TextField
@@ -30,7 +45,9 @@ function LoginForm(props) {
           type='password'
           id='password'
           value={credentials.password}
-          onChange={(e) => handleTextChange(LOGIN_MODAL, e.target.name, e.target.value)}
+          onChange={(e) =>
+            handleTextChange(LOGIN_MODAL, e.target.name, e.target.value)
+          }
           autoComplete='current-password'
         />
         <Button
@@ -41,9 +58,10 @@ function LoginForm(props) {
           color='secondary'
           sx={{ mt: 3, mb: 2 }}
           disabled={submitButtonDisabled}
+          onClick={handleSubmit}
         >
           {isLoggingIn && <CircularProgress />}
-          {!isLoggingIn && 'Đăng nhập'}
+          {!isLoggingIn && "Đăng nhập"}
         </Button>
         {!isAdminAuthentication && (
           <div className='text__center'>
@@ -54,8 +72,7 @@ function LoginForm(props) {
         )}
       </Box>
     </Layout>
-  )
+  );
 }
 
-export default LoginForm
-
+export default LoginForm;

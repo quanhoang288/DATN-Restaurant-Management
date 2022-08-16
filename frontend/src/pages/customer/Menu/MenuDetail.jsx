@@ -1,41 +1,87 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState } from "react";
 
-import { Button, Card, CardActionArea, CardActions, CardContent, CardMedia, IconButton, Typography } from '@material-ui/core'
-import AddBoxOutlinedIcon from '@material-ui/icons/AddBoxOutlined'
-import CustomTabs from '../../../components/CustomTabs/CustomTabs'
-import TabPanel from '../../../components/CustomTabs/TabPanel'
-import CustomerMain from '../../../containers/CustomerMain/CustomerMain'
-import { useParams } from 'react-router-dom'
-import { getMenu } from '../../../apis/menu'
-import { useDispatch } from 'react-redux'
-import { cartActions } from '../../../redux/actions'
+import {
+  Button,
+  Card,
+  CardActionArea,
+  CardActions,
+  CardContent,
+  CardMedia,
+  IconButton,
+  Typography,
+} from "@material-ui/core";
+import AddBoxOutlinedIcon from "@material-ui/icons/AddBoxOutlined";
+import CustomTabs from "../../../components/CustomTabs/CustomTabs";
+import TabPanel from "../../../components/CustomTabs/TabPanel";
+import CustomerMain from "../../../containers/CustomerMain/CustomerMain";
+import { useParams } from "react-router-dom";
+import { getMenu } from "../../../apis/menu";
+import { useDispatch } from "react-redux";
+import { cartActions } from "../../../redux/actions";
+import Toast from "../../../components/Toast/Toast";
+import { ASSET_BASE_URL } from "../../../configs";
+import noImageAvailable from "../../../assets/no-image-available.jpg";
 
 function CategoryItem(props) {
-  const { item } = props
+  const { item } = props;
+  const [isNewItemAdded, setNewItemAdded] = useState(false);
 
-  const dispatch = useDispatch()
+  const dispatch = useDispatch();
 
   return (
     <Card>
+      {isNewItemAdded && (
+        <Toast
+          variant='success'
+          message='Thêm món ăn vào giỏ đồ thành công'
+          handleClose={() => setNewItemAdded(false)}
+        />
+      )}
+
       <CardContent>
-        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+        <div style={{ display: "flex", justifyContent: "space-between" }}>
           <div>
             <img
-              src='https://d1sag4ddilekf6.azureedge.net/compressed_webp/items/VNITE20210921094246019781/detail/8e68806c57314ae2b14f0e01998c65f3_1632217366841678818.webp'
+              src={
+                item.image
+                  ? `${ASSET_BASE_URL}/images/${item.image}`
+                  : noImageAvailable
+              }
               alt='Category item'
               width={100}
               height={100}
             />
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', marginLeft: '1rem' }}>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "space-between",
+              marginLeft: "1rem",
+            }}
+          >
             <div>
               <Typography variant='h6'>{item.name}</Typography>
-              <Typography>{item.description || 'Description'}</Typography>
+              {/* <Typography>{item.description || "Description"}</Typography> */}
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Typography style={{ fontWeight: 500 }}>{item.sale_price}</Typography>
-              <IconButton style={{ color: 'green' }} onClick={() => dispatch(cartActions.addToCart(item.id))}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <Typography style={{ fontWeight: 500 }}>
+                {item.sale_price}
+              </Typography>
+              <IconButton
+                style={{ color: "green" }}
+                onClick={() => {
+                  dispatch(cartActions.addToCart(item));
+                  setNewItemAdded(true);
+                }}
+              >
                 <AddBoxOutlinedIcon />
               </IconButton>
             </div>
@@ -43,18 +89,18 @@ function CategoryItem(props) {
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }
 
 function MenuCategory(props) {
-  const { category } = props
+  const { category } = props;
   return (
     <div
       style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(4, 1fr)',
+        display: "grid",
+        gridTemplateColumns: "repeat(4, 1fr)",
         rowGap: 20,
-        alignItems: 'center',
+        alignItems: "center",
         flex: 1,
         columnGap: 20,
       }}
@@ -63,28 +109,28 @@ function MenuCategory(props) {
         <CategoryItem item={item} />
       ))}
     </div>
-  )
+  );
 }
 
 export default function MenuDetail(props) {
-  const { id } = useParams()
-  const [menuData, setMenuData] = useState({})
-  const [activeTab, setActiveTab] = useState(0)
+  const { id } = useParams();
+  const [menuData, setMenuData] = useState({});
+  const [activeTab, setActiveTab] = useState(0);
 
   const fetchMenuData = async (menuId) => {
-    const menu = (await getMenu(menuId)).data
-    setMenuData(menu)
-  }
+    const menu = (await getMenu(menuId)).data;
+    setMenuData(menu);
+  };
 
   useEffect(() => {
     if (id) {
-      fetchMenuData(id)
+      fetchMenuData(id);
     }
-  }, [id])
+  }, [id]);
 
   return (
     <CustomerMain>
-      <div style={{ padding: '2rem 2rem' }}>
+      <div style={{ padding: "2rem 2rem" }}>
         <CustomTabs
           labels={(menuData.categories || []).map((category) => category.name)}
           activeTab={activeTab}
@@ -100,6 +146,5 @@ export default function MenuDetail(props) {
         </CustomTabs>
       </div>
     </CustomerMain>
-  )
+  );
 }
-

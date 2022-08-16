@@ -6,6 +6,8 @@ import {
   FormControlLabel,
   IconButton,
   InputAdornment,
+  List,
+  ListItem,
   Table,
   TableBody,
   TableCell,
@@ -15,6 +17,8 @@ import {
   TextField,
   Typography,
 } from "@material-ui/core";
+import AddIcon from "@material-ui/icons/Add";
+
 import CameraAltIcon from "@material-ui/icons/CameraAlt";
 import DeleteIcon from "@material-ui/icons/Delete";
 import CustomTabs from "../../../components/CustomTabs/CustomTabs";
@@ -23,6 +27,9 @@ import TabPanel from "../../../components/CustomTabs/TabPanel";
 import pick from "../../../utils/pick";
 import { createGood, getGood, getGoods, updateGood } from "../../../apis/good";
 import CustomAccordion from "../../../components/CustomAccordion/CustomAccordion";
+import { createGoodGroup, getGoodGroups } from "../../../apis/good-group";
+import { createUnit, getUnits } from "../../../apis/unit";
+import { ASSET_BASE_URL } from "../../../configs";
 // import './GoodCreate.css'
 
 const goodTypes = [
@@ -48,16 +55,17 @@ const defaultGoodData = {
   name: "",
   menuId: null,
   goodGroupId: null,
-  importPrice: null,
   salePrice: null,
-  quantity: null,
+  deliverySalePrice: null,
   minQuantity: null,
   maxQuantity: null,
   description: "",
   attributes: [],
-  units: [],
+  basicUnit: null,
+  otherUnits: [],
   components: [],
   type: goodTypes[0].value,
+  isSoldDirectly: 0,
 };
 
 function GoodAttributeCreate(props) {
@@ -112,52 +120,82 @@ function GoodAttributeCreate(props) {
   );
 }
 
-function GoodUnitCreate(props) {
-  const { unit, handleChange, handleDelete } = props;
+function UnitCreate({ isModalVisible, handleCloseModal }) {
+  const [name, setName] = useState("");
+
+  const handleSaveUnit = useCallback(async () => {
+    await createUnit({ name });
+    handleCloseModal(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [name]);
 
   return (
-    <div style={{ display: "flex", marginBottom: 10 }}>
+    <Modal
+      title='Thêm đơn vị'
+      isModalVisible={isModalVisible}
+      handleClose={handleCloseModal}
+    >
       <TextField
-        label='Tên thuộc tính'
-        InputLabelProps={{
-          shrink: true,
-          style: {
-            fontSize: 20,
-          },
-        }}
-        value={unit.name}
-        onChange={(e) => handleChange({ ...unit, name: e.target.value })}
+        required
+        fullWidth
+        InputLabelProps={{ shrink: true, style: { fontSize: 18 } }}
+        value={name}
+        label='Tên đơn vị'
+        onChange={(e) => setName(e.target.value)}
       />
-      <Autocomplete
-        className='navbar__searchBar__container'
-        freeSolo
-        id='free-solo-2-demo'
-        multiple
-        options={[]}
-        // getOptionLabel={(option) => option.userName && option.fullName}
-        filterOptions={(options, state) => options}
-        onChange={(e, options) => {
-          handleChange({ ...unit, values: options });
-        }}
-        style={{ flex: 1, marginLeft: 10 }}
-        renderInput={(params) => (
-          <TextField
-            {...params}
-            label='Giá trị'
-            fullWidth
-            InputLabelProps={{
-              shrink: true,
-              style: {
-                fontSize: 20,
-              },
-            }}
-          />
-        )}
+      <div style={{ display: "flex", float: "right", marginTop: "2rem" }}>
+        <Button
+          variant='contained'
+          color='primary'
+          onClick={handleSaveUnit}
+          style={{ marginRight: "0.5rem" }}
+        >
+          Lưu
+        </Button>
+        <Button variant='contained' onClick={handleCloseModal}>
+          Hủy bỏ
+        </Button>
+      </div>
+    </Modal>
+  );
+}
+
+function GoodGroupCreate({ isModalVisible, handleCloseModal }) {
+  const [name, setName] = useState("");
+
+  const handleSaveGoodGroup = useCallback(async () => {
+    await createGoodGroup({ name });
+    handleCloseModal(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [name]);
+
+  return (
+    <Modal
+      title='Thêm nhóm hàng'
+      isModalVisible={isModalVisible}
+      handleClose={handleCloseModal}
+    >
+      <TextField
+        required
+        fullWidth
+        InputLabelProps={{ shrink: true, style: { fontSize: 18 } }}
+        value={name}
+        onChange={(e) => setName(e.target.value)}
       />
-      <IconButton onClick={handleDelete}>
-        <DeleteIcon />
-      </IconButton>
-    </div>
+      <div style={{ display: "flex", float: "right", marginTop: "2rem" }}>
+        <Button
+          variant='contained'
+          color='primary'
+          onClick={handleSaveGoodGroup}
+          style={{ marginRight: "0.5rem" }}
+        >
+          Lưu
+        </Button>
+        <Button variant='contained' onClick={handleCloseModal}>
+          Hủy bỏ
+        </Button>
+      </div>
+    </Modal>
   );
 }
 
@@ -165,6 +203,8 @@ function GoodComponents({
   components,
   onChangeComponentQuantity,
   onDeleteComponent,
+  onChangeComponentUnit,
+  unitOptions,
 }) {
   return (
     <TableContainer>
@@ -175,7 +215,7 @@ function GoodComponents({
             <TableCell>Tên hàng thành phần</TableCell>
             <TableCell>Số lượng</TableCell>
             <TableCell>Đơn vị</TableCell>
-            <TableCell>Giá bán gốc</TableCell>
+            {/* <TableCell>Giá bán gốc</TableCell> */}
             <TableCell></TableCell>
           </TableRow>
         </TableHead>
@@ -190,14 +230,33 @@ function GoodComponents({
                   InputProps={{ inputProps: { min: 1 } }}
                   value={component.quantity}
                   onChange={(e) =>
-                    onChangeComponentQuantity(component.id, e.target.value)
+                    onChangeComponentQuantity(
+                      component.id,
+                      Number.parseFloat(e.target.value) || null
+                    )
                   }
                 />
               </TableCell>
-              <TableCell>{component.unit || "gram"}</TableCell>
               <TableCell>
-                {/* {component.import_price * (component.quantity || 1)} */}
+                <TextField
+                  SelectProps={{ native: true }}
+                  style={{ minWidth: 200, marginRight: "1rem" }}
+                  select
+                  value={component.unit_id}
+                  onChange={(e) =>
+                    onChangeComponentUnit(
+                      component.id,
+                      Number.parseInt(e.target.value) || null
+                    )
+                  }
+                >
+                  <option value={""}>Chọn đơn vị</option>
+                  {unitOptions.map((opt) => (
+                    <option value={opt.id}>{opt.name}</option>
+                  ))}
+                </TextField>
               </TableCell>
+
               <TableCell>
                 <IconButton onClick={() => onDeleteComponent(component.id)}>
                   <DeleteIcon />
@@ -226,8 +285,8 @@ function GoodStock({ goodId }) {
         <TableRow>
           <TableCell>Chi nhánh Hà Nội</TableCell>
           <TableCell>kg</TableCell>
-          <TableCell>10000</TableCell>
-          <TableCell>5</TableCell>
+          <TableCell>35000</TableCell>
+          <TableCell>4.5</TableCell>
         </TableRow>
       </TableBody>
     </TableContainer>
@@ -238,24 +297,38 @@ function GoodCreate({ goodId, isModalVisible, handleCloseModal }) {
   const [goodData, setGoodData] = useState(defaultGoodData);
   const [goodOptions, setGoodOptions] = useState([]);
   const [selectedFile, setSelectedFile] = useState(null);
-  const [profilePreview, setProfilePreview] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
   const [activeTab, setActiveTab] = useState(0);
   const [componentKeyword, setComponentKeyword] = useState("");
+  const [isGoodGroupModalVisible, setGoodGroupModalVisible] = useState(false);
+  const [isUnitCreateVisible, setUnitCreateVisible] = useState(false);
+
+  const [goodGroupOptions, setGoodGroupOptions] = useState([]);
+  const [unitOptions, setUnitOptions] = useState([]);
 
   const fetchGoodData = async (goodId) => {
     const good = (await getGood(goodId)).data;
     setGoodData({
       name: good.name,
       description: good.description,
-      quantity: good.quantity,
       minQuantity: good.min_quantity_threshold,
       maxQuantity: good.max_quantity_threshold,
       type: good.type,
-      importPrice: good.import_price,
       salePrice: good.sale_price,
-      attributes: good.attributes || [],
-      units: good.units || [],
-      components: good.components || [],
+      deliverySalePrice: good.delivery_sale_price,
+      isSoldDirectly: good.is_sold_directly,
+      image: good.image,
+      basicUnit: (good.units || []).find(
+        (unit) => unit.GoodUnit?.multiplier === 1
+      ),
+      otherUnits:
+        (good.units || []).filter((unit) => unit.GoodUnit?.multiplier !== 1) ||
+        [],
+      components: good.components.map((component) => ({
+        ...component,
+        quantity: component.GoodComponent?.quantity,
+        unit_id: component.GoodComponent?.unit_id,
+      })),
     });
   };
 
@@ -302,6 +375,18 @@ function GoodCreate({ goodId, isModalVisible, handleCloseModal }) {
     [goodData]
   );
 
+  const handleChangeComponentUnit = useCallback(
+    (componentId, unitId) => {
+      setGoodData({
+        ...goodData,
+        components: goodData.components.map((comp) =>
+          comp.id === componentId ? { ...comp, unit_id: unitId } : comp
+        ),
+      });
+    },
+    [goodData]
+  );
+
   const handleDeleteComponent = useCallback(
     (componentId) => {
       setGoodData({
@@ -314,12 +399,91 @@ function GoodCreate({ goodId, isModalVisible, handleCloseModal }) {
     [goodData]
   );
 
+  const fetchGroupGoodOptions = async () => {
+    const options = (await getGoodGroups()).data;
+    setGoodGroupOptions(options);
+  };
+
+  const fetchUnitOptions = async () => {
+    const options = (await getUnits()).data;
+    setUnitOptions(options);
+  };
+
+  const handleAddUnit = useCallback(
+    (unitId, idx) => {
+      const unit = goodData.otherUnits.find((u) => u.id === unitId);
+      if (!unit) {
+        const newUnits = goodData.otherUnits;
+        newUnits[idx] = { ...newUnits[idx], id: unitId };
+        setGoodData({ ...goodData, otherUnits: newUnits });
+      }
+    },
+    [goodData]
+  );
+
+  const handleRemoveUnit = useCallback(
+    (unitId) => {
+      setGoodData({
+        ...goodData,
+        otherUnits: goodData.otherUnits.filter((unit) => unit.id !== unitId),
+      });
+    },
+    [goodData]
+  );
+
+  const handleSaveGood = useCallback(async () => {
+    const uploadData = {
+      name: goodData.name,
+      type: goodData.type,
+      is_sold_directly: goodData.isSoldDirectly,
+      units: JSON.stringify({
+        value: goodData.basicUnit
+          ? [...goodData.otherUnits, goodData.basicUnit]
+          : goodData.otherUnits,
+      }),
+      components: JSON.stringify({ value: goodData.components }),
+    };
+
+    if (goodData.description) {
+      uploadData.description = goodData.description;
+    }
+
+    if (goodData.salePrice) {
+      uploadData.sale_price = goodData.salePrice;
+    }
+
+    if (goodData.deliverySalePrice) {
+      uploadData.delivery_sale_price = goodData.deliverySalePrice;
+    }
+
+    if (goodData.minQuantity) {
+      uploadData.min_quantity_threshold = goodData.minQuantity;
+    }
+
+    if (goodData.maxQuantity) {
+      uploadData.max_quantity_threshold = goodData.maxQuantity;
+    }
+
+    if (selectedFile) {
+      uploadData.image = selectedFile;
+    }
+
+    if (goodId) {
+      await updateGood(goodId, uploadData);
+    } else {
+      await createGood(uploadData);
+    }
+    handleCloseModal(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [goodId, goodData, selectedFile]);
+
   useEffect(() => {
     if (!selectedFile) {
+      setImagePreview(null);
       return;
     }
     const objectUrl = URL.createObjectURL(selectedFile);
-    setProfilePreview(objectUrl);
+    setImagePreview(objectUrl);
 
     return () => URL.revokeObjectURL(objectUrl);
   }, [selectedFile]);
@@ -332,48 +496,9 @@ function GoodCreate({ goodId, isModalVisible, handleCloseModal }) {
     if (goodId) {
       fetchGoodData(goodId);
     }
+    fetchGroupGoodOptions();
+    fetchUnitOptions();
   }, [goodId]);
-
-  const handleSaveGood = useCallback(async () => {
-    const uploadData = {
-      name: goodData.name,
-      type: goodData.type,
-      attributes: goodData.attributes,
-      units: goodData.units,
-      components: goodData.components,
-    };
-
-    if (goodData.description) {
-      uploadData.description = goodData.description;
-    }
-
-    if (goodData.importPrice) {
-      uploadData.import_price = goodData.importPrice;
-    }
-
-    if (goodData.salePrice) {
-      uploadData.sale_price = goodData.salePrice;
-    }
-    if (goodData.quantity) {
-      uploadData.quantity = goodData.quantity;
-    }
-
-    if (goodData.minQuantity) {
-      uploadData.min_quantity_threshold = goodData.minQuantity;
-    }
-
-    if (goodData.maxQuantity) {
-      uploadData.max_quantity_threshold = goodData.maxQuantity;
-    }
-
-    if (goodId) {
-      await updateGood(goodId, uploadData);
-    } else {
-      await createGood(uploadData);
-    }
-    handleCloseModal();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [goodId, goodData]);
 
   useEffect(() => {
     if (goodId) {
@@ -381,15 +506,46 @@ function GoodCreate({ goodId, isModalVisible, handleCloseModal }) {
     }
   }, [goodId]);
 
+  useEffect(() => {
+    console.log(goodData);
+  }, [goodData]);
+
   return (
     <div className='good__create__container'>
+      <GoodGroupCreate
+        isModalVisible={isGoodGroupModalVisible}
+        handleCloseModal={(success = false) => {
+          setGoodGroupModalVisible(false);
+          if (success) {
+            fetchGroupGoodOptions();
+          }
+        }}
+      />
+      <UnitCreate
+        isModalVisible={isUnitCreateVisible}
+        handleCloseModal={(success = false) => {
+          setUnitCreateVisible(false);
+          console.log(success);
+          if (success) {
+            fetchUnitOptions();
+          }
+        }}
+      />
       <Modal
         isModalVisible={isModalVisible}
-        handleClose={handleCloseModal}
+        handleClose={() => {
+          setActiveTab(0);
+          setGoodData(defaultGoodData);
+          handleCloseModal();
+        }}
         title='Thêm hàng hóa'
       >
         <CustomTabs
-          labels={["Thông tin chung", "Thành phần", "Tồn kho"]}
+          labels={
+            goodId
+              ? ["Thông tin chung", "Thành phần", "Tồn kho"]
+              : ["Thông tin chung", "Thành phần"]
+          }
           activeTab={activeTab}
           onChangeActiveTab={(val) => setActiveTab(val)}
         >
@@ -445,6 +601,13 @@ function GoodCreate({ goodId, isModalVisible, handleCloseModal }) {
                   select
                   margin='normal'
                   label='Nhóm hàng'
+                  value={goodData.goodGroupId}
+                  onChange={(e) =>
+                    setGoodData({
+                      ...goodData,
+                      goodGroupId: Number.parseInt(e.target.value) || null,
+                    })
+                  }
                   InputLabelProps={{
                     shrink: true,
                     style: {
@@ -455,9 +618,30 @@ function GoodCreate({ goodId, isModalVisible, handleCloseModal }) {
                     native: true,
                   }}
                   style={{ minWidth: 200, marginRight: "1rem" }}
-                ></TextField>
+                >
+                  <option value=''>Chọn nhóm hàng</option>
+                  {goodGroupOptions.map((opt) => (
+                    <option value={opt.id}>{opt.name}</option>
+                  ))}
+                </TextField>
+                <IconButton
+                  onClick={() => setGoodGroupModalVisible(true)}
+                  style={{ marginRight: "2rem" }}
+                >
+                  <AddIcon />
+                </IconButton>
                 <FormControlLabel
-                  control={<Checkbox />}
+                  control={
+                    <Checkbox
+                      checked={goodData.isSoldDirectly}
+                      onChange={(e, checked) =>
+                        setGoodData({
+                          ...goodData,
+                          isSoldDirectly: checked ? 1 : 0,
+                        })
+                      }
+                    />
+                  }
                   label='Bán trực tiếp'
                 />
               </div>
@@ -476,7 +660,10 @@ function GoodCreate({ goodId, isModalVisible, handleCloseModal }) {
                   style={{ minWidth: 200, marginRight: "2rem" }}
                   value={goodData.salePrice}
                   onChange={(e) =>
-                    setGoodData({ ...goodData, salePrice: e.target.value })
+                    setGoodData({
+                      ...goodData,
+                      salePrice: Number.parseInt(e.target.value) || null,
+                    })
                   }
                   InputProps={{
                     endAdornment: (
@@ -496,9 +683,13 @@ function GoodCreate({ goodId, isModalVisible, handleCloseModal }) {
                     },
                   }}
                   style={{ marginRight: 10 }}
-                  value={goodData.salePrice}
+                  value={goodData.deliverySalePrice}
                   onChange={(e) =>
-                    setGoodData({ ...goodData, salePrice: e.target.value })
+                    setGoodData({
+                      ...goodData,
+                      deliverySalePrice:
+                        Number.parseInt(e.target.value) || null,
+                    })
                   }
                   InputProps={{
                     endAdornment: (
@@ -548,9 +739,12 @@ function GoodCreate({ goodId, isModalVisible, handleCloseModal }) {
                     alignItems: "center",
                   }}
                 >
-                  {selectedFile ? (
+                  {selectedFile || goodData.image ? (
                     <img
-                      src={profilePreview}
+                      src={
+                        imagePreview ||
+                        `${ASSET_BASE_URL}/images/${goodData.image}`
+                      }
                       alt='profile-preview'
                       style={{ maxWidth: 150, minHeight: 150, maxHeight: 300 }}
                     />
@@ -563,11 +757,17 @@ function GoodCreate({ goodId, isModalVisible, handleCloseModal }) {
                     </>
                   )}
                 </div>
-                {selectedFile ? (
+                {selectedFile || goodData.image ? (
                   <Button
                     variant='contained'
                     color='secondary'
-                    onClick={() => setSelectedFile(null)}
+                    onClick={() => {
+                      if (goodData.image) {
+                        setGoodData({ ...goodData, image: null });
+                      } else {
+                        setSelectedFile(null);
+                      }
+                    }}
                   >
                     Xóa ảnh
                   </Button>
@@ -599,7 +799,10 @@ function GoodCreate({ goodId, isModalVisible, handleCloseModal }) {
                     }}
                     value={goodData.minQuantity}
                     onChange={(e) =>
-                      setGoodData({ ...goodData, minQuantity: e.target.value })
+                      setGoodData({
+                        ...goodData,
+                        minQuantity: Number.parseFloat(e.target.value) || null,
+                      })
                     }
                   />
                   <TextField
@@ -614,95 +817,121 @@ function GoodCreate({ goodId, isModalVisible, handleCloseModal }) {
                     }}
                     value={goodData.maxQuantity}
                     onChange={(e) =>
-                      setGoodData({ ...goodData, maxQuantity: e.target.value })
+                      setGoodData({
+                        ...goodData,
+                        maxQuantity: Number.parseFloat(e.target.value) || null,
+                      })
                     }
                   />
-                </div>
-              </CustomAccordion>
-              <CustomAccordion title='Thuộc tính (Màu sắc, kích thước)'>
-                <div style={{ flex: 1 }}>
-                  <div>
-                    <Button
-                      variant='contained'
-                      onClick={() =>
-                        setGoodData({
-                          ...goodData,
-                          attributes: [
-                            {
-                              name: "",
-                              values: [],
-                            },
-                            ...goodData.attributes,
-                          ],
-                        })
-                      }
-                    >
-                      Thêm thuộc tính
-                    </Button>
-                  </div>
-                  <div style={{ marginTop: 20 }}>
-                    {goodData.attributes.map((attribute, index) => (
-                      <GoodAttributeCreate
-                        attribute={attribute}
-                        handleChange={(newAttribute) =>
-                          setGoodData({
-                            ...goodData,
-                            attributes: goodData.attributes.map((attr, idx) =>
-                              idx === index ? newAttribute : attr
-                            ),
-                          })
-                        }
-                        handleDelete={() =>
-                          setGoodData({
-                            ...goodData,
-                            attributes: goodData.attributes.filter(
-                              (attr, idx) => idx !== index
-                            ),
-                          })
-                        }
-                      />
-                    ))}
-                  </div>
                 </div>
               </CustomAccordion>
 
               <CustomAccordion title='Đơn vị tính'>
                 <div style={{ flex: 1 }}>
-                  <TextField
-                    margin='normal'
-                    label='Đơn vị cơ bản'
-                    InputLabelProps={{
-                      shrink: true,
-                      style: {
-                        fontSize: 20,
-                      },
-                    }}
-                  />
-                  <div>
-                    <Button variant='contained'>Thêm đơn vị tính</Button>
+                  <div style={{ display: "flex", marginBottom: 10 }}>
+                    <TextField
+                      margin='normal'
+                      label='Đơn vị cơ bản'
+                      style={{ minWidth: 200, marginBottom: "1rem" }}
+                      InputLabelProps={{
+                        shrink: true,
+                        style: {
+                          fontSize: 18,
+                        },
+                      }}
+                      select
+                      SelectProps={{ native: true }}
+                      onChange={(e) =>
+                        setGoodData({
+                          ...goodData,
+                          basicUnit: {
+                            id: Number.parseInt(e.target.value) || null,
+                            multiplier: 1,
+                          },
+                        })
+                      }
+                      value={goodData.basicUnit?.id}
+                    >
+                      <option value=''>Chọn đơn vị</option>
+                      {unitOptions.map((opt) => (
+                        <option value={opt.id}>{opt.name}</option>
+                      ))}
+                    </TextField>
+                    <IconButton
+                      style={{ marginRight: "1rem" }}
+                      onClick={() => setUnitCreateVisible(true)}
+                    >
+                      <AddIcon />
+                    </IconButton>
                   </div>
-                  <div style={{ marginTop: 20 }}>
-                    {goodData.attributes.map((attribute, index) => (
-                      <GoodAttributeCreate
-                        attribute={attribute}
-                        handleChange={(newAttribute) =>
-                          setGoodData({
-                            ...goodData,
-                            attributes: goodData.attributes.map((attr, idx) =>
-                              idx === index ? newAttribute : attr
-                            ),
-                          })
-                        }
-                        handleDelete={() =>
-                          setGoodData({
-                            ...goodData,
-                            attributes: goodData.attributes.filter(
-                              (attr, idx) => idx !== index
-                            ),
-                          })
-                        }
-                      />
-                    ))}
+
+                  <Button
+                    variant='contained'
+                    onClick={() =>
+                      setGoodData({
+                        ...goodData,
+                        otherUnits: [...goodData.otherUnits, {}],
+                      })
+                    }
+                  >
+                    Thêm đơn vị tính
+                  </Button>
+
+                  <div style={{ marginTop: 5 }}>
+                    <List>
+                      {(goodData.otherUnits || []).map((unit, idx) => (
+                        <ListItem
+                          style={{ display: "flex", alignItems: "center" }}
+                        >
+                          <TextField
+                            margin='normal'
+                            label='Đơn vị'
+                            InputLabelProps={{
+                              shrink: true,
+                            }}
+                            SelectProps={{ native: true }}
+                            style={{ minWidth: 200, marginRight: "1rem" }}
+                            select
+                            value={unit.id || -1}
+                            onChange={(e) =>
+                              handleAddUnit(
+                                Number.parseInt(e.target.value),
+                                idx
+                              )
+                            }
+                          >
+                            {unitOptions.map((opt) => (
+                              <option value={opt.id}>{opt.name}</option>
+                            ))}
+                          </TextField>
+
+                          <TextField
+                            label='Quy đổi với đơn vị cơ bản'
+                            type='number'
+                            InputLabelProps={{ shrink: true }}
+                            style={{ marginRight: "1rem" }}
+                            onChange={(e) =>
+                              setGoodData({
+                                ...goodData,
+                                otherUnits: goodData.otherUnits.map((u) =>
+                                  u.id === unit.id
+                                    ? {
+                                        ...u,
+                                        multiplier:
+                                          Number.parseFloat(e.target.value) ||
+                                          null,
+                                      }
+                                    : u
+                                ),
+                              })
+                            }
+                          />
+                          <IconButton onClick={() => handleRemoveUnit(unit.id)}>
+                            <DeleteIcon />
+                          </IconButton>
+                        </ListItem>
+                      ))}
+                    </List>
                   </div>
                 </div>
               </CustomAccordion>
@@ -737,16 +966,20 @@ function GoodCreate({ goodId, isModalVisible, handleCloseModal }) {
                 <GoodComponents
                   components={goodData.components}
                   onChangeComponentQuantity={handleChangeComponentQuantity}
+                  onChangeComponentUnit={handleChangeComponentUnit}
                   onDeleteComponent={handleDeleteComponent}
+                  unitOptions={unitOptions}
                 />
               </div>
             )}
           </TabPanel>
-          <TabPanel value={activeTab} index={2}>
-            <div>
-              <GoodStock />
-            </div>
-          </TabPanel>
+          {goodId && (
+            <TabPanel value={activeTab} index={2}>
+              <div style={{ flex: 1 }}>
+                <GoodStock />
+              </div>
+            </TabPanel>
+          )}
         </CustomTabs>
         <div style={{ display: "flex", float: "right", marginTop: 2 }}>
           <Button

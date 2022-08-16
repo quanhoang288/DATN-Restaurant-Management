@@ -4,6 +4,8 @@ import { getTables, deleteTable } from "../../../apis/table";
 import CustomTable from "../../../components/Table/CustomTable";
 import TableCreate from "./TableCreate";
 import ConfirmDialog from "../../../components/Modal/ConfirmDialog";
+import { getBranches } from "../../../apis/branch";
+import { parseSearchParams } from "../../../utils/parseSearchParams";
 
 const cols = [
   { id: "id", label: "Mã bàn", isSortable: true },
@@ -17,11 +19,16 @@ function TableList(props) {
   const [isDeleteDialogVisible, setDeleteDialogVisible] = useState(false);
   const [tableList, setTableList] = useState([]);
   const [totalCount, setTotalCount] = useState(0);
+  const [searchParams, setSearchParams] = useState({});
+  const [branchOptions, setBranchOptions] = useState([]);
 
   const [selected, setSelected] = useState(null);
 
-  const fetchCurPage = async (page, perPage) => {
-    const res = (await getTables({ page, perPage })).data;
+  const fetchCurPage = async (page, perPage, searchParams = {}) => {
+    const filters = parseSearchParams(searchParams);
+    const res = (
+      await getTables({ page, perPage, filters: JSON.stringify(filters) })
+    ).data;
     setTableList(
       res.data.map((table) => ({
         ...table,
@@ -36,6 +43,15 @@ function TableList(props) {
       await deleteTable(id);
       setDeleteDialogVisible(false);
     }
+  };
+
+  const fetchBranchOptions = async () => {
+    const branches = (
+      await getBranches({ filters: JSON.stringify({ is_active: 1 }) })
+    ).data;
+    setBranchOptions(
+      branches.map((branch) => ({ id: branch.id, name: branch.name }))
+    );
   };
 
   const actionButtons = [
@@ -58,6 +74,10 @@ function TableList(props) {
       },
     },
   ];
+
+  useEffect(() => {
+    fetchBranchOptions();
+  }, []);
 
   return (
     <div>
@@ -97,6 +117,13 @@ function TableList(props) {
             }}
             variant='standard'
             style={{ marginRight: 20 }}
+            value={searchParams.id}
+            onChange={(e) =>
+              setSearchParams({
+                ...searchParams,
+                id: Number.parseInt(e.target.value) || null,
+              })
+            }
           />
           <TextField
             label='Chi nhánh'
@@ -111,11 +138,18 @@ function TableList(props) {
               },
             }}
             style={{ marginRight: 20 }}
+            value={searchParams.branch_id}
+            onChange={(e) =>
+              setSearchParams({
+                ...searchParams,
+                branch_id: Number.parseInt(e.target.value) || null,
+              })
+            }
           >
-            <option>Tất cả</option>
-            <option value='pending'>Chờ xác nhận</option>
-            <option value='confirmed'>Đã xác nhận (Chờ nhận bàn)</option>
-            <option value='serving'>Đã nhận bàn</option>
+            <option value=''>Tất cả</option>
+            {branchOptions.map((opt) => (
+              <option value={opt.id}>{opt.name}</option>
+            ))}
           </TextField>
           <TextField
             label='Tầng'
@@ -126,6 +160,13 @@ function TableList(props) {
               },
             }}
             type='number'
+            value={searchParams.floor_num}
+            onChange={(e) =>
+              setSearchParams({
+                ...searchParams,
+                floor_num: Number.parseInt(e.target.value) || null,
+              })
+            }
             variant='standard'
             style={{ marginRight: 20 }}
           />
@@ -156,6 +197,7 @@ function TableList(props) {
           handleFetchRows={fetchCurPage}
           cols={cols}
           actionButtons={actionButtons}
+          searchParams={searchParams}
         />
       </div>
     </div>

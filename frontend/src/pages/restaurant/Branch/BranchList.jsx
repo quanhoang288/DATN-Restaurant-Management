@@ -9,7 +9,7 @@ import { provinces } from "../../../constants/provinces";
 import { parseSearchParams } from "../../../utils/parseSearchParams";
 
 const cols = [
-  { id: "id", label: "STT", isSortable: true },
+  { id: "id", label: "ID", isSortable: true },
   { id: "name", label: "Tên chi nhánh", isSortable: true },
   { id: "city", label: "Thành phố", isSortable: true },
   { id: "address", label: "Địa chỉ", isSortable: true },
@@ -44,7 +44,6 @@ function BranchList(props) {
   }, [searchParams]);
 
   const fetchCurPage = async (page, perPage, searchParams = {}) => {
-    console.log("fetching page");
     const filters = parseSearchParams(searchParams);
     const res = (
       await getBranches({
@@ -90,9 +89,9 @@ function BranchList(props) {
     },
   ];
 
-  useEffect(() => {
-    fetchBranchList();
-  }, []);
+  // useEffect(() => {
+  //   fetchBranchList();
+  // }, []);
 
   return (
     <Main>
@@ -228,7 +227,14 @@ function BranchList(props) {
       </div>
 
       <div>
-        <CustomTable rows={branchList} cols={cols} totalCount={totalCount} />
+        <CustomTable
+          rows={branchList}
+          cols={cols}
+          totalCount={totalCount}
+          actionButtons={actionButtons}
+          handleFetchRows={fetchCurPage}
+          searchParams={searchParams}
+        />
       </div>
     </Main>
   );

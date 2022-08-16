@@ -12,7 +12,6 @@ const styles = StyleSheet.create({
     borderBottomColor: "#bff0fd",
     borderBottomWidth: 1,
     alignItems: "center",
-    fontStyle: "bold",
     height: 60,
   },
   tableHeader: {
@@ -29,8 +28,10 @@ function InvoiceTableRow({ item, index }) {
       <Text style={{ width: 50 }}>{index + 1}</Text>
       <Text style={{ width: 200 }}>{item.name}</Text>
       <Text style={{ width: 100 }}>{item.quantity}</Text>
-      <Text style={{ width: 100 }}>{item.price}</Text>
-      <Text style={{ width: 100 }}>{item.price * item.quantity}</Text>
+      <Text style={{ width: 100 }}>{item.sale_price}</Text>
+      <Text style={{ width: 100, textAlign: "right" }}>
+        {item.sale_price * item.quantity}
+      </Text>
     </View>
   );
 }
@@ -39,10 +40,10 @@ const InvoiceItemsTable = ({ items }) => (
   <View style={styles.tableContainer}>
     <View style={styles.tableHeader}>
       <Text style={{ width: 50 }}>STT</Text>
-      <Text style={{ width: 200 }}>Ten mon</Text>
+      <Text style={{ width: 200 }}>Tên món</Text>
       <Text style={{ width: 100 }}>SL</Text>
-      <Text style={{ width: 100 }}>Don gia</Text>
-      <Text style={{ width: 100 }}>Thanh tien</Text>
+      <Text style={{ width: 100 }}>Đơn giá</Text>
+      <Text style={{ width: 100, textAlign: "right" }}>Thành tiền</Text>
     </View>
     <View style={{ borderBottomWidth: 1 }}>
       {(items || []).map((item, idx) => (

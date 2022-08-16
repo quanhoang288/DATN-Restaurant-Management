@@ -4,6 +4,8 @@ import CustomTable from "../../../components/Table/CustomTable";
 import ConfirmDialog from "../../../components/Modal/ConfirmDialog";
 import InventoryHistoryCreate from "./InventoryHistoryCreate";
 import { getInventoryHistories } from "../../../apis/inventory-history";
+import { parseSearchParams } from "../../../utils/parseSearchParams";
+import { formatDate } from "../../../utils/date";
 
 const cols = [
   { id: "id", label: "Mã nhập kho", isSortable: true },
@@ -19,7 +21,7 @@ const cols = [
     type: "chip",
     variantMapping: [
       {
-        value: "imported",
+        value: "done",
         variant: "success",
       },
       { value: "temp", variant: "info" },
@@ -31,96 +33,136 @@ const cols = [
   },
 ];
 
-const testInventoryHistories = [
-  {
-    id: 1,
-    type: "provider",
-    provider: "Provider 1",
-    target_inventory: "Kho đông lạnh - Chi nhánh Hà Nội",
-    source_inventory: null,
-    import_time: "08/01/2022 17:22",
-    status: {
-      name: "Đã nhập hàng",
-      value: "imported",
-    },
-  },
-  {
-    id: 2,
-    type: "provider",
-    provider: "Provider 2",
-    source_inventory: null,
+// const testInventoryHistories = [
+//   {
+//     id: 1,
+//     type: "provider",
+//     provider: "Provider 1",
+//     target_inventory: "Kho đông lạnh - Chi nhánh Hà Nội",
+//     source_inventory: null,
+//     import_time: "08/01/2022 17:22",
+//     status: {
+//       name: "Đã nhập hàng",
+//       value: "imported",
+//     },
+//   },
+//   {
+//     id: 2,
+//     type: "provider",
+//     provider: "Provider 2",
+//     source_inventory: null,
 
-    target_inventory: "Kho đông lạnh - Chi nhánh Hà Nội",
-    import_time: "08/02/2022 10:22",
-    status: {
-      name: "Đã nhập hàng",
-      value: "imported",
-    },
-  },
-  {
-    id: 2,
-    type: "provider",
-    provider: "Provider 3",
-    source_inventory: null,
+//     target_inventory: "Kho đông lạnh - Chi nhánh Hà Nội",
+//     import_time: "08/02/2022 10:22",
+//     status: {
+//       name: "Đã nhập hàng",
+//       value: "imported",
+//     },
+//   },
+//   {
+//     id: 2,
+//     type: "provider",
+//     provider: "Provider 3",
+//     source_inventory: null,
 
-    target_inventory: "Kho đông lạnh - Chi nhánh Hà Nội",
-    import_time: "08/03/2022 09:35",
-    status: {
-      name: "Đã nhập hàng",
-      value: "imported",
-    },
-  },
-  {
-    id: 3,
-    type: "provider",
-    provider: "Provider 4",
-    source_inventory: null,
+//     target_inventory: "Kho đông lạnh - Chi nhánh Hà Nội",
+//     import_time: "08/03/2022 09:35",
+//     status: {
+//       name: "Đã nhập hàng",
+//       value: "imported",
+//     },
+//   },
+//   {
+//     id: 3,
+//     type: "provider",
+//     provider: "Provider 4",
+//     source_inventory: null,
 
-    target_inventory: "Kho đông lạnh - Chi nhánh Hà Nội",
-    import_time: "08/04/2022 08:00",
-    status: {
-      name: "Đã nhập hàng",
-      value: "imported",
-    },
-  },
-  {
-    id: 4,
-    type: "provider",
-    provider: "Provider 1",
-    source_inventory: null,
+//     target_inventory: "Kho đông lạnh - Chi nhánh Hà Nội",
+//     import_time: "08/04/2022 08:00",
+//     status: {
+//       name: "Đã nhập hàng",
+//       value: "imported",
+//     },
+//   },
+//   {
+//     id: 4,
+//     type: "provider",
+//     provider: "Provider 1",
+//     source_inventory: null,
 
-    target_inventory: "Kho đông lạnh - Chi nhánh Đà Nẵng",
-    import_time: "08/05/2022 17:22",
-    status: {
-      name: "Đã nhập hàng",
-      value: "imported",
-    },
-  },
-  {
-    id: 5,
-    type: "provider",
-    provider: "Provider 1",
-    source_inventory: null,
+//     target_inventory: "Kho đông lạnh - Chi nhánh Đà Nẵng",
+//     import_time: "08/05/2022 17:22",
+//     status: {
+//       name: "Đã nhập hàng",
+//       value: "imported",
+//     },
+//   },
+//   {
+//     id: 5,
+//     type: "provider",
+//     provider: "Provider 1",
+//     source_inventory: null,
 
-    target_inventory: "Kho đông lạnh - Chi nhánh TP.HCM",
-    import_time: "08/06/2022 17:22",
-    status: {
-      name: "Đã nhập hàng",
-      value: "imported",
-    },
-  },
-];
+//     target_inventory: "Kho đông lạnh - Chi nhánh TP.HCM",
+//     import_time: "08/06/2022 17:22",
+//     status: {
+//       name: "Đã nhập hàng",
+//       value: "imported",
+//     },
+//   },
+// ];
 
 function InventoryHistoryList(props) {
   const [isCreateModalVisible, setCreateModalVisible] = useState(false);
   const [isDeleteDialogVisible, setDeleteDialogVisible] = useState(false);
   const [inventoryHistoryList, setInventoryHistoryList] = useState([]);
   const [selected, setSelected] = useState(null);
+  const [totalCount, setTotalCount] = useState(0);
+  const [searchParams, setSearchParams] = useState({});
 
   const fetchInventoryHistoryList = async () => {
-    // const inventoryHistories = (await getInventoryHistories()).data;
-    // setInventoryHistoryList(inventoryHistories);
-    setInventoryHistoryList(testInventoryHistories);
+    const inventoryHistories = (await getInventoryHistories()).data;
+    setInventoryHistoryList(inventoryHistories);
+  };
+
+  const fetchCurPage = async (page, perPage, searchParams = {}) => {
+    const filters = parseSearchParams(searchParams);
+    const res = (
+      await getInventoryHistories({
+        page,
+        perPage,
+        filters: JSON.stringify(filters),
+      })
+    ).data;
+
+    if (res) {
+      setInventoryHistoryList(
+        res.data.map((history) => ({
+          ...history,
+          source_inventory: history.sourceInventory?.name,
+          target_inventory: history.targetInventory?.name,
+          import_time: formatDate(history.created_at, "DD/MM/YYYY hh:mm"),
+          status:
+            history.status === "temp"
+              ? {
+                  name: "Phiếu tạm",
+                  value: "temp",
+                }
+              : history.status === "done"
+              ? {
+                  name: "Đã hoàn tất",
+                  value: "done",
+                }
+              : {
+                  name: "Đã hủy",
+                  value: "canceled",
+                },
+        }))
+      );
+
+      setTotalCount(res.total);
+    }
   };
 
   const handleDeleteInventoryHistory = async (id) => {
@@ -302,15 +344,14 @@ function InventoryHistoryList(props) {
       </div>
 
       <div>
-        {inventoryHistoryList.length > 0 ? (
-          <CustomTable
-            rows={inventoryHistoryList}
-            cols={cols}
-            actionButtons={actionButtons}
-          />
-        ) : (
-          <Typography variant='h6'>Không có dữ liệu</Typography>
-        )}
+        <CustomTable
+          rows={inventoryHistoryList}
+          cols={cols}
+          actionButtons={actionButtons}
+          handleFetchRows={fetchCurPage}
+          totalCount={totalCount}
+          searchParams={searchParams}
+        />
       </div>
     </div>
   );

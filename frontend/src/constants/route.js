@@ -17,11 +17,13 @@ const routes = {
   CUSTOMER_HOME: "/",
   CUSTOMER_MENUS: "/menus",
   CUSTOMER_MENU_DETAIL: "/menus/:id",
+  CUSTOMER_PROFILE: "/profile/:id",
 
   CUSTOMER_RESERVATIONS: "/reservations",
   CART: "/cart",
   CHECKOUT: "/checkout",
   CUSTOMER_ORDER: "/orders",
   CUSTOMER_RESERVATION_DETAIL: "/reservations/:id",
+  CUSTOMER_ORDER_SUMMARY: "/orders/:id",
 };
 export default routes;

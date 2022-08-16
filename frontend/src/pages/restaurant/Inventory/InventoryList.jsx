@@ -4,9 +4,10 @@ import CustomTable from "../../../components/Table/CustomTable";
 import ConfirmDialog from "../../../components/Modal/ConfirmDialog";
 import InventoryCreate from "./InventoryCreate";
 import { getInventories } from "../../../apis/inventory";
+import { parseSearchParams } from "../../../utils/parseSearchParams";
 
 const cols = [
-  { id: "id", label: "STT", isSortable: true },
+  { id: "id", label: "ID", isSortable: true },
   { id: "name", label: "Tên kho", isSortable: true },
   { id: "branch", label: "Chi nhánh", isSortable: true },
 ];
@@ -16,6 +17,8 @@ function InventoryList(props) {
   const [isDeleteDialogVisible, setDeleteDialogVisible] = useState(false);
   const [inventoryList, setInventoryList] = useState([]);
   const [selected, setSelected] = useState(null);
+  const [totalCount, setTotalCount] = useState(0);
+  const [searchParams, setSearchParams] = useState({});
 
   const fetchInventoryList = async () => {
     const inventories = (await getInventories()).data;
@@ -25,6 +28,23 @@ function InventoryList(props) {
         branch: inventory.branch.name,
       }))
     );
+  };
+
+  const fetchCurPage = async (page, perPage, searchParams = {}) => {
+    const filters = parseSearchParams(searchParams);
+    const res = (
+      await getInventories({ page, perPage, filters: JSON.stringify(filters) })
+    ).data;
+
+    if (res) {
+      setInventoryList(
+        res.data.map((inventory) => ({
+          ...inventory,
+          branch: inventory.branch.name,
+        }))
+      );
+      setTotalCount(res.total);
+    }
   };
 
   const handleDeleteInventory = async (id) => {
@@ -148,15 +168,14 @@ function InventoryList(props) {
       </div>
 
       <div>
-        {inventoryList.length > 0 ? (
-          <CustomTable
-            rows={inventoryList}
-            cols={cols}
-            actionButtons={actionButtons}
-          />
-        ) : (
-          <Typography variant='h6'>Không có dữ liệu</Typography>
-        )}
+        <CustomTable
+          rows={inventoryList}
+          cols={cols}
+          actionButtons={actionButtons}
+          handleFetchRows={fetchCurPage}
+          totalCount={totalCount}
+          searchParams={searchParams}
+        />
       </div>
     </div>
   );

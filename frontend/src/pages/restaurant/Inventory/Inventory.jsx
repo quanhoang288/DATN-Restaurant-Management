@@ -17,7 +17,7 @@ function Inventory(props) {
           <Typography variant='h5'>Cơ sở vật chất</Typography>
         </div> */}
         <CustomTabs
-          labels={["Thông tin kho", "Lịch sử nhập kho"]}
+          labels={["Thông tin kho", "Lịch sử nhập/xuất kho"]}
           activeTab={activeTab}
           onChangeActiveTab={(val) => setActiveTab(val)}
         >

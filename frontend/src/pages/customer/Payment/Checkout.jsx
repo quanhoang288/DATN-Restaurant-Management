@@ -5,7 +5,9 @@ import {
   Card,
   CardContent,
   CardHeader,
+  Checkbox,
   Divider,
+  FormControlLabel,
   FormGroup,
   FormLabel,
   IconButton,
@@ -17,79 +19,302 @@ import {
 import RemoveIcon from "@material-ui/icons/Remove";
 import AddIcon from "@material-ui/icons/Add";
 import CustomerMain from "../../../containers/CustomerMain/CustomerMain";
-import { useLocation } from "react-router-dom/cjs/react-router-dom.min";
+import {
+  useHistory,
+  useLocation,
+} from "react-router-dom/cjs/react-router-dom.min";
 import { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { resetCart, updateCart } from "../../../redux/actions/cartActions";
+import {
+  createDeliveryInfo,
+  getDeliveryInfos,
+} from "../../../apis/delivery-info";
+import Modal from "../../../components/Modal/Modal";
+import { createOrder } from "../../../apis/order";
+import { createNotification } from "../../../apis/notification";
+import { useWebsocket } from "../../../utils/websocket.context";
+import { ASSET_BASE_URL } from "../../../configs";
+import noImageAvailable from "../../../assets/no-image-available.jpg";
+import { getBranches } from "../../../apis/branch";
 
 const defaultOrderData = {
-  orderItems: [],
-  customerId: null,
-  customerPhoneNumber: null,
-  customerAddress: null,
+  customer_id: null,
+  delivery_info_id: null,
   note: "",
   discounts: [],
+  branch_id: null,
 };
+
+function DeliveryInfoCreate(props) {
+  const { userId, deliveryInfoId, isModalVisible, handleCloseModal } = props;
+  const [deliveryInfoData, setDeliveryInfoData] = useState({});
+
+  const handleSaveDeliveryInfo = useCallback(async () => {
+    if (userId) {
+      await createDeliveryInfo({ ...deliveryInfoData, customer_id: userId });
+    }
+    handleCloseModal(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, deliveryInfoData]);
+
+  return (
+    <Modal
+      title='Thêm địa chỉ giao hàng'
+      isModalVisible={isModalVisible}
+      handleClose={handleCloseModal}
+    >
+      <div>
+        <TextField
+          fullWidth
+          label='Tên địa chỉ'
+          variant='outlined'
+          style={{ marginBottom: "1rem" }}
+          InputLabelProps={{
+            shrink: true,
+            style: {
+              fontSize: 20,
+            },
+          }}
+          value={deliveryInfoData.name}
+          onChange={(e) =>
+            setDeliveryInfoData({ ...deliveryInfoData, name: e.target.value })
+          }
+        />
+
+        <TextField
+          fullWidth
+          label='Địa chỉ'
+          variant='outlined'
+          style={{ marginBottom: "1rem" }}
+          InputLabelProps={{
+            shrink: true,
+            style: {
+              fontSize: 20,
+            },
+          }}
+          value={deliveryInfoData.delivery_address}
+          onChange={(e) =>
+            setDeliveryInfoData({
+              ...deliveryInfoData,
+              delivery_address: e.target.value,
+            })
+          }
+        />
+
+        <FormControlLabel
+          control={
+            <Checkbox
+              checked={deliveryInfoData.is_default}
+              onChange={(e, checked) =>
+                setDeliveryInfoData({
+                  ...deliveryInfoData,
+                  is_default: checked ? 1 : 0,
+                })
+              }
+            />
+          }
+          label='Đặt làm địa chỉ mặc định'
+        />
+      </div>
+
+      <div style={{ display: "flex", float: "right", marginTop: 2 }}>
+        <Button
+          variant='contained'
+          color='primary'
+          onClick={handleSaveDeliveryInfo}
+        >
+          Luu
+        </Button>
+        <Button variant='contained' onClick={handleCloseModal}>
+          Huy bo
+        </Button>
+      </div>
+    </Modal>
+  );
+}
 
 export default function Checkout(props) {
   const [orderData, setOrderData] = useState(defaultOrderData);
+  const [otherFee, setOtherFee] = useState(30000);
+  const [deliveryInfoOptions, setDeliveryInfoOptions] = useState([]);
+  const [isDeliveryInfoCreateVisible, setDeliveryInfoCreateVisible] =
+    useState(false);
+  const [branchOptions, setBranchOptions] = useState([]);
 
-  const location = useLocation();
+  const cartItems = useSelector((state) => state.cart.items);
+  const authUser = useSelector((state) => state.auth.user);
 
-  const handleUpdateItemQuantity = useCallback(
-    (itemId, quantity) => {
-      setOrderData({
-        ...orderData,
-        orderItems:
-          quantity === 0
-            ? orderData.orderItems.filter((i) => i.id !== itemId)
-            : orderData.orderItems.map((i) =>
-                i.id === itemId ? { ...i, quantity } : i
-              ),
-      });
+  const socket = useWebsocket();
+  const history = useHistory();
+  const dispatch = useDispatch();
+
+  const fetchBranchOptions = async () => {
+    const branches = (await getBranches()).data;
+    setBranchOptions(branches);
+  };
+
+  const fetchDeliveryInfoOptions = useCallback(async () => {
+    if (authUser) {
+      const options = (
+        await getDeliveryInfos({
+          filters: JSON.stringify({ customer_id: authUser.id }),
+        })
+      ).data;
+      setDeliveryInfoOptions(options);
+    }
+  }, [authUser]);
+
+  const handleUpdateDeliveryInfo = useCallback(
+    (deliveryInfoId) => {
+      setOrderData({ ...orderData, delivery_info_id: deliveryInfoId });
     },
     [orderData]
   );
 
-  const handleCreateOrder = useCallback(() => {
-    //TODO: api call
+  const handleCreateOrder = useCallback(async () => {
     console.log("order data: ", orderData);
-  }, [orderData]);
+    const postData = {
+      ...orderData,
+      type: "delivery",
+      details: cartItems.map((item) => ({
+        id: item.id,
+        quantity: item.quantity,
+      })),
+      created_by_customer: 1,
+      customer_id: authUser?.id,
+    };
+    const order = (await createOrder(postData)).data;
+
+    // create and send notification to server
+    // const notification = (
+    //   await createNotification({
+    //     order_id: order.id,
+    //     type: "order_created",
+    //   })
+    // ).data;
+
+    // socket?.emit("NEW_NOTIFICATION", notification);
+
+    history.push(`/orders/${order.id}`, {
+      order: { ...orderData, items: cartItems },
+    });
+    dispatch(resetCart());
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orderData, cartItems, socket, authUser]);
 
   useEffect(() => {
-    if (location.state?.orderItems) {
-      setOrderData({ ...orderData, orderItems: location.state.orderItems });
+    if (!authUser) {
+      history.push("/");
     }
-  }, [location, orderData]);
+    fetchDeliveryInfoOptions();
+    fetchBranchOptions();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authUser]);
+
+  useEffect(() => {
+    if (deliveryInfoOptions.length) {
+      const defaultInfo = deliveryInfoOptions.find((opt) => opt.is_default);
+      if (defaultInfo) {
+        handleUpdateDeliveryInfo(defaultInfo.id);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [deliveryInfoOptions]);
 
   return (
     <>
+      <DeliveryInfoCreate
+        isModalVisible={isDeliveryInfoCreateVisible}
+        handleCloseModal={(success = false) => {
+          setDeliveryInfoCreateVisible(false);
+          if (success) {
+            fetchDeliveryInfoOptions();
+          }
+        }}
+        userId={authUser?.id}
+      />
       <CustomerMain includeFooter={false}>
         <div style={{ padding: "1rem 30rem", background: "#f5f5f5" }}>
           <Card style={{ marginBottom: "2rem", marginTop: "1rem" }}>
             <CardHeader title='Giao đến' />
             <CardContent>
-              <FormGroup style={{ marginBottom: "2rem" }}>
-                <FormLabel>Địa chỉ</FormLabel>
+              <TextField
+                label='Chi nhánh nhận đơn'
+                select
+                SelectProps={{ native: true }}
+                InputLabelProps={{
+                  shrink: true,
+                  style: {
+                    fontSize: 20,
+                  },
+                }}
+                fullWidth
+                style={{ marginBottom: "1rem" }}
+                value={orderData.branch_id || null}
+                onChange={(e) =>
+                  setOrderData({
+                    ...orderData,
+                    branch_id: Number.parseInt(e.target.value) || null,
+                  })
+                }
+              >
+                <option value=''>Chọn chi nhánh</option>
+                {branchOptions.map((opt) => (
+                  <option
+                    value={opt.id}
+                  >{`${opt.name} - ${opt.address}`}</option>
+                ))}
+              </TextField>
+              <div style={{ display: "flex", alignItems: "flex-end" }}>
                 <TextField
+                  label='Địa chỉ'
+                  select
+                  SelectProps={{ native: true }}
+                  InputLabelProps={{
+                    shrink: true,
+                    style: {
+                      fontSize: 20,
+                    },
+                  }}
                   fullWidth
-                  variant='outlined'
-                  style={{ marginTop: 10 }}
-                />
-              </FormGroup>
-              <FormGroup>
-                <FormLabel>Ghi chú cho tài xế</FormLabel>
-                <TextField
-                  fullWidth
-                  variant='outlined'
-                  style={{ marginTop: 10 }}
-                />
-              </FormGroup>
+                >
+                  {deliveryInfoOptions.map((opt) => (
+                    <option value={opt.id}>{opt.delivery_address}</option>
+                  ))}
+                </TextField>
+                <IconButton
+                  style={{ marginLeft: "0.5rem" }}
+                  onClick={() => setDeliveryInfoCreateVisible(true)}
+                >
+                  <AddIcon />
+                </IconButton>
+              </div>
+
+              <TextField
+                fullWidth
+                label='Ghi chú cho tài xế'
+                variant='outlined'
+                style={{ marginTop: "2rem" }}
+                InputLabelProps={{
+                  shrink: true,
+                  style: {
+                    fontSize: 20,
+                  },
+                }}
+                value={orderData.note}
+                onChange={(e) =>
+                  setOrderData({ ...orderData, note: e.target.value })
+                }
+              />
             </CardContent>
           </Card>
           <Card style={{ marginBottom: "2rem" }}>
             <CardHeader title='Thông tin đơn hàng' />
             <CardContent>
               <List style={{ minWidth: 400 }}>
-                {orderData.orderItems.map((item) => (
+                {cartItems.map((item) => (
                   <>
                     <ListItem alignItems='center'>
                       <div
@@ -101,8 +326,8 @@ export default function Checkout(props) {
                       >
                         <IconButton
                           size='medium'
-                          onChange={() =>
-                            handleUpdateItemQuantity(item.id, item.quantity - 1)
+                          onClick={() =>
+                            dispatch(updateCart(item.id, item.quantity - 1))
                           }
                         >
                           <RemoveIcon />
@@ -110,7 +335,12 @@ export default function Checkout(props) {
                         <Typography style={{ margin: "0 4px" }}>
                           {item.quantity}
                         </Typography>
-                        <IconButton size='medium'>
+                        <IconButton
+                          size='medium'
+                          onClick={() =>
+                            dispatch(updateCart(item.id, item.quantity + 1))
+                          }
+                        >
                           <AddIcon />
                         </IconButton>
                       </div>
@@ -129,7 +359,11 @@ export default function Checkout(props) {
                           }}
                         >
                           <img
-                            src='https://d1sag4ddilekf6.azureedge.net/compressed/items/VNITE20220620072008363273/photo/menueditor_item_c1cc9114f56b46308d9d553166e4b3bc_1655892956270133788.jpg'
+                            src={
+                              item.image
+                                ? `${ASSET_BASE_URL}/images/${item.image}`
+                                : noImageAvailable
+                            }
                             alt='Cart item'
                             width={60}
                             height={60}
@@ -140,7 +374,9 @@ export default function Checkout(props) {
                           </Typography>
                         </div>
                         <div>
-                          <Typography>{item.sale_price}</Typography>
+                          <Typography>
+                            {item.delivery_sale_price || item.sale_price}
+                          </Typography>
                         </div>
                       </div>
                     </ListItem>
@@ -158,7 +394,7 @@ export default function Checkout(props) {
                 >
                   <Typography>Tổng tạm tính</Typography>
                   <Typography style={{ fontWeight: 500 }}>
-                    {orderData.orderItems.reduce(
+                    {cartItems.reduce(
                       (prevTotal, item) =>
                         prevTotal + item.sale_price * item.quantity,
                       0
@@ -169,7 +405,9 @@ export default function Checkout(props) {
                   style={{ display: "flex", justifyContent: "space-between" }}
                 >
                   <Typography>Phí áp dụng</Typography>
-                  <Typography style={{ fontWeight: 500 }}>30000</Typography>
+                  <Typography style={{ fontWeight: 500 }}>
+                    {otherFee}
+                  </Typography>
                 </div>
               </div>
             </CardContent>
@@ -230,7 +468,11 @@ export default function Checkout(props) {
           <div>
             <Typography style={{ fontSize: 20 }}>Tổng cộng</Typography>
             <Typography style={{ fontSize: 20, fontWeight: 500 }}>
-              170.000
+              {cartItems.reduce(
+                (prevTotal, item) =>
+                  prevTotal + item.sale_price * item.quantity,
+                0
+              ) + otherFee}
             </Typography>
           </div>
 

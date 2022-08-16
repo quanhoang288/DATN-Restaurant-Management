@@ -11,7 +11,9 @@ import React, { useState } from "react";
 import { useEffect } from "react";
 import { useHistory } from "react-router-dom/cjs/react-router-dom.min";
 import { getMenus } from "../../../apis/menu";
+import { ASSET_BASE_URL } from "../../../configs";
 import CustomerMain from "../../../containers/CustomerMain/CustomerMain";
+import noImageAvailable from "../../../assets/no-image-available.jpg";
 
 function Menu(props) {
   const { menu } = props;
@@ -21,17 +23,20 @@ function Menu(props) {
       <CardActionArea onClick={() => history.push(`/menus/${menu.id}`)}>
         <CardMedia
           component='img'
-          alt='Contemplative Reptile'
+          alt='Menu thumbnail'
           height='140'
-          image='https://cdn4.vectorstock.com/i/1000x1000/71/83/sign-board-discount-vector-1947183.jpg'
-          title='Discount thumbnail'
+          image={
+            menu.image
+              ? `${ASSET_BASE_URL}/images/${menu.image}`
+              : noImageAvailable
+          }
         />
         <CardContent>
           <Typography gutterBottom variant='h5' component='h2'>
             {menu.name}
           </Typography>
           <Typography variant='body2' color='textSecondary' component='p'>
-            {menu.description || "Description"}
+            {menu.description || ""}
           </Typography>
         </CardContent>
       </CardActionArea>
@@ -43,7 +48,9 @@ function MenuList(props) {
   const [menuList, setMenuList] = useState([]);
 
   const fetchMenuList = async () => {
-    setMenuList((await getMenus()).data);
+    setMenuList(
+      (await getMenus({ filters: JSON.stringify({ is_active: 1 }) })).data
+    );
   };
 
   useEffect(() => {

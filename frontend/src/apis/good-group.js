@@ -5,6 +5,6 @@ const getGoodGroups = (params = {}) =>
     params,
   });
 
-const createGood = (data) => api.post("good-groups", data);
+const createGoodGroup = (data) => api.post("good-groups", data);
 
-export { createGood, getGoodGroups };
+export { createGoodGroup, getGoodGroups };

@@ -4,6 +4,7 @@ import { getKitchens, deleteKitchen } from "../../../apis/kitchen";
 import CustomTable from "../../../components/Table/CustomTable";
 import KitchenCreate from "./KitchenCreate";
 import ConfirmDialog from "../../../components/Modal/ConfirmDialog";
+import { getBranches } from "../../../apis/branch";
 
 const cols = [
   { id: "id", label: "STT", isSortable: true },
@@ -18,18 +19,8 @@ function KitchenList(props) {
   const [kitchenList, setKitchenList] = useState([]);
   const [totalCount, setTotalCount] = useState(0);
   const [selected, setSelected] = useState(null);
-
-  // const fetchKitchenList = async () => {
-  //   const res = await getKitchens();
-
-  //   setKitchenList(
-  //     res.data.map((kitchen) => ({
-  //       ...kitchen,
-  //       type: kitchen.type === "food" ? "Bếp" : "Quầy pha chế",
-  //       branch: kitchen.branch.name,
-  //     }))
-  //   );
-  // };
+  const [searchParams, setSearchParams] = useState({});
+  const [branchOptions, setBranchOptions] = useState([]);
 
   const fetchCurPage = async (page, perPage) => {
     const res = (await getKitchens({ page, perPage })).data;
@@ -41,6 +32,11 @@ function KitchenList(props) {
       }))
     );
     setTotalCount(res.total);
+  };
+
+  const fetchBranchOptions = async () => {
+    const options = (await getBranches()).data;
+    setBranchOptions(options);
   };
 
   const handleDeleteKitchen = async (id) => {
@@ -70,6 +66,10 @@ function KitchenList(props) {
       },
     },
   ];
+
+  useEffect(() => {
+    fetchBranchOptions();
+  }, []);
 
   return (
     <div>
@@ -125,10 +125,10 @@ function KitchenList(props) {
             }}
             style={{ marginRight: 20 }}
           >
-            <option>Tất cả</option>
-            <option value='pending'>Chờ xác nhận</option>
-            <option value='confirmed'>Đã xác nhận (Chờ nhận bàn)</option>
-            <option value='serving'>Đã nhận bàn</option>
+            <option value=''>Tất cả</option>
+            {branchOptions.map((opt) => (
+              <option value={opt.id}>{opt.name}</option>
+            ))}
           </TextField>
           <TextField
             label='Loại khu vực'
@@ -142,11 +142,14 @@ function KitchenList(props) {
                 fontSize: 20,
               },
             }}
+            value={searchParams.type}
+            onChange={(e) =>
+              setSearchParams({ ...searchParams, type: e.target.value })
+            }
           >
-            <option>Tất cả</option>
-            <option value='pending'>Chờ xác nhận</option>
-            <option value='confirmed'>Đã xác nhận (Chờ nhận bàn)</option>
-            <option value='serving'>Đã nhận bàn</option>
+            <option value=''>Tất cả</option>
+            <option value='food'>Đồ ăn</option>
+            <option value='beverage'>Đồ uống</option>
           </TextField>
         </div>
         <div>
@@ -169,17 +172,14 @@ function KitchenList(props) {
       </div>
 
       <div>
-        {kitchenList.length > 0 ? (
-          <CustomTable
-            rows={kitchenList}
-            cols={cols}
-            totalCount={totalCount}
-            handleFetchRows={fetchCurPage}
-            actionButtons={actionButtons}
-          />
-        ) : (
-          <Typography variant='h6'>Không có dữ liệu</Typography>
-        )}
+        <CustomTable
+          rows={kitchenList}
+          cols={cols}
+          totalCount={totalCount}
+          handleFetchRows={fetchCurPage}
+          searchParams={searchParams}
+          actionButtons={actionButtons}
+        />
       </div>
     </div>
   );

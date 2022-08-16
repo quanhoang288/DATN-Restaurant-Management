@@ -18,6 +18,17 @@ import {
   IconButton,
   withStyles,
   Tooltip,
+  FormControl,
+  FormLabel,
+  RadioGroup,
+  FormControlLabel,
+  Radio,
+  TableContainer,
+  TableHead,
+  TableBody,
+  TableRow,
+  TableCell,
+  Table,
 } from "@material-ui/core";
 import ClearIcon from "@material-ui/icons/Clear";
 import CheckIcon from "@material-ui/icons/Check";
@@ -30,6 +41,8 @@ import MoreVertIcon from "@material-ui/icons/MoreVert";
 import Main from "../../../containers/Main/Main";
 import ConfirmDialog from "../../../components/Modal/ConfirmDialog";
 import {
+  bulkUpdateKitchenItems,
+  getKitchenItems,
   getOrder,
   getOrders,
   updateOrder,
@@ -38,6 +51,7 @@ import {
 import "./KitchenDisplay.css";
 import Modal from "../../../components/Modal/Modal";
 import { formatDate } from "../../../utils/date";
+import { updateGood } from "../../../apis/good";
 
 const GreenTextTypography = withStyles({
   root: {
@@ -47,7 +61,6 @@ const GreenTextTypography = withStyles({
 
 function OrderItem(props) {
   const { order, handleViewDetail } = props;
-  console.log(order);
   return (
     <Card
       className='order__item__card'
@@ -115,8 +128,48 @@ function FinishQuantityModal(props) {
   );
 }
 
+function RejectReasonModal(props) {
+  const { isModalVisible, handleCloseModal, handleRejectOrder } = props;
+  const [reason, setReason] = useState("");
+
+  return (
+    <Modal
+      title='Lí do từ chối'
+      isModalVisible={isModalVisible}
+      handleClose={handleCloseModal}
+    >
+      <TextField
+        label='Lí do'
+        fullWidth
+        InputLabelProps={{ shrink: true, style: { fontSize: 18 } }}
+        onChange={(e) => setReason(e.target.value)}
+      />
+      <div style={{ display: "flex", float: "right", marginTop: 10 }}>
+        <Button
+          variant='contained'
+          color='primary'
+          onClick={() => {
+            handleCloseModal();
+            handleRejectOrder(reason);
+          }}
+        >
+          Lưu
+        </Button>
+        <Button variant='contained' onClick={handleCloseModal}>
+          Đóng
+        </Button>
+      </div>
+    </Modal>
+  );
+}
+
 function OrderDetail(props) {
-  const { orderId, handleCloseDetailView, handleUpdateOrderStatus } = props;
+  const {
+    orderId,
+    handleCloseDetailView,
+    handleUpdateOrderStatus,
+    handleRejectOrder,
+  } = props;
   const [orderDetail, setOrderDetail] = useState({});
   const [isNotiDialogVisible, setNotiDialogVisible] = useState(false);
   const [orderItemIdToReject, setOrderItemIdToReject] = useState(null);
@@ -124,21 +177,27 @@ function OrderDetail(props) {
     useState(false);
   const [finishedQuantity, setFinishedQuantity] = useState(0);
   const [orderItemIdToFinish, setOrderItemIdToFinish] = useState(null);
+  const [isRejectModalVisible, setRejectModalVisible] = useState(false);
 
   const fetchOrderDetail = async (id) => {
     const res = await getOrder(id);
     setOrderDetail(res.data);
   };
 
-  const updateStatus = (orderId, curStatus) => {
-    const newStatus =
-      curStatus === "pending"
-        ? "in_progress"
-        : curStatus === "in_progress"
-        ? "done"
-        : "pending";
-    handleUpdateOrderStatus(orderId, newStatus);
-  };
+  const updateStatus = useCallback(
+    async (orderId, curStatus) => {
+      const newStatus =
+        curStatus === "pending"
+          ? "in_progress"
+          : curStatus === "in_progress"
+          ? "ready_to_serve"
+          : "pending";
+      await handleUpdateOrderStatus(orderId, newStatus);
+      setOrderDetail({ ...orderDetail, prepare_status: newStatus });
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [orderDetail]
+  );
 
   const handleUpdateOrderItemStatus = useCallback(
     async (itemId, newStatus, finishedQuantity = null) => {
@@ -162,9 +221,12 @@ function OrderDetail(props) {
 
   const handleRejectOrderItem = useCallback(
     async (itemId, rejectForAllOrders = false) => {
-      await updateOrderItem(!rejectForAllOrders ? orderId : null, itemId, {
-        status: "rejected",
-      });
+      if (!rejectForAllOrders) {
+        await updateOrderItem(orderId, itemId, { status: "rejected" });
+      } else {
+        await bulkUpdateKitchenItems(itemId, { status: "rejected" });
+      }
+
       setOrderDetail({
         ...orderDetail,
         goods: (orderDetail.goods || []).map((item) =>
@@ -187,6 +249,10 @@ function OrderDetail(props) {
     }
   }, [orderId]);
 
+  useEffect(() => {
+    console.log("order detail: ", orderDetail);
+  }, [orderDetail]);
+
   return (
     <>
       <ConfirmDialog
@@ -206,12 +272,34 @@ function OrderDetail(props) {
         handleChangeFinishedQuantity={(newQuantity) =>
           setFinishedQuantity(newQuantity)
         }
-        handleFinishOrderItem={() =>
-          updateOrderItem(orderId, orderItemIdToFinish, {
+        handleFinishOrderItem={async () => {
+          await updateOrderItem(orderId, orderItemIdToFinish, {
             status: "ready_to_serve",
             finished_quantity: finishedQuantity,
-          })
-        }
+          });
+          setFinishedQuantity(0);
+          setFinishQuantityModalVisible(false);
+          setOrderDetail({
+            ...orderDetail,
+            goods: (orderDetail.goods || []).map((item) =>
+              item.id === orderItemIdToFinish
+                ? {
+                    ...item,
+                    OrderDetail: {
+                      ...item.OrderDetail,
+                      status: "ready_to_serve",
+                      finished_quantity: finishedQuantity,
+                    },
+                  }
+                : item
+            ),
+          });
+        }}
+      />
+      <RejectReasonModal
+        isModalVisible={isRejectModalVisible}
+        handleCloseModal={() => setRejectModalVisible(false)}
+        handleRejectOrder={(reason) => handleRejectOrder(orderId, reason)}
       />
       <Card style={{ height: "100%", marginBottom: "1.5rem" }}>
         <CardHeader
@@ -262,7 +350,7 @@ function OrderDetail(props) {
                         ? "line__through"
                         : ""
                     }
-                    secondary={item.OrderDetail.quantity}
+                    secondary={`${item.OrderDetail.finished_quantity}/${item.OrderDetail.quantity}`}
                   />
                   {!["ready_to_serve", "done"].includes(
                     item.OrderDetail.status
@@ -340,7 +428,15 @@ function OrderDetail(props) {
               marginTop: "3rem",
             }}
           >
-            <Button color='secondary'>Ngừng nhận đơn</Button>
+            {orderDetail.prepare_status === "pending" && (
+              <Button
+                color='secondary'
+                onClick={() => setRejectModalVisible(true)}
+              >
+                Từ chối
+              </Button>
+            )}
+
             <Button
               color='primary'
               onClick={() => updateStatus(orderId, orderDetail.prepare_status)}
@@ -394,10 +490,24 @@ function KitchenDisplay(props) {
   const [activeTab, setActiveTab] = useState(0);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [orders, setOrders] = useState([]);
+  const [kitchenItems, setKitchenItems] = useState([]);
+  const [itemStatusFilter, setStatusFilter] = useState("pending");
 
   const fetchOrders = async () => {
-    const res = await getOrders();
+    const res = await getOrders({
+      filters: JSON.stringify({
+        status: { notIn: ["pending", "rejected", "canceled"] },
+        prepare_status: { in: ["pending", "in_progress"] },
+      }),
+    });
     setOrders(res.data);
+  };
+
+  const fetchKitchenItems = async (status = "pending") => {
+    const items = (
+      await getKitchenItems({ filters: JSON.stringify({ status }) })
+    ).data;
+    setKitchenItems(items);
   };
 
   const handleUpdateOrderStatus = useCallback(
@@ -412,22 +522,50 @@ function KitchenDisplay(props) {
     [orders]
   );
 
-  useEffect(() => {
-    fetchOrders();
-  }, []);
+  const handleRejectOrder = useCallback(
+    async (orderId, reason) => {
+      await updateOrder(orderId, {
+        prepare_status: "rejected",
+        prepare_reject_reason: reason,
+      });
+      setOrders(orders.filter((order) => order.id !== orderId));
+      setSelectedOrder(null);
+    },
+    [orders]
+  );
+
+  const handleBulkUpdateItems = useCallback(
+    async (itemId, status) => {
+      await bulkUpdateKitchenItems(itemId, status);
+      setKitchenItems(kitchenItems.filter((item) => item.id !== itemId));
+    },
+    [kitchenItems]
+  );
+
+  const handleAcceptNewOrder = useCallback(
+    async (itemId) => {
+      await updateGood(itemId, { is_available: 1 });
+      setKitchenItems(kitchenItems.filter((item) => item.id !== itemId));
+    },
+    [kitchenItems]
+  );
 
   useEffect(() => {
-    console.log("selected order: ", selectedOrder);
-  }, [selectedOrder]);
+    if (activeTab === 1) {
+      fetchKitchenItems();
+    } else {
+      fetchOrders();
+    }
+  }, [activeTab]);
 
   useEffect(() => {
-    console.log("orders: ", orders);
-  }, [orders]);
+    fetchKitchenItems(itemStatusFilter);
+  }, [itemStatusFilter]);
 
   return (
     <Main>
       <CustomTabs
-        labels={["Theo bàn", "Theo món"]}
+        labels={["Theo đơn", "Theo món"]}
         activeTab={activeTab}
         onChangeActiveTab={(val) => setActiveTab(val)}
       >
@@ -460,6 +598,7 @@ function KitchenDisplay(props) {
                   orderId={selectedOrder}
                   handleCloseDetailView={() => setSelectedOrder(null)}
                   handleUpdateOrderStatus={handleUpdateOrderStatus}
+                  handleRejectOrder={handleRejectOrder}
                 />
               </Grid>
             </Grid>
@@ -489,54 +628,102 @@ function KitchenDisplay(props) {
           )}
         </TabPanel>
         <TabPanel value={activeTab} index={1}>
-          <List style={{ flex: 1 }}>
-            <ListItem style={{ justifyContent: "space-between" }}>
-              <div
-                style={{
-                  display: "flex",
-                  flex: 1,
-                  minWidth: 500,
-                  alignItems: "center",
-                }}
-              >
-                <Typography
-                  style={{ marginRight: 100, fontWeight: "bold", fontSize: 18 }}
-                >
-                  Bo xao xa ot
-                </Typography>
-                <Typography style={{ fontSize: 18 }}>1</Typography>
-              </div>
-              <div style={{ display: "flex" }}>
-                <Button variant='contained'>Bao het mon</Button>
-                <Button variant='contained' color='primary'>
-                  Doi ung
-                </Button>
-              </div>
-            </ListItem>
-            <ListItem style={{ justifyContent: "space-between" }}>
-              <div
-                style={{
-                  display: "flex",
-                  flex: 1,
-                  minWidth: 500,
-                  alignItems: "center",
-                }}
-              >
-                <Typography
-                  style={{ marginRight: 100, fontWeight: "bold", fontSize: 18 }}
-                >
-                  Bo xao xa ot
-                </Typography>
-                <Typography style={{ fontSize: 18 }}>1</Typography>
-              </div>
-              <div style={{ display: "flex" }}>
-                <Button variant='contained'>Bao het mon</Button>
-                <Button variant='contained' color='primary'>
-                  Doi ung
-                </Button>
-              </div>
-            </ListItem>
-          </List>
+          <FormControl margin='normal'>
+            <FormLabel id='demo-radio-buttons-group-label'>
+              Trạng thái
+            </FormLabel>
+            <RadioGroup
+              row
+              aria-labelledby='demo-radio-buttons-group-label'
+              defaultValue='dine-in'
+              name='radio-buttons-group'
+              value={itemStatusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+            >
+              <FormControlLabel
+                value='pending'
+                control={<Radio />}
+                label='Chờ chế biến'
+              />
+              <FormControlLabel
+                value='in_progress'
+                control={<Radio />}
+                label='Đang chế biến'
+              />
+              <FormControlLabel
+                value='rejected'
+                control={<Radio />}
+                label='Đã báo hết'
+              />
+            </RadioGroup>
+          </FormControl>
+          <TableContainer>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>ID</TableCell>
+                  <TableCell colSpan={3}>Tên món</TableCell>
+                  <TableCell>Số lượng</TableCell>
+                  <TableCell align='center'>Hành động</TableCell>
+                </TableRow>
+              </TableHead>
+
+              <TableBody>
+                {kitchenItems.map((item) => (
+                  <TableRow>
+                    <TableCell>{item.id}</TableCell>
+                    <TableCell colSpan={3}>{item.name}</TableCell>
+                    <TableCell align='left'>{item.quantity}</TableCell>
+                    <TableCell align='center'>
+                      {itemStatusFilter === "pending" ? (
+                        <div
+                          style={{ display: "flex", justifyContent: "center" }}
+                        >
+                          <Button
+                            variant='contained'
+                            color='primary'
+                            style={{ marginRight: "1rem" }}
+                            onClick={() =>
+                              handleBulkUpdateItems(item.id, "in_progress")
+                            }
+                          >
+                            Bắt đầu chế biến
+                          </Button>
+                          <Button
+                            variant='contained'
+                            color='secondary'
+                            onClick={() =>
+                              handleBulkUpdateItems(item.id, "rejected")
+                            }
+                          >
+                            Báo hết
+                          </Button>
+                        </div>
+                      ) : itemStatusFilter === "in_progress" ? (
+                        <Button
+                          variant='contained'
+                          color='primary'
+                          onClick={() =>
+                            handleBulkUpdateItems(item.id, "ready_to_serve")
+                          }
+                        >
+                          Hoàn thành
+                        </Button>
+                      ) : (
+                        <Button
+                          variant='contained'
+                          color='primary'
+                          onClick={() => handleAcceptNewOrder(item.id)}
+                        >
+                          Tiếp tục nhận món
+                        </Button>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
 
           <div></div>
         </TabPanel>

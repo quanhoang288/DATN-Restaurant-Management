@@ -33,7 +33,7 @@ import { useSelector } from "react-redux";
 const categories = [
   { name: "Tổng quan", url: routes.DASHBOARD, Icon: EqualizerIcon },
   { name: "Chi nhánh", url: routes.BRANCH, Icon: LocationOnIcon },
-  { name: "Sổ quỹ", url: routes.FINANCE, Icon: AttachMoneyIcon },
+  // { name: "Sổ quỹ", url: routes.FINANCE, Icon: AttachMoneyIcon },
   {
     name: "Hàng hóa",
     url: routes.GOODS,
@@ -77,7 +77,9 @@ function Sidebar({ isDrawerOpen, onCloseDrawer }) {
         }
         case "server": {
           setItems(
-            categories.filter((cat) => [routes.ORDERS].includes(cat.url))
+            categories.filter((cat) =>
+              [routes.ORDERS, routes.RESERVATIONS].includes(cat.url)
+            )
           );
           break;
         }

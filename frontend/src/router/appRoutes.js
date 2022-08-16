@@ -20,6 +20,8 @@ import AdminAuth from "../pages/restaurant/AdminAuth/AdminAuth";
 import ReservationDetail from "../pages/customer/Reservation/ReservationDetail";
 import BranchList from "../pages/restaurant/Branch/BranchList";
 import Inventory from "../pages/restaurant/Inventory/Inventory";
+import Profile from "../pages/customer/Profile/Profile";
+import OrderSummary from "../pages/customer/Payment/OrderSummary";
 
 const appRoutes = [
   {
@@ -147,6 +149,18 @@ const appRoutes = [
   {
     path: routes.CUSTOMER_ORDER,
     component: Order,
+    exact: true,
+    isPrivate: false,
+  },
+  {
+    path: routes.CUSTOMER_ORDER_SUMMARY,
+    component: OrderSummary,
+    exact: true,
+    isPrivate: false,
+  },
+  {
+    path: routes.CUSTOMER_PROFILE,
+    component: Profile,
     exact: true,
     isPrivate: false,
   },

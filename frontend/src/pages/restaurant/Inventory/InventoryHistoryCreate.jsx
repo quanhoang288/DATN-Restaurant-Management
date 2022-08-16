@@ -24,6 +24,7 @@ import {
   createInventoryHistory,
   updateInventoryHistory,
 } from "../../../apis/inventory-history";
+import { getKitchen, getKitchens } from "../../../apis/kitchen";
 
 const defaultData = {
   import_time: formatDate(new Date(), "YYYY-MM-DDThh:mm"),
@@ -35,6 +36,7 @@ const defaultData = {
   items: [],
   note: "",
   discount: 0,
+  kitchen_id: null,
 };
 
 function InventoryHistoryCreate({
@@ -46,6 +48,7 @@ function InventoryHistoryCreate({
   const [inventoryOptions, setInventoryOptions] = useState([]);
   const [goodOptions, setGoodOptions] = useState([]);
   const [unitOptions, setUnitOptions] = useState([]);
+  const [kitchenOptions, setKitchenOptions] = useState([]);
 
   const fetchInventoryHistoryData = async (inventoryHistoryId) => {};
 
@@ -72,6 +75,16 @@ function InventoryHistoryCreate({
   const fetchUnitOptions = async () => {
     const units = (await getUnits()).data;
     setUnitOptions(units);
+  };
+
+  const fetchKitchenOptions = async (branchId) => {
+    if (branchId) {
+      console.log(branchId);
+      const kitchens = (
+        await getKitchens({ filters: JSON.stringify({ branch_id: branchId }) })
+      ).data;
+      setKitchenOptions(kitchens);
+    }
   };
 
   const handleAddItem = useCallback(() => {
@@ -114,14 +127,14 @@ function InventoryHistoryCreate({
         pick(item, ["id", "unit_id", "unit_price", "quantity"])
       ),
     };
-    console.log(postData);
-    // if (inventoryHistoryId) {
-    //   await updateInventoryHistory(inventoryHistoryId, postData);
-    // } else {
-    //   await createInventoryHistory(postData);
-    // }
-    // setInventoryHistoryData(defaultData);
-    // handleCloseModal();
+    // console.log(postData);
+    if (inventoryHistoryId) {
+      await updateInventoryHistory(inventoryHistoryId, postData);
+    } else {
+      await createInventoryHistory(postData);
+    }
+    setInventoryHistoryData(defaultData);
+    handleCloseModal();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [inventoryHistoryId, inventoryHistoryData]);
 
@@ -134,19 +147,25 @@ function InventoryHistoryCreate({
     fetchUnitOptions();
   }, [inventoryHistoryId]);
 
+  // useEffect(() => {
+  //   if (inventoryOptions.length) {
+  //     setInventoryHistoryData({
+  //       ...inventoryHistoryData,
+  //       source_inventory_id:
+  //         inventoryHistoryData.type === "transfer"
+  //           ? inventoryOptions[0].id
+  //           : null,
+  //       target_inventory_id: inventoryOptions[0].id,
+  //     });
+  //   }
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [inventoryOptions]);
+
   useEffect(() => {
-    if (inventoryOptions.length) {
-      setInventoryHistoryData({
-        ...inventoryHistoryData,
-        source_inventory_id:
-          inventoryHistoryData.type === "transfer"
-            ? inventoryOptions[0].id
-            : null,
-        target_inventory_id: inventoryOptions[0].id,
-      });
+    if (inventoryHistoryData.source_inventory_id) {
+      fetchKitchenOptions(inventoryHistoryData.source_inventory_id);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [inventoryOptions]);
+  }, [inventoryHistoryData]);
 
   useEffect(() => {
     console.log(inventoryHistoryData);
@@ -156,7 +175,7 @@ function InventoryHistoryCreate({
     <Modal
       isModalVisible={isModalVisible}
       handleClose={handleCloseModal}
-      title='Thêm thông tin nhập kho'
+      title='Thêm thông tin nhập/xuất kho'
     >
       <div style={{ padding: "0 1rem" }}>
         <Grid container style={{ alignItem: "center" }}>
@@ -215,6 +234,8 @@ function InventoryHistoryCreate({
             >
               <option value='provider'>Nhập từ NCC</option>
               <option value='transfer'>Chuyển từ kho khác</option>
+              <option value='transfer-to-kitchen'>Xuất đến bếp</option>
+              <option value='discard'>Bỏ hàng hóa thừa</option>
             </TextField>
 
             <TextField
@@ -238,7 +259,7 @@ function InventoryHistoryCreate({
               }
             >
               <option value='temp'>Phiếu tạm</option>
-              <option value='imported'>Đã nhập hàng</option>
+              <option value='done'>Đã hoàn tất</option>
               <option value='canceled'>Đã hủy</option>
             </TextField>
           </Grid>
@@ -280,10 +301,12 @@ function InventoryHistoryCreate({
                 onChange={(e) =>
                   setInventoryHistoryData({
                     ...inventoryHistoryData,
-                    source_inventory_id: Number.parseInt(e.target.value),
+                    source_inventory_id:
+                      Number.parseInt(e.target.value) || null,
                   })
                 }
               >
+                <option value=''>Chọn kho</option>
                 {inventoryOptions.map((inventory) => (
                   <option
                     value={inventory.id}
@@ -292,32 +315,62 @@ function InventoryHistoryCreate({
               </TextField>
             )}
 
-            <TextField
-              label='Kho nhập'
-              fullWidth
-              margin='normal'
-              InputLabelProps={{
-                shrink: true,
-                style: {
-                  fontSize: 18,
-                },
-              }}
-              select
-              SelectProps={{ native: true }}
-              value={inventoryHistoryData.target_inventory_id}
-              onChange={(e) =>
-                setInventoryHistoryData({
-                  ...inventoryHistoryData,
-                  target_inventory_id: Number.parseInt(e.target.value),
-                })
-              }
-            >
-              {inventoryOptions.map((inventory) => (
-                <option
-                  value={inventory.id}
-                >{`${inventory.name} - ${inventory.branch.name}`}</option>
-              ))}
-            </TextField>
+            {inventoryHistoryData.type === "transfer-to-kitchen" ? (
+              <TextField
+                label='Bếp nhập nguyên liệu'
+                fullWidth
+                margin='normal'
+                InputLabelProps={{
+                  shrink: true,
+                  style: {
+                    fontSize: 18,
+                  },
+                }}
+                select
+                SelectProps={{ native: true }}
+                value={inventoryHistoryData.kitchen_id}
+                onChange={(e) =>
+                  setInventoryHistoryData({
+                    ...inventoryHistoryData,
+                    kitchen_id: Number.parseInt(e.target.value) || null,
+                  })
+                }
+              >
+                <option value=''>Chọn bếp</option>
+                {kitchenOptions.map((kitchen) => (
+                  <option value={kitchen.id}>{`${kitchen.name}`}</option>
+                ))}
+              </TextField>
+            ) : (
+              <TextField
+                label='Kho nhập'
+                fullWidth
+                margin='normal'
+                InputLabelProps={{
+                  shrink: true,
+                  style: {
+                    fontSize: 18,
+                  },
+                }}
+                select
+                SelectProps={{ native: true }}
+                value={inventoryHistoryData.target_inventory_id}
+                onChange={(e) =>
+                  setInventoryHistoryData({
+                    ...inventoryHistoryData,
+                    target_inventory_id:
+                      Number.parseInt(e.target.value) || null,
+                  })
+                }
+              >
+                <option value=''>Chọn kho</option>
+                {inventoryOptions.map((inventory) => (
+                  <option
+                    value={inventory.id}
+                  >{`${inventory.name} - ${inventory.branch.name}`}</option>
+                ))}
+              </TextField>
+            )}
 
             <TextField
               label='Ghi chú'

@@ -11,6 +11,7 @@ import CustomTable from "../../../components/Table/CustomTable";
 import Main from "../../../containers/Main/Main";
 import ReservationCreate from "./ReservationCreate";
 import { formatDate } from "../../../utils/date";
+import { parseSearchParams } from "../../../utils/parseSearchParams";
 
 const reservationCols = [
   {
@@ -54,10 +55,14 @@ const reservationCols = [
       },
       {
         value: "confirmed",
-        variant: "primary",
+        variant: "warning",
       },
       {
         value: "serving",
+        variant: "primary",
+      },
+      {
+        value: "done",
         variant: "success",
       },
     ],
@@ -69,6 +74,46 @@ function ReservationList(props) {
   const [isDeleteDialogVisible, setDeleteDialogVisible] = useState(false);
   const [reservationList, setReservationList] = useState([]);
   const [selected, setSelected] = useState(null);
+  const [totalCount, setTotalCount] = useState(0);
+  const [searchParams, setSearchParams] = useState({});
+
+  const fetchCurPage = async (page, perPage, searchParams = {}) => {
+    const filters = parseSearchParams(searchParams);
+    const res = (
+      await getReservations({ page, perPage, filters: JSON.stringify(filters) })
+    ).data;
+
+    setReservationList(
+      (res.data || []).map((reservation) => ({
+        ...reservation,
+        arrive_time: formatDate(
+          new Date(reservation.arrive_time),
+          "DD/MM/YYYY hh:mm"
+        ),
+        status:
+          reservation.status === "pending"
+            ? {
+                name: "Chờ xác nhận",
+                value: "pending",
+              }
+            : reservation.status === "confirmed"
+            ? {
+                name: "Đã xác nhận (Chờ nhận bàn)",
+                value: "confirmed",
+              }
+            : reservation.status === "serving"
+            ? {
+                name: "Đã nhận bàn",
+                value: "serving",
+              }
+            : {
+                name: "Đã trả bàn",
+                value: "done",
+              },
+      }))
+    );
+    setTotalCount(res.total);
+  };
 
   const handleDeleteReservation = async (id) => {
     if (id) {
@@ -98,38 +143,6 @@ function ReservationList(props) {
     },
   ];
 
-  const fetchReservationList = async () => {
-    const res = await getReservations();
-    setReservationList(
-      res.data.map((reservation) => ({
-        ...reservation,
-        arrive_time: formatDate(
-          new Date(reservation.arrive_time),
-          "DD/MM/YYYY hh:mm"
-        ),
-        status:
-          reservation.status === "pending"
-            ? {
-                name: "Chờ xác nhận",
-                value: "pending",
-              }
-            : reservation.status === "confirmed"
-            ? {
-                name: "Đã xác nhận (Chờ nhận bàn)",
-                value: "confirmed",
-              }
-            : {
-                name: "Đã nhận bàn",
-                value: "serving",
-              },
-      }))
-    );
-  };
-
-  useEffect(() => {
-    fetchReservationList();
-  }, []);
-
   return (
     <Main>
       <div>
@@ -145,7 +158,13 @@ function ReservationList(props) {
         <ReservationCreate
           reservationId={selected}
           isModalVisible={isCreateModalVisible}
-          handleCloseModal={() => setCreateModalVisible(false)}
+          handleCloseModal={(success = false) => {
+            setCreateModalVisible(false);
+            setSelected(null);
+            if (success) {
+              fetchCurPage(1, 5);
+            }
+          }}
         />
         <div className='list__header'>
           <Typography variant='h5'>Đặt lịch/Check-in</Typography>
@@ -159,18 +178,26 @@ function ReservationList(props) {
         >
           <div style={{ display: "flex", flex: 1 }}>
             <TextField
-              label='Mã/Tên khách hàng'
+              label='Mã đặt bàn'
               InputLabelProps={{
                 shrink: true,
                 style: {
                   fontSize: 20,
                 },
               }}
+              type='number'
               variant='standard'
               style={{ marginRight: 20 }}
+              value={searchParams.id}
+              onChange={(e) =>
+                setSearchParams({
+                  ...searchParams,
+                  id: Number.parseInt(e.target.value) || null,
+                })
+              }
             />
             <TextField
-              label='SĐT'
+              label='Khách hàng'
               InputLabelProps={{
                 shrink: true,
                 style: {
@@ -179,6 +206,13 @@ function ReservationList(props) {
               }}
               variant='standard'
               style={{ marginRight: 20 }}
+              value={searchParams.customer_name}
+              onChange={(e) =>
+                setSearchParams({
+                  ...searchParams,
+                  customer_name: e.target.value,
+                })
+              }
             />
             <TextField
               label='Từ ngày'
@@ -215,6 +249,10 @@ function ReservationList(props) {
                   fontSize: 20,
                 },
               }}
+              value={searchParams.status}
+              onChange={(e) =>
+                setSearchParams({ ...searchParams, status: e.target.value })
+              }
             >
               <option>Tất cả</option>
               <option value='pending'>Chờ xác nhận</option>
@@ -234,6 +272,9 @@ function ReservationList(props) {
           <CustomTable
             rows={reservationList}
             cols={reservationCols}
+            handleFetchRows={fetchCurPage}
+            totalCount={totalCount}
+            searchParams={searchParams}
             actionButtons={actionButtons}
           />
         </div>

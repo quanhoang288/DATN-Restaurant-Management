@@ -28,7 +28,8 @@ import { getGoodGroups } from "../../../apis/good-group";
 import { parseSearchParams } from "../../../utils/parseSearchParams";
 
 const cols = [
-  { id: "id", label: "Mã hàng hóa", isSortable: true },
+  { id: "id", label: "ID", isSortable: true },
+  { id: "image", label: "", type: "image", isSortable: false },
   { id: "name", label: "Tên hàng hóa", isSortable: true },
   {
     id: "type",
@@ -177,6 +178,7 @@ function GoodList({ children }) {
   const [fileToImport, setFileToImport] = useState(null);
   const [goodGroupOptions, setGoodGroupOptions] = useState([]);
   const [searchParams, setSearchParams] = useState(defaultSearchParams);
+  const [isSaveSuccessful, setSaveSuccessful] = useState(false);
 
   const handleDownloadTemplateFile = () => {};
 
@@ -278,7 +280,8 @@ function GoodList({ children }) {
         handleCloseModal={(success = false) => {
           setGoodModalVisible(false);
           if (success) {
-            fetchCurPage(1, 5, defaultSearchParams);
+            setSaveSuccessful(true);
+            fetchCurPage(1, 5);
           }
         }}
       />

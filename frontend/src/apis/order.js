@@ -14,7 +14,15 @@ const payOrder = (id, paymentData) =>
   api.post(`orders/${id}/payment`, paymentData);
 
 const updateOrderItem = (orderId, itemId, data) =>
-  api.post(`orders/${orderId}/items/${itemId}/update`, data);
+  api.post(`orders/items/${itemId}/update`, {
+    ...data,
+    order_id: orderId,
+  });
+
+const bulkUpdateKitchenItems = (itemId, status) =>
+  api.post("orders/items/bulk-update", { itemId, status });
+
+const getKitchenItems = (params = {}) => api.get("/orders/items", { params });
 
 export {
   createOrder,
@@ -24,4 +32,6 @@ export {
   deleteOrder,
   payOrder,
   updateOrderItem,
+  getKitchenItems,
+  bulkUpdateKitchenItems,
 };

@@ -1,33 +1,34 @@
-import Snackbar from '@material-ui/core/Snackbar'
-import { Alert } from '@material-ui/lab'
+import Snackbar from "@material-ui/core/Snackbar";
+import { Alert } from "@material-ui/lab";
 
-import React, { useState } from 'react'
+import React, { useState } from "react";
 
 function Toast(props) {
-  const { variant, message, handleClose, ...rest } = props
-  const [open, setOpen] = useState(true)
+  const { variant, message, handleClose, ...rest } = props;
+  const [open, setOpen] = useState(true);
   const onClose = () => {
-    setOpen(false)
+    setOpen(false);
     if (handleClose) {
-      handleClose()
+      handleClose();
     }
-  }
+  };
+
   return (
     <Snackbar
       open={open}
-      autoHideDuration={4000}
+      autoHideDuration={3000}
       anchorOrigin={{
-        vertical: 'top',
-        horizontal: 'center',
+        vertical: "top",
+        horizontal: "center",
       }}
       onClose={onClose}
       {...rest}
     >
-      <Alert severity={variant} onClose={onClose}>
+      <Alert severity={variant} onClose={onClose} square color={variant}>
         {message}
       </Alert>
     </Snackbar>
-  )
+  );
 }
 
-export default Toast
+export default Toast;

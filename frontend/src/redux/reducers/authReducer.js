@@ -1,4 +1,4 @@
-import { authActionTypes } from '../actions/authActions'
+import { authActionTypes } from "../actions/authActions";
 
 const initialState = {
   isLoggingIn: false,
@@ -6,7 +6,7 @@ const initialState = {
   registerSuccess: false,
   user: null,
   error: null,
-}
+};
 
 const authReducer = (state = initialState, action) => {
   switch (action.type) {
@@ -14,46 +14,53 @@ const authReducer = (state = initialState, action) => {
       return {
         ...initialState,
         isLoggingIn: true,
-      }
+      };
 
     case authActionTypes.LOGIN_SUCCESS:
       return {
         ...initialState,
         user: action.payload,
-      }
+      };
 
     case authActionTypes.LOGIN_FAILURE:
       return {
         ...initialState,
         error: action.payload,
-      }
+      };
 
     case authActionTypes.REGISTER_REQUEST:
       return {
         ...initialState,
         isRegistering: true,
-      }
+      };
 
     case authActionTypes.REGISTER_SUCCESS:
       return {
         ...initialState,
         registerSuccess: true,
+        isRegistering: false,
         user: action.payload,
-      }
+      };
 
     case authActionTypes.REGISTER_FAILURE:
       return {
         ...initialState,
         error: action.payload,
-      }
+      };
+
+    case authActionTypes.REGISTER_RESET:
+      return {
+        ...state,
+        registerSuccess: false,
+        isRegistering: false,
+      };
 
     case authActionTypes.LOGOUT:
-      return initialState
+      return initialState;
 
     default:
-      return state
+      return state;
   }
-}
+};
 
-export default authReducer
-
+export default authReducer;

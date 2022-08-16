@@ -7,7 +7,7 @@ import TabPanel from "../../../components/CustomTabs/TabPanel";
 import { Typography } from "@material-ui/core";
 
 function FacilityList(props) {
-  const [activeTab, setActiveTab] = useState(1);
+  const [activeTab, setActiveTab] = useState(0);
 
   return (
     <Main>

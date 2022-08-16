@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState } from "react";
 
 import {
   Button,
@@ -13,99 +13,130 @@ import {
   ListItemText,
   TextField,
   Typography,
-} from '@material-ui/core'
-import AddBoxOutlinedIcon from '@material-ui/icons/AddBoxOutlined'
-import RemoveIcon from '@material-ui/icons/Remove'
-import AddIcon from '@material-ui/icons/Add'
-import CustomAccordion from '../../../components/CustomAccordion/CustomAccordion'
-import CustomTabs from '../../../components/CustomTabs/CustomTabs'
-import TabPanel from '../../../components/CustomTabs/TabPanel'
-import CustomerMain from '../../../containers/CustomerMain/CustomerMain'
-import { useHistory } from 'react-router-dom/cjs/react-router-dom.min'
-import SlickList from '../../../components/SlickList/SlickList'
-import { useEffect } from 'react'
-import { getMenus } from '../../../apis/menu'
-import { useCallback } from 'react'
+} from "@material-ui/core";
+import AddBoxOutlinedIcon from "@material-ui/icons/AddBoxOutlined";
+import RemoveIcon from "@material-ui/icons/Remove";
+import AddIcon from "@material-ui/icons/Add";
+import CustomAccordion from "../../../components/CustomAccordion/CustomAccordion";
+import CustomTabs from "../../../components/CustomTabs/CustomTabs";
+import TabPanel from "../../../components/CustomTabs/TabPanel";
+import CustomerMain from "../../../containers/CustomerMain/CustomerMain";
+import { useHistory } from "react-router-dom/cjs/react-router-dom.min";
+import SlickList from "../../../components/SlickList/SlickList";
+import { useEffect } from "react";
+import { getMenus } from "../../../apis/menu";
+import { useCallback } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { addToCart, updateCart } from "../../../redux/actions/cartActions";
+import { showModal } from "../../../redux/actions/modalActions";
+import { ASSET_BASE_URL } from "../../../configs";
+import noImageAvailable from "../../../assets/no-image-available.jpg";
+
 // import './Order.css'
 
 function CategoryItem(props) {
-  const { item, handleItemSelect } = props
+  const { item, handleItemSelect } = props;
   return (
-    <Card style={{ margin: '1rem 1rem' }}>
+    <Card style={{ margin: "1rem 1rem" }}>
       <CardActionArea onClick={() => handleItemSelect(item)}>
         <CardMedia
           component='img'
-          alt='Contemplative Reptile'
+          alt='Item thumbnail'
           height={150}
           width={150}
-          image='https://cdn4.vectorstock.com/i/1000x1000/71/83/sign-board-discount-vector-1947183.jpg'
-          title='Discount thumbnail'
+          image={
+            item.image
+              ? `${ASSET_BASE_URL}/images/${item.image}`
+              : noImageAvailable
+          }
         />
-        <CardContent style={{ textAlign: 'center' }}>
-          <Typography style={{ fontWeight: 500 }}>{item?.name ?? ''}</Typography>
+        <CardContent style={{ textAlign: "center" }}>
+          <Typography style={{ fontWeight: 500 }}>
+            {item?.name ?? ""}
+          </Typography>
           <Typography variant='body2' color='textSecondary' component='p'>
-            {item?.sale_price ?? ''}
+            {item?.sale_price ?? ""}
           </Typography>
         </CardContent>
       </CardActionArea>
     </Card>
-  )
+  );
 }
 
 export default function Order(props) {
-  const [activeTab, setActiveTab] = useState(0)
-  const [menuList, setMenuList] = useState([])
-  const [selectedMenuId, setSelectedMenuId] = useState(null)
-  const [orderItems, setOrderItems] = useState([])
+  const [activeTab, setActiveTab] = useState(0);
+  const [menuList, setMenuList] = useState([]);
+  const [selectedMenuId, setSelectedMenuId] = useState(null);
+  const [requestToPay, setRequestToPay] = useState(false);
+  const cartItems = useSelector((state) => state.cart.items);
+  const authUser = useSelector((state) => state.auth.user);
 
-  const history = useHistory()
+  const dispatch = useDispatch();
+  const history = useHistory();
 
   const fetchMenuList = async () => {
-    setMenuList((await getMenus()).data)
-  }
+    setMenuList((await getMenus()).data);
+  };
 
-  const handleItemSelect = useCallback(
-    (selectedItem) => {
-      const isAlreadySelected = orderItems.some((item) => item.id === selectedItem.id)
-      setOrderItems(
-        isAlreadySelected
-          ? orderItems.map((item) => (item.id === selectedItem.id ? { ...item, quantity: item.quantity + 1 } : item))
-          : [...orderItems, { id: selectedItem.id, name: selectedItem.name, sale_price: selectedItem.sale_price, quantity: 1 }]
-      )
-    },
-    [orderItems]
-  )
+  const handleCheckout = useCallback(() => {
+    if (!authUser) {
+      dispatch(showModal());
+    }
+    setRequestToPay(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authUser]);
 
-  const handleUpdateItemQuantity = useCallback(
-    (itemId, quantity) => {
-      setOrderItems(
-        quantity === 0 ? orderItems.filter((i) => i.id !== itemId) : orderItems.map((i) => (i.id === itemId ? { ...i, quantity } : i))
-      )
-    },
-    [orderItems]
-  )
+  useEffect(() => {
+    if (authUser && requestToPay) {
+      history.push("/checkout");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authUser, requestToPay]);
 
   useEffect(() => {
     if (menuList.length && !selectedMenuId) {
-      setSelectedMenuId(menuList[0].id)
+      setSelectedMenuId(menuList[0].id);
     }
-  }, [menuList, selectedMenuId])
+  }, [menuList, selectedMenuId]);
 
   useEffect(() => {
-    fetchMenuList()
-  }, [])
+    fetchMenuList();
+  }, []);
 
   return (
     <CustomerMain includeFooter={false}>
-      <div style={{ padding: '2rem 10rem' }}>
-        <div style={{ display: 'flex', width: '100%' }}>
-          <div style={{ flex: 1, marginRight: '2rem' }}>
-            <TextField fullWidth placeholder='Tìm kiếm theo tên món ăn/đồ uống' variant='outlined' style={{ marginBottom: '1rem' }} />
+      <div style={{ padding: "2rem 10rem" }}>
+        <div style={{ display: "flex", width: "100%" }}>
+          <div style={{ flex: 1, marginRight: "2rem" }}>
+            <TextField
+              fullWidth
+              placeholder='Tìm kiếm theo tên món ăn/đồ uống'
+              variant='outlined'
+              style={{ marginBottom: "1rem" }}
+            />
             <Card>
-              <CardContent style={{ display: 'flex', width: '100%', minWidth: 0, minHeight: 0 }}>
-                <List component='nav' style={{ minWidth: 150, borderRight: '1px solid', textAlign: 'center' }}>
+              <CardContent
+                style={{
+                  display: "flex",
+                  width: "100%",
+                  minWidth: 0,
+                  minHeight: 0,
+                }}
+              >
+                <List
+                  component='nav'
+                  style={{
+                    minWidth: 150,
+                    borderRight: "1px solid",
+                    textAlign: "center",
+                  }}
+                >
                   {menuList.map((menu) => (
-                    <ListItem button selected={menu.id === selectedMenuId} onClick={() => setSelectedMenuId(menu.id)}>
+                    <ListItem
+                      button
+                      selected={menu.id === selectedMenuId}
+                      onClick={() => setSelectedMenuId(menu.id)}
+                    >
                       <ListItemText primary={menu.name} />
                     </ListItem>
                   ))}
@@ -113,25 +144,45 @@ export default function Order(props) {
 
                 <div>
                   <CustomTabs
-                    labels={(menuList.find((item) => item.id === selectedMenuId)?.categories || []).map((category) => category.name)}
+                    labels={(
+                      menuList.find((item) => item.id === selectedMenuId)
+                        ?.categories || []
+                    ).map((category) => category.name)}
                     activeTab={activeTab}
                     onChangeActiveTab={(val) => setActiveTab(val)}
                   >
-                    {(menuList.find((item) => item.id === selectedMenuId)?.categories || []).map((category, idx) => (
+                    {(
+                      menuList.find((item) => item.id === selectedMenuId)
+                        ?.categories || []
+                    ).map((category, idx) => (
                       <TabPanel value={activeTab} index={idx}>
-                        <div style={{ minWidth: 600, maxWidth: 800, marginLeft: '2.5rem' }}>
+                        <div
+                          style={{
+                            minWidth: 600,
+                            maxWidth: 800,
+                            marginLeft: "2.5rem",
+                          }}
+                        >
                           <SlickList
                             settings={{
                               dots: true,
                               infinite: false,
                               slidesToShow: 3,
                               speed: 500,
-                              rows: Math.max((category.items || []).length / 3, 1),
+                              rows: Math.max(
+                                (category.items || []).length / 3,
+                                1
+                              ),
                               slidesToScroll: 1,
                             }}
                           >
                             {(category.items || []).map((item) => (
-                              <CategoryItem item={item} handleItemSelect={handleItemSelect} />
+                              <CategoryItem
+                                item={item}
+                                handleItemSelect={() =>
+                                  dispatch(addToCart(item))
+                                }
+                              />
                             ))}
                           </SlickList>
                         </div>
@@ -143,34 +194,78 @@ export default function Order(props) {
             </Card>
           </div>
           <Card>
-            <CardContent style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+            <CardContent
+              style={{
+                height: "100%",
+                display: "flex",
+                flexDirection: "column",
+              }}
+            >
               <div style={{ flex: 1 }}>
                 <List style={{ minWidth: 200 }}>
-                  {orderItems.map((item) => (
+                  {cartItems.map((item) => (
                     <>
                       <ListItem alignItems='center'>
-                        <div style={{ display: 'flex', alignItems: 'center', marginRight: 10 }}>
-                          <IconButton size='medium' onClick={() => handleUpdateItemQuantity(item.id, item.quantity - 1)}>
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            marginRight: 10,
+                          }}
+                        >
+                          <IconButton
+                            size='medium'
+                            onClick={() =>
+                              dispatch(updateCart(item.id, item.quantity - 1))
+                            }
+                          >
                             <RemoveIcon />
                           </IconButton>
-                          <Typography style={{ margin: '0 4px' }}>{item.quantity ?? 1}</Typography>
-                          <IconButton size='medium' onClick={() => handleUpdateItemQuantity(item.id, item.quantity + 1)}>
+                          <Typography style={{ margin: "0 4px" }}>
+                            {item.quantity ?? 1}
+                          </Typography>
+                          <IconButton
+                            size='medium'
+                            onClick={() =>
+                              dispatch(updateCart(item.id, item.quantity + 1))
+                            }
+                          >
                             <AddIcon />
                           </IconButton>
                         </div>
-                        <div style={{ display: 'flex', flex: 1, alignItems: 'center' }}>
-                          <div style={{ display: 'flex', flex: 1, alignItems: 'center' }}>
+                        <div
+                          style={{
+                            display: "flex",
+                            flex: 1,
+                            alignItems: "center",
+                          }}
+                        >
+                          <div
+                            style={{
+                              display: "flex",
+                              flex: 1,
+                              alignItems: "center",
+                            }}
+                          >
                             <img
-                              src='https://d1sag4ddilekf6.azureedge.net/compressed/items/VNITE20220620072008363273/photo/menueditor_item_c1cc9114f56b46308d9d553166e4b3bc_1655892956270133788.jpg'
+                              src={
+                                item.image
+                                  ? `${ASSET_BASE_URL}/images/${item.image}`
+                                  : noImageAvailable
+                              }
                               alt='Cart item'
                               width={60}
                               height={60}
                               style={{ marginRight: 10 }}
                             />
-                            <Typography style={{ fontWeight: 500 }}>{item.name}</Typography>
+                            <Typography style={{ fontWeight: 500 }}>
+                              {item.name}
+                            </Typography>
                           </div>
                           <div>
-                            <Typography>{item.sale_price}</Typography>
+                            <Typography>
+                              {item.delivery_sale_price || item.sale_price}
+                            </Typography>
                           </div>
                         </div>
                       </ListItem>
@@ -178,27 +273,54 @@ export default function Order(props) {
                     </>
                   ))}
                 </List>
-                <div style={{ padding: '1rem 1rem' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <div style={{ padding: "1rem 1rem" }}>
+                  <div
+                    style={{ display: "flex", justifyContent: "space-between" }}
+                  >
                     <Typography style={{ fontSize: 18 }}>Tổng</Typography>
                     <Typography style={{ fontSize: 18, fontWeight: 500 }}>
-                      {orderItems.reduce((prevTotal, item) => prevTotal + item.sale_price * item.quantity, 0)}
+                      {cartItems.reduce(
+                        (prevTotal, item) =>
+                          prevTotal +
+                          (item.delivery_sale_price || item.sale_price) *
+                            item.quantity,
+                        0
+                      )}
                     </Typography>
                   </div>
-                  <Typography color='textSecondary'>Phí giao hàng sẽ được tính khi kiểm tra đơn hàng</Typography>
+                  <Typography color='textSecondary'>
+                    Phí giao hàng sẽ được tính khi kiểm tra đơn hàng
+                  </Typography>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center' }}>
-                  <TextField fullWidth placeholder='Nhập mã khuyến mãi' variant='outlined' />
-                  <Button variant='contained' style={{ background: 'green', color: 'white', minWidth: 100, marginLeft: '2rem' }}>
+                <div style={{ display: "flex", alignItems: "center" }}>
+                  <TextField
+                    fullWidth
+                    placeholder='Nhập mã khuyến mãi'
+                    variant='outlined'
+                  />
+                  <Button
+                    variant='contained'
+                    style={{
+                      background: "green",
+                      color: "white",
+                      minWidth: 100,
+                      marginLeft: "2rem",
+                    }}
+                  >
                     Áp dụng
                   </Button>
                 </div>
               </div>
-              <div style={{ textAlign: 'center', padding: '1rem 0' }}>
+              <div style={{ textAlign: "center", padding: "1rem 0" }}>
                 <Button
                   variant='contained'
-                  style={{ background: 'green', color: 'white', minWidth: 300, borderRadius: 10 }}
-                  onClick={() => history.push('/checkout', { orderItems })}
+                  style={{
+                    background: "green",
+                    color: "white",
+                    minWidth: 300,
+                    borderRadius: 10,
+                  }}
+                  onClick={handleCheckout}
                 >
                   Thanh toán
                 </Button>
@@ -208,6 +330,5 @@ export default function Order(props) {
         </div>
       </div>
     </CustomerMain>
-  )
+  );
 }
-

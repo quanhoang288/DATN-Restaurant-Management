@@ -8,6 +8,8 @@ import * as reservationApi from "./reservation";
 import * as orderApi from "./order";
 import * as notificationApi from "./notification";
 import * as discountApi from "./discount";
+import * as deliveryInfoApi from "./delivery-info";
+import * as customerApi from "./customer";
 
 export {
   authApi,
@@ -20,4 +22,6 @@ export {
   orderApi,
   notificationApi,
   discountApi,
+  deliveryInfoApi,
+  customerApi,
 };
