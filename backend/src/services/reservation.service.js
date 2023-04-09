@@ -220,8 +220,8 @@ const sendReminders = async () => {
       mapToModel: true,
     },
   );
+  console.log(reservationsToRemind);
 
-  console.log('reservations: ', reservationsToRemind);
   // await Promise.all(
   //   reservationsToRemind.map((reservation) =>
   //     messagingService.sendMessage(

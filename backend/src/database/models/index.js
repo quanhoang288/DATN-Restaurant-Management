@@ -11,8 +11,9 @@ const sequelizeConfig = {
   dialectOptions: {
     charset: 'utf8mb4',
   },
-  // logging: console.log,
-  logging: false,
+  host: config.db.host || '127.0.0.1',
+  port: config.db.port,
+  logging: console.log,
   define: {
     underscored: true,
     timestamps: true,
@@ -30,16 +31,11 @@ const sequelizeConfig = {
   seederStorageTableName: 'seeders',
 };
 
-console.log(config.db.password);
-
 const sequelize = new Sequelize(
   config.db.database,
   config.db.username,
   config.db.password || '',
-  {
-    ...sequelizeConfig,
-    port: config.db.port,
-  },
+  sequelizeConfig,
 );
 
 const db = {};

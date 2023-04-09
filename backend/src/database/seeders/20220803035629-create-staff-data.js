@@ -101,6 +101,8 @@ module.exports = {
       users.map((user) => ({
         id: user.id,
         role_id: staffData.find((data) => data.email === user.email).role_id,
+        created_at: user.created_at,
+        updated_at: user.updated_at,
       })),
     );
   },

@@ -1,15 +1,13 @@
-FROM node:alpine
+FROM node:16-alpine
 
-RUN mkdir -p /usr/src/node-app && chown -R node:node /usr/src/node-app
+WORKDIR /home/restaurant-management-be
 
-WORKDIR /usr/src/node-app
+COPY package*.json ./
 
-COPY package.json package-lock.json ./
+RUN npm i
 
-USER node
+COPY . .
 
-RUN npm install --pure-lockfile
+EXPOSE 3000
 
-COPY --chown=node:node . .
-
-EXPOSE 5000
+CMD [ "node", "src/index.js" ]

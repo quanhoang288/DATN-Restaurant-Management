@@ -18,7 +18,7 @@
     "migrate": "npx sequelize-cli db:migrate --config src/database/config/config.js --migrations-path src/database/migrations",
     "migrate:undo": "npx sequelize-cli db:migrate:undo --config src/database/config/config.js --migrations-path src/database/migrations",
     "migrate:reset": "npx sequelize-cli db:migrate:undo:all --config src/database/config/config.js --migrations-path src/database/migrations",
-    "db-init": "npm run db-create & npm run migrate & npm run seed",
+    "db-init": "npm run db-create & npm run migrate",
     "sequelize": "npx sequelize-cli",
     "docker:prod": "docker-compose -f docker-compose.yml -f docker-compose.prod.yml up",
     "docker:dev": "docker-compose -f docker-compose.yml -f docker-compose.dev.yml up"

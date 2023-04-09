@@ -115,6 +115,10 @@ const routes = [
   },
 ];
 
+router.get('/ping', (req, res) => {
+  res.send('pong');
+});
+
 routes.forEach((route) => {
   router.use(route.path, route.route);
 });

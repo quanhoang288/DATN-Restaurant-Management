@@ -24,7 +24,7 @@ module.exports = {
         type: Sequelize.DataTypes.BIGINT.UNSIGNED,
         references: {
           model: {
-            tableName: 'kitchen_id',
+            tableName: 'kitchens',
           },
         },
       },

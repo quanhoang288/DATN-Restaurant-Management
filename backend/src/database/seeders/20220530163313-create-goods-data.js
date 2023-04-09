@@ -3,7 +3,6 @@ module.exports = {
     await queryInterface.bulkInsert('goods', [
       {
         name: 'Bò xào nấm',
-        import_price: 50000,
         sale_price: 70000,
         created_at: new Date(),
         updated_at: new Date(),
@@ -11,7 +10,6 @@ module.exports = {
 
       {
         name: 'Nấm xào',
-        import_price: 50000,
         sale_price: 70000,
         created_at: new Date(),
         updated_at: new Date(),
@@ -19,7 +17,6 @@ module.exports = {
 
       {
         name: 'Gà chiên mắm',
-        import_price: 50000,
         sale_price: 70000,
         created_at: new Date(),
         updated_at: new Date(),

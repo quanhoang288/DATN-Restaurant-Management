@@ -7,7 +7,7 @@ import ROUTE from '../constants/route'
 function PrivateRoute({ component: Component, ...rest }) {
   const user = useSelector((state) => state.auth.user)
 
-  return <Route {...rest} render={(props) => (user ? <Component {...props} /> : <Redirect to={ROUTE.DASHBOARD} />)} />
+  return <Route {...rest} render={(props) => (user ? <Component {...props} /> : <Redirect to={ROUTE.ADMIN_AUTH} />)} />
 }
 
 export default PrivateRoute
